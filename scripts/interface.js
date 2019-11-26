@@ -599,6 +599,10 @@ class UI {
       cells.addEventListener("mouseup", function(e) { // required for drawing obstacles / empty cells
         state.mse_pen = false;
       }, false);
+      // Mouseout Cells - Same as Mouseup
+      cells.addEventListener("mouseleave", function(e) { // required for drawing obstacles / empty cells
+        state.mse_pen = false;
+      }, false);
       // Mouseover Cells - Draw depending on mode
       html_map_obj.map.addEventListener("mousemove", function(e) { // required for drawing obstacles / empty cells
         if (state.mse_pen === true) {
