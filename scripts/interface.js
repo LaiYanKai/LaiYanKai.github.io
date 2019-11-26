@@ -13,7 +13,7 @@ class UIMap {
     this._cells = Array(num_i);
     this.num_i = num_i;
     this.num_j = num_j;
-    this.paths = {};
+    this.paths = [];
     // use css grid template
     var css = '', css_row, css_cell;
     for (var i=num_i-1; i>=0; i--) {
@@ -121,20 +121,23 @@ class UIStep {
   constructor() {
     this.actions = [];
   }
-  set_cell_rgb(i, j, r, g, b, bg=true, border=true) {
-    this.actions.push(['r', arguments]);
-  }
-  set_cell_hsl(i, j, h, s, l, bg=true, border=true) {
-    this.actions.push(['h', arguments]);
-  }
-  set_cell_text(i, j, txt) {
+  // set_cell_rgb(i, j, r, g, b, bg=true, border=true) {
+    // this.actions.push(['r', arguments]);
+  // }
+  // set_cell_hsl(i, j, h, s, l, bg=true, border=true) {
+    // this.actions.push(['h', arguments]);
+  // }
+  set_cell_text(vec, txt) {
     this.actions.push(['t', arguments]);
   }
   draw_path(start_vertex, end_vertex, class_name) {
     this.actions.push(['p', arguments]);
   }
-  display_path(start_vertex, show) {
+  display_path(start_vec, end_vec ,show) {
     this.actions.push(['dp', arguments]);
+  }
+  remove_paths(start_vec, end_vec) {
+    this.actions.push(['rp', arguments])
   }
   set_info_pair(pane_key, pair_key, value, subtitle=undefined) {
     this.actions.push(['ip', arguments]);
@@ -142,7 +145,7 @@ class UIStep {
   set_info_text(pane_key, value) {
     this.actions.push(['it', arguments]);
   }
-  set_cell_class(i, j, class_name, remove=false) {
+  set_cell_class(vec, class_name, remove=false) {
     this.actions.push(['cn', arguments]);
   }
   
@@ -826,7 +829,7 @@ class UI {
       if ((state.sim === false || recompile === true) && play === true) {
         handlers.switch_mode(true); 
         
-        self.planners[state.planner].compile();
+        self.planners[state.planner].planner.compile();
       }
       state.play = play;
       // Play or pause
@@ -881,7 +884,7 @@ class UI {
     // Reset the simulator area by erasing planner data
     handlers.reset_sim = function() {
       handlers.step_to_initial();
-      handlers.delete_paths();
+      handlers.remove_paths();
       self.steps.steps = [];
       self.steps.steps_compiled = [];
       self.info = {};
@@ -1119,7 +1122,7 @@ class UI {
       if (ui_map.paths[ki] === undefined) {
         // when starting vertex does not contain paths from it
         var path  = new UIPath(start_pos, end_pos, self.LINE_RADIUS_X, self.LINE_RADIUS_Y, class_name);
-        ui_map.paths[ki] = {};
+        ui_map.paths[ki] = [];
         ui_map.paths[ki][kf] = path;
         html_map_obj.map.appendChild(path.ele);
       } else if (ui_map.paths[ki][kf] === undefined) {
@@ -1133,7 +1136,7 @@ class UI {
       }
     }
     // Hide a path
-    handlers.display_path = function(start_vec, end_vec, show) {
+    handlers.display_path = function(start_vec, end_vec, show) { // add support for multiple start_vec paths
       var ui_map = self.ui_map; 
       var paths = ui_map.paths;
       var ki = ui_map.flatten(start_vec);
@@ -1145,7 +1148,7 @@ class UI {
       else
         paths[ki][kf].display = false;
     }
-    handlers.delete_paths = function(start_vec, end_vec){
+    handlers.remove_paths = function(start_vec, end_vec){
       if (self.ui_map === undefined)
         return;
       var paths = self.ui_map.paths;
@@ -1181,13 +1184,19 @@ class UI {
       }
     }
     // for compiling
-    handlers.get_path = function(start_vec, end_vec) {
+    handlers.get_paths = function(start_vec, end_vec) {
       var ki = self.ui_map.flatten(start_vec);
-      var kf = self.ui_map.flatten(end_vec)
       var paths = self.ui_map.paths;
-      if (paths[ki] === undefined || paths[ki][kf] === undefined)
+      var tmp = paths[ki];
+      if (tmp === undefined) 
         return undefined;
-      return paths[ki][kf];
+      if (end_vec === undefined)
+        return tmp;
+      var kf = self.ui_map.flatten(end_vec)
+      tmp = tmp[kf];
+      if (tmp === undefined)
+        return undefined;
+      return tmp;
     }
     // Colour cell
     handlers.set_cell_hsl = function(i, j, h, s, l, bg=true) {
@@ -1213,15 +1222,15 @@ class UI {
     handlers.get_cell_color_css = function(i, j) {
       return getComputedStyle(self.ui_map.cells(i,j).ele)['background-color'];
     }
-    handlers.set_cell_class = function(i, j, class_name, remove=false) {
+    handlers.set_cell_class = function(vec, class_name, remove=false) {
       if (remove === true)
-        self.ui_map.cells(i, j).ele.classList.remove(class_name)
+        self.ui_map.cells(vec).ele.classList.remove(class_name)
       else
-        self.ui_map.cells(i, j).ele.classList.add(class_name)
+        self.ui_map.cells(vec).ele.classList.add(class_name)
     }
     // Write cell
-    handlers.set_cell_text = function(i, j, txt) {
-      self.ui_map.cells(i, j).ele.innerHTML = txt;
+    handlers.set_cell_text = function(vec, txt) {
+      self.ui_map.cells(vec).ele.innerHTML = txt;
     }
     // Set obstacle
     handlers.set_cell_obstacle = function(i, j, cost) {
@@ -1274,25 +1283,23 @@ class UI {
               break;
             // action is to set the text of the cell
             case 't': // set text
-              var i=args[0], j=args[1];
-              var bck_args = [i, j, self.ui_map.cells(i,j).ele.innerHTML];
               compiled_action = {
                 fwd_handler : handlers.set_cell_text,
                 fwd_args : args,
                 bck_handler : handlers.set_cell_text,
-                bck_args: bck_args
+                bck_args: [args[0], self.ui_map.cells(args[0]).ele.innerHTML]
               }
               // apply the forward step
               compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
               break;
             case 'p': // draw path
-              var prev_path = handlers.get_path(args[0], args[1]);
+              var prev_path = handlers.get_paths(args[0], args[1]);
               if (prev_path === undefined) {
                 // path does not exist before
                 compiled_action = {
                   fwd_handler : handlers.draw_path,
                   fwd_args : args,
-                  bck_handler : handlers.delete_paths,
+                  bck_handler : handlers.remove_paths,
                   bck_args : [args[0], args[1]]
                 }
               } else if (prev_path.class_name !== args[2]) {// class_name is different
@@ -1306,13 +1313,49 @@ class UI {
               // apply the forward step
               compiled_action.fwd_handler.apply(null, compiled_action.fwd_args);
               break;
+            case 'rp': // remove path
+              var prev_paths = handlers.get_paths(args[0], args[1]);
+              if (prev_paths === undefined )
+                continue // path does not exist, nth to delete
+              if (args[1] === undefined) {// multiple paths need to be removed
+                // prev_paths is an array of paths
+                // get all path properties
+                var properties = [];
+                var kfs = Object.keys(prev_paths);
+                for (const kf of kfs) {
+                  prev_path = prev_paths[kf];
+                  properties.push([prev_path.start_pos, prev_path.end_pos, prev_path.class_name]);
+                }
+                var bck_handler = function(e) {
+                  for (const p of properties) {
+                    handlers.draw_path.apply(null, p);
+                  }
+                }
+                compiled_action = {
+                  fwd_handler : handlers.remove_paths,
+                  fwd_args : args,
+                  bck_handler : bck_handler,
+                  bck_args : undefined
+                }
+              } else {
+                // prev_paths is just a path
+                compiled_action = {
+                  fwd_handler : handlers.remove_paths,
+                  fwd_args : args,
+                  bck_handler : handlers.draw_path,
+                  bck_args : [args[0], args[1], prev_paths.class_name]
+                }
+                // apply the forward step
+                compiled_action.fwd_handler.apply(null, compiled_action.fwd_args);
+              }
+              break;
             case 'dp': // display path
-              var prev_path = handlers.get_path(args[0], args[1]);
+              var prev_path = handlers.get_paths(args[0], args[1]);
               if (prev_path === undefined && args[2] === false)
-                return;
+                continue;
               var prev_show = prev_path.show;
               if (prev_show === args[2])
-                return;
+                continue;
               compiled_action = {
                 fwd_handler : handlers.display_path,
                 fwd_args : args, // get the show
@@ -1356,7 +1399,7 @@ class UI {
                 fwd_handler : handlers.set_cell_class,
                 fwd_args : args,
                 bck_handler : handlers.set_cell_class,
-                bck_args : [args[0], args[1], args[2], !args[3]]
+                bck_args : [args[0], args[1], !args[2]]
               }
               // apply the forward step
               compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
@@ -1448,12 +1491,12 @@ class UI {
       j = Math.round(j);
       return {i: i, j: j};
     }
-    handlers.add_planner = function(label, display_name) {
+    handlers.add_planner = function(key, display_name) {
       var planner_dialog = html_dialog_obj.templates.planners;
       var ele_algorithms = html_options_obj.algorithms;
       // add the option to the dropdown in the dialog
       var ele_option = document.createElement('option');
-      ele_option.setAttribute('value', label);
+      ele_option.setAttribute('value', key);
       ele_option.innerHTML = display_name;
       ele_option.setAttribute('selected', '');
       for (const c of ele_algorithms.childNodes)
@@ -1461,7 +1504,7 @@ class UI {
           c.removeAttribute('selected');
       ele_algorithms.appendChild(ele_option);
       // set the chosen planner
-      state.planner = label;
+      state.planner = key;
       // set the button to display display_name
       html_options_obj.planners.innerHTML = display_name;
     }
@@ -1474,8 +1517,11 @@ class UI {
         handlers.play_pause(false);
         handlers.reset_sim();
       }
+      // get the algo key
       var ele_algorithms = html_options_obj.algorithms
-      state.planner = ele_algorithms.options[ele_algorithms.selectedIndex].value;
+      var key = ele_algorithms.options[ele_algorithms.selectedIndex].value;
+      html_options_obj.planners.innerHTML = self.planners[key].display_name;
+      state.planner = key;
       if (state.sim === true) {
         handlers.play_pause(true, true);
       }
@@ -1527,10 +1573,10 @@ ui = new UI();
 
 /* ----------------- Path Planners ------------------- */
 class Planner {
-  constructor(label, display_name) {
+  constructor(key, display_name) {
     this.ui = window.ui;
-    this.ui.planners[label] = this;
-    this.ui.graphic_handlers.add_planner(label, display_name);
+    this.ui.planners[key] = {display_name: display_name, planner: this};
+    this.ui.graphic_handlers.add_planner(key, display_name);
     this.add_step = this.ui.steps.add_step;
     this.new_info_pair_pane = this.ui.graphic_handlers.new_info_pair_pane;
     this.new_info_text_pane = this.ui.graphic_handlers.new_info_text_pane;

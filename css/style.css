@@ -561,10 +561,10 @@ input.nav_num {
   z-index: 98;
   border: 1px solid red;
 }
-.cell_encountered {
+.cell_encountered, .cell_opened {
   background: rgb(255, 245, 230);
 }
-.cell_visited {
+.cell_visited, .cell_closed {
   background: rgb(248, 248, 255);
 }
 .cell_front {

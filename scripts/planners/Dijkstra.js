@@ -119,12 +119,12 @@ class Dijkstra extends Planner {
   }
   run() {
     this.reset();
-    
+    this.new_info_text_pane(['info', 'Status'], 'Exploring...');
     var ul = this.unvisited_list;
     var step, vertex, next_position, next_cell, prev_vertex, next_vertex, vertex, n, m;
     var path_found = false;
-    this.new_info_text_pane(['info', 'Status'], 'Exploring...');
     var prev_vertex = undefined;
+    var goal_cost = Infinity;
     while (ul.is_populated()) {
       vertex = ul.get_min_vertex();
       // skip if this vertex is already visited (neighbours explored)
@@ -134,10 +134,10 @@ class Dijkstra extends Planner {
       vertex.visited = true;
       // colour the current cell
       step  = this.add_step();
-      step.set_cell_class(vertex.i, vertex.j, 'cell_front');
+      step.set_cell_class(vertex.position, 'cell_front');
       // step.set_cell_rgb(vertex.i, vertex.j, 1, 0.9, 0.88);
       if (prev_vertex !== undefined)
-        step.set_cell_class(prev_vertex.i, prev_vertex.j, 'cell_front', true);
+        step.set_cell_class(prev_vertex.position, 'cell_front', true);
       // expand the neighbours
       for (const ord of Ord.list) {
         next_position = vertex.position.add(Ord.ord_to_vec(ord));
@@ -145,11 +145,12 @@ class Dijkstra extends Planner {
         if (next_position.equals(this.goal_position)) {
           next_vertex = this.graph.vertices(next_position);
           next_vertex.source = vertex;
+          goal_cost = vertex.cost + (Ord.is_diagonal(ord) ? Math.SQRT2 : 1);
           // GUI
           step = this.add_step();
           step.set_info_text('info', 'PATH FOUND!');
-          step.set_cell_class(next_vertex.i, next_vertex.j, 'cell_front');
-          step.set_cell_class(vertex.i, vertex.j, 'cell_front', true);
+          step.set_cell_class(next_vertex.position, 'cell_front');
+          step.set_cell_class(vertex.position, 'cell_front', true);
           // trace path to start
           vertex = next_vertex;
           var start_trace = true;
@@ -175,7 +176,7 @@ class Dijkstra extends Planner {
           continue;
         // check if cell is obstacle
         if (next_cell.is_obstacle()) {// is obstacle
-          step.set_cell_text(next_position.i, next_position.j, 'OBS');
+          step.set_cell_text(next_position, 'OBS');
           continue;
         }
         // if cell is available, we add the vertex if not encountered, or get the vertex if encountered
@@ -190,20 +191,20 @@ class Dijkstra extends Planner {
           step.draw_path(next_vertex.position, vertex.position, 'path_trace');
           
           // GUI
-          step.set_cell_text(next_position.i, next_position.j, next_vertex.cost.toFixed(1));
-          step.set_cell_class(next_position.i, next_position.j, 'cell_encountered');
+          step.set_cell_text(next_position, next_vertex.cost.toFixed(1));
+          step.set_cell_class(next_position, 'cell_encountered');
         }
       }
       if (path_found === true)
         break;
-      step.set_cell_class(vertex.i, vertex.j, 'cell_visited');
+      step.set_cell_class(vertex.position, 'cell_visited');
       prev_vertex = vertex;
     }
     if (path_found === false) {
       step = this.add_step();
       step.set_info_text('info', 'NO PATH FOUND!!');
     } else {
-      step.set_info_text('info', 'Complete!');
+      step.set_info_text('info', 'Complete! Goal cost is $'.concat(goal_cost.toFixed(3)));
     }
   }
 }
