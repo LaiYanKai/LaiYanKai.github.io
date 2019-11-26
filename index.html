@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="UTF-8"> 
+  <head>
+    <script src="scripts/plotly-latest.min.js"></script>
+    <!-- <link href='https://fonts.googleapis.com/css?family=Unica One' rel='stylesheet'> -->
+    <link href='css/unica_one.css' rel='stylesheet'>
+    <link rel="stylesheet" href="css/style.css"></link>
+    <title>Uniform Planners</title>
+  </head>
+  <body>
+    <form autocomplete="false" id="ui_form_build" onsubmit="return false;" style="display:none;" novalidate method="post">
+      <input type="submit" /></input>
+    </form>
+    <div class="nav">
+      <div class="nav_title">
+        Uniform Planners
+      </div>
+      <div class="nav_pane" id="ui_file">
+        <div class="nav_btn" id="ui_build">
+          <img src="img/build.svg"/>
+        </div>
+        <div class="nav_btn" id="ui_load">
+          <img src="img/load.svg"/>
+        </div>
+        <div class="nav_btn" id="ui_save">
+          <img src="img/save.svg"/>
+        </div>
+      </div>
+      <div class="nav_pane" id="ui_edit">       
+        <div class="nav_btn" id="ui_pen">
+          <img src="img/pen.svg"/>
+        </div>
+      </div>
+      <div class="nav_pane" id="ui_run">
+        <div class="nav_btn" id="ui_exit">
+          <img src="img/exit.svg"/>
+        </div>
+        <div class="nav_btn" id="ui_initial">
+          <img src="img/initial.svg"/>
+        </div>
+        <div class="nav_btn" id="ui_prev">
+          <img src="img/prev.svg"/>
+        </div>
+        <div class="nav_btn" id="ui_play">
+          <img src="img/play.svg" id="ui_play_img"/>
+        </div>
+        <div class="nav_btn" id="ui_next">
+          <img src="img/next.svg"/>
+        </div>
+        <div class="nav_btn" id="ui_final">
+          <img src="img/final.svg"/>
+        </div>
+      </div>
+      <div class="nav_pane" id="ui_options">
+        <div class="nav_btn nav_btn_long" id="ui_planners"></div>
+      </div>
+    </div>
+    <div class ="info_container">
+      <div class="info" id="ui_info">
+        <div class="info_title" id="ui_info_title"></div>
+        <div class="info_panes" id="ui_info_panes"></div>
+      </div>
+    </div>
+    <div class="sim_container">
+      <div class="sim">
+        <div class="ruler_h ruler_top" id="ui_ruler_top"></div>
+        <div class="ruler_v ruler_left" id="ui_ruler_left"></div>
+        <div class="map" id="ui_map">
+          <div class="cells" id="ui_cells"></div>
+          <div class="start" id="ui_start"></div>
+          <div class="goal" id="ui_goal"></div>
+        </div>
+        <div class="ruler_v ruler_right" id="ui_ruler_right"></div>
+        <div class="ruler_h ruler_bottom" id="ui_ruler_bottom"></div>
+      </div>
+    </div>
+    <div class="dialog" id="ui_dialog">
+      <div class="dialog_container">
+        <div class="dialog_title" id="ui_dialog_title"></div>
+        <div class="dialog_area" id="ui_dialog_area"></div>
+        <div class="dialog_confirmation">
+          <div class="nav_btn" id="ui_yes">
+            <img src="img/yes.svg"/>
+          </div>
+          <div class="nav_btn" id="ui_no">
+            <img src="img/no.svg"/>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="ui_dialog_templates">
+      <div key="planners" id="ui_dialog_planners">
+        <select name="algorithms" id="ui_algorithms">
+        </select>
+      </div>
+      <div key="build" id="ui_dialog_build">
+        <table>
+          <tbody>
+            <tr>
+              <td>Rows (x)</td>
+              <td><input class="nav_num" id="ui_build_i" value="20"></input></td>
+            </tr>
+            <tr>
+              <td>Columns (y)</td>
+              <td><input class="nav_num" id="ui_build_j" value="30"></input></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tooltip" id="ui_tooltip">
+      <div class="tooltip_area" id="ui_tooltip_area"></div>
+    </div>
+    <script src="scripts/interface.js"></script>
+  </body>
+</html>
