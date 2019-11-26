@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="UTF-8"> 
+  <head>
+    <base target="_top">
+    <script src="scripts/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="css/style.css"></link>
+    <title>Calibrator</title>
+  </head>
+  <body>
+    <!-- Intro -->
+    <table class="paneintro">
+      <tbody>
+        <tr>
+          <td class="title">Calibrator</td>
+        </tr>
+      </tbody>
+    <table>
+    <form autocomplete="false" onsubmit="readSingleFile(); return false;" novalidate  method="post">
+      <table class="pane paneparam">
+        <tbody>
+          <tr>
+            <th class="th1" colspan="2">Parameters</th>
+          </tr>
+          <tr class="tooltiptrigger">
+            <td style="text-align:left"  colspan="3">
+              <input class="btn" type="button" onclick="document.getElementById('fileinput').click()" value="Load..."></input>
+              <input style="display:none;" type="file" id="fileinput" onchange="readSingleFile()" multiple="false" accept=".rtf"></input>
+              <span id="fileinputname" style="padding-left:3px"><i>No file loaded</i></span>
+              <div class="tooltip">
+                <div class="tooltiptext"><b>Load an RTF file generated from the EV3 (Ctrl-O)</b>. The RTF file should contain samples from the sensor for a period of time, and the samples must more or less equally represent the colours where the calibrating points are to be specified by the program. For example, <u>at least one-third</u> of the samples should contain <u>black</u> values of the map, and <u>at least another one-third</u> should contain <u>white</u> values of the map. The RTF file should be populated with <u>one sample from each sensor within one iteration</u>, so if there are three sensors, the first, fourth, seventh etc. lines should be populated by the first sensor, and the second, fifth, eighth lines by the second sensor, etc.</div>
+              </div>
+            </td>
+          </tr>
+          <tr class="tooltiptrigger">
+            <td>Sensors</td>
+            <td class="val">
+              <input type="number" value="2" id="num_sensors" min="1" max="4" step="1"></input>
+              <div class="tooltip">
+                <div class="tooltiptext"><b>Number of sensors in the RTF file</b>, an integer between 1 and 4 inclusive.</div>
+              </div>
+            </td>
+          </tr>
+          <tr class="tooltiptrigger">
+            <td>Smoother</td>
+            <td class="val">
+              <input type="number" value="5" min="0.5" id="sd"></input>
+              <div class="tooltip">
+                <div class="tooltiptext"><b>The smoothing parameter of the data</b>, a number larger than 0.5 inclusive. This is the Gaussian standard-deviation used for moving-average smoothing. </div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2"><input class="btn" type="submit" style="width:100%" value="Calculate"></input></td>
+          </tr>
+        </tbody>
+      </table>
+    </form>
+    <div class="footnote">
+      2019 August 12, 17:30, Lai Yan Kai
+    </div>
+    <!-- Plots -->
+    <div class="sensorplots">
+      <table class="pane">
+        <tr class="plottitle">
+          <th class="th1" colspan="4">1<sup>st</sup> Sensor</th>
+        </tr>
+        <tr>
+          <td class="plot" colspan="4" id="plot0"></td>
+        </tr>
+        <tr class="s0" style="display: none">
+          <th class="thl" colspan="4"></th>
+        </tr>
+        <tr class="s0" style="display: none">
+          <th class="th2" colspan="4">Define Ranges for Max Values</th>
+        </tr>
+        <tr class="s0 tooltiptrigger" style="display: none">
+          <td colspan="4">
+            <div class="range_canvas" id="r0">
+              <div class="range_slide"></div>
+              <a class="range_handle" style="left:25%" id="h00"><span></span></a>
+              <a class="range_handle" style="left:52%" id="h01"><span></span></a>
+              <a class="range_handle" style="left:67%" id="h02"><span></span></a>
+            </div>
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Slide the handles to define ranges</b>. The corresponding sensor values are displayed above the handles. The sensors values that have the most occurences after smoothing, in each of the 4 ranges specified between the 3 handles, will be displayed below.</div>
+            </div>
+          </td>
+        </tr>
+        <tr class="s0" style="display: none">
+          <th class="th3">Range 1</th>
+          <th class="th3">Range 2</th>
+          <th class="th3">Range 3</th>
+          <th class="th3">Range 4</th>
+        </tr>
+        <tr class="s0 tooltiptrigger" style="display: none">
+          <td class="val" id="o00"></td>
+          <td class="val" id="o01"></td>
+          <td class="val" id="o02"></td>
+          <td class="val" id="o03"></td>
+          <td style="width:0">
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Maximum sensor values corresponding to each range between each handle</b>. This identifies the samples with the most occurences in each range after smoothing, so you are informed on which value to use for calibration.</div>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <table class="pane">
+        <tr class="plottitle">
+          <th class="th1" colspan="4">2<sup>nd</sup> Sensor</th>
+        </tr>
+        <tr>
+          <td class="plot" colspan="4" id="plot1"></td>
+        </tr>
+        <tr class="s1" style="display: none">
+          <th class="thl" colspan="4"></th>
+        </tr>
+        <tr class="s1" style="display: none">
+          <th class="th2" colspan="4">Define Ranges for Max Values</th>
+        </tr>
+        <tr class="s1 tooltiptrigger" style="display: none">
+          <td colspan="4">
+            <div class="range_canvas" id="r1">
+              <div class="range_slide"></div>
+              <a class="range_handle" style="left:25%" id="h10"><span></span></a>
+              <a class="range_handle" style="left:52%" id="h11"><span></span></a>
+              <a class="range_handle" style="left:67%" id="h12"><span></span></a>
+            </div>
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Slide the handles to define ranges</b>. The corresponding sensor values are displayed above the handles. The sensors values that have the most occurences after smoothing, in each of the 4 ranges specified between the 3 handles, will be displayed below.</div>
+            </div>
+          </td>
+        </tr>
+        <tr class="s1" style="display: none">
+          <th class="th3">Range 1</th>
+          <th class="th3">Range 2</th>
+          <th class="th3">Range 3</th>
+          <th class="th3">Range 4</th>
+        </tr>
+        <tr class="s1 tooltiptrigger" style="display: none">
+          <td class="val" id="o10"></td>
+          <td class="val" id="o11"></td>
+          <td class="val" id="o12"></td>
+          <td class="val" id="o13"></td>
+          <td style="width:0">
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Maximum sensor values corresponding to each range between each handle</b>. This identifies the samples with the most occurences in each range after smoothing, so you are informed on which value to use for calibration.</div>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <table class="pane">
+        <tr class="plottitle">
+          <th class="th1"  colspan="4">3<sup>rd</sup> Sensor</th>
+        </tr>
+        <tr>
+          <td class="plot" colspan="4" id="plot2"></td>
+        </tr>
+        <tr class="s2" style="display: none">
+          <th class="thl" colspan="4"></th>
+        </tr>
+        <tr class="s2" style="display: none">
+          <th class="th2" colspan="4">Define Ranges for Max Values</th>
+        </tr>
+        <tr class="s2 tooltiptrigger" style="display: none">
+          <td colspan="4">
+            <div class="range_canvas" id="r2">
+              <div class="range_slide"></div>
+              <a class="range_handle" style="left:25%" id="h20"><span></span></a>
+              <a class="range_handle" style="left:52%" id="h21"><span></span></a>
+              <a class="range_handle" style="left:67%" id="h22"><span></span></a>
+            </div>
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Slide the handles to define ranges</b>. The corresponding sensor values are displayed above the handles. The sensors values that have the most occurences after smoothing, in each of the 4 ranges specified between the 3 handles, will be displayed below.</div>
+            </div>
+          </td>
+        </tr>
+        <tr class="s2" style="display: none">
+          <th class="th3">Range 1</th>
+          <th class="th3">Range 2</th>
+          <th class="th3">Range 3</th>
+          <th class="th3">Range 4</th>
+        </tr>
+        <tr class="s2 tooltiptrigger" style="display: none">
+          <td class="val" id="o20"></td>
+          <td class="val" id="o21"></td>
+          <td class="val" id="o22"></td>
+          <td class="val" id="o23"></td>
+          <td style="width:0">
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Maximum sensor values corresponding to each range between each handle</b>. This identifies the samples with the most occurences in each range after smoothing, so you are informed on which value to use for calibration.</div>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <table class="pane">
+        <tr class="plottitle">
+          <th class="th1" colspan="4">4<sup>th</sup> Sensor</th>
+        </tr>
+        <tr>
+          <td class="plot" colspan="4" id="plot3"></td>
+        </tr>
+        <tr class="s3" style="display: none">
+          <th class="thl" colspan="4"></th>
+        </tr>
+        <tr class="s3" style="display: none">
+          <th class="th2" colspan="4">Define Ranges for Max Values</th>
+        </tr>
+        <tr class="s3 tooltiptrigger" style="display: none">
+          <td colspan="4">
+            <div class="range_canvas" id="r3">
+              <div class="range_slide"></div>
+              <a class="range_handle" style="left:25%" id="h30"><span></span></a>
+              <a class="range_handle" style="left:52%" id="h31"><span></span></a>
+              <a class="range_handle" style="left:67%" id="h32"><span></span></a>
+            </div>
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Slide the handles to define ranges</b>. The corresponding sensor values are displayed above the handles. The sensors values that have the most occurences after smoothing, in each of the 4 ranges specified between the 3 handles, will be displayed below.</div>
+            </div>
+          </td>
+        </tr>
+        <tr class="s3" style="display: none">
+          <th class="th3">Range 1</th>
+          <th class="th3">Range 2</th>
+          <th class="th3">Range 3</th>
+          <th class="th3">Range 4</th>
+        </tr>
+        <tr class="s3 tooltiptrigger" style="display: none">
+          <td class="val" id="o30"></td>
+          <td class="val" id="o31"></td>
+          <td class="val" id="o32"></td>
+          <td class="val" id="o33"></td>
+          <td style="width:0">
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Maximum sensor values corresponding to each range between each handle</b>. This identifies the samples with the most occurences in each range after smoothing, so you are informed on which value to use for calibration.</div>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <script src="scripts/Calibrator.js"></script>
+  </body>
+</html>

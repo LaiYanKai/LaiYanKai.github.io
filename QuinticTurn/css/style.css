@@ -1,0 +1,319 @@
+* {
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  transition-duration: 0.05s;
+}
+body {
+  width: 1415px;
+  height: 875px;
+  background: #fff9fc; 
+}
+table {
+  border: 1px solid rgb(200, 200, 220);
+  text-align: center;
+  padding: 3px;
+  border-radius: 10px;
+  background-color: white;
+  margin: 0;
+}
+table *{
+  border-radius: 6px;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+input {
+  border: 1px solid rgb(200, 200, 220);
+  background-color: white;
+  padding: 3px;
+}
+input:hover {
+  border: 1px solid rgb(180, 180, 200);
+  background-color: rgb(250, 250, 255);
+}
+input:focus {
+  border: 1px solid rgb(140, 140, 230);
+  background-color: rgb(245, 245, 255);
+}
+input:active {
+	transform: scale(0.95,0.95);
+}
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+  width: 110px;
+}
+th {
+  padding: 6px;
+}
+sup, sub {
+  vertical-align: baseline;
+  position: relative;
+  top: -0.4em;
+  font-size: 8pt;
+}
+sub { 
+  top: 0.4em; 
+}
+.th1 {
+  background: #FF416C;  /* fallback for old browsers */
+  background: linear-gradient(to bottom, #FF4B2B, #FF416C); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+  height: 20px;
+  color: white;
+}
+.th2 {
+  background-color: rgb(240, 240, 240);
+}
+.th3 {
+  background-color: rgb(240, 240, 240);
+  padding: 1px;
+}
+.sym {
+  font-family: "Times New Roman";
+  font-size: 12pt;
+  font-weight: bold;
+  width: 38px;
+  text-align: center;
+}
+.sym sub, .sym sup {
+  font-family: "Times New Roman";
+}
+.unit {
+  text-align: center;
+}
+.val {
+  text-align: left;
+}
+.val_coeff {
+  text-align: right;
+}
+.val_operand {
+  text-align: left;
+  font-size: 14pt;
+}
+.plot {
+  width : 260px;
+}
+.thl {
+  height : 1px;
+  padding : 0;
+  background-color : rgb(220, 220, 220);
+}
+.btn {
+	box-shadow:inset 0px 1px 0px 0px #cf866c;
+	background:linear-gradient(to bottom, #d0451b 5%, #bc3315 100%);
+	background-color:#d0451b;
+	border-radius:4px;
+	border:1px solid #942911;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:13px;
+	padding:5px 24px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #854629;
+}
+.btn:hover{
+	background:linear-gradient(to bottom, #bc3315 5%, #d0451b 100%);
+  border:1px solid #942911;
+	background-color:#bc3315;
+}
+.btn2 {
+	box-shadow:inset 0px 1px 0px 0px #f3f3ff;
+	background:linear-gradient(to bottom, #fcfcfc 5%, #dcdcdc 100%);
+	background-color:#fcfcfc;
+	border-radius:4px;
+	border:1px solid #c3c3c3;
+	display:inline-block;
+	cursor:pointer;
+	color:#33333;
+	font-family:Arial;
+	font-size:13px;
+	padding:5px 24px;
+	text-decoration:none;
+  font-weight: normal;
+}
+.btn2:hover{
+	background:linear-gradient(to bottom, #ececef 5%, #dcdcdc 100%);
+  border:1px solid #b3b3b3;
+	background-color:#ececef;
+}
+.btn2:active{
+	background:linear-gradient(to bottom, #dcdcdc 5%, #fcfcfc 100%);
+  border:1px solid #b3b3b3;
+	background-color:#dcdcdc;
+}
+.rtfbtn {
+  display: none; 
+  padding: 5px 3px;
+  width: 68px;
+}
+.radiusbtn {
+  padding: 5px 3px;
+  width: 116px;
+}
+.title {
+  font-size: 45px;
+  font-family: Georgia, serif;
+  color: #332029;
+}
+.pane {
+  box-shadow: 0 0 3px 0px #efc9d7;
+}
+.paneintro {
+  position: absolute;
+  top: 10px;
+  left: 265px;
+  width: 300px;
+  height: 140px;
+  background: none;
+  border: none;
+}
+.paneparam {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 250px;
+  z-index: 9;
+}
+.panecalcparam {
+  position: absolute;
+  top: 155px;
+  left: 265px;
+  width: 300px;
+  height: 380px;
+  border-spacing: 2px;
+}
+.panecalcparam .val {
+  background-color: white;
+}
+.panecalcparam tr:hover .val{
+  background-color: rgb(245, 245, 255);
+}
+.panecalcparam tr:hover .sym, .panecalcparam tr:hover .unit{
+  background-color: rgb(230, 230, 240);
+}
+.paneplotxy {
+  position: absolute;
+  /* top: 360px; */
+  /* left: 570px; */
+  top: 10px;
+  left: 570px;
+  width: 280px;
+  height: 345px;
+}
+.paneploto {
+  position: absolute;
+  top: 10px;
+  left: 1140px;
+  width: 280px;
+  height: 345px;
+}
+
+.paneplots {
+  position: absolute;
+  top: 360px;
+  left: 570px;
+  width: 280px;
+  height: 345px;
+}
+.paneplotv{
+  position: absolute;
+  top: 10px;
+  left: 855px;
+  width: 280px;
+  height: 345px;
+}
+.paneplota{
+  position: absolute;
+  top: 360px;
+  left: 855px;
+  width: 280px;
+  height: 345px;
+}
+.paneplotr{
+  position: absolute;
+  top: 360px;
+  left: 1140px;
+  width: 280px;
+  height: 345px;
+}
+.panecoeffleft{
+  position: absolute;
+  top: 540px;
+  left: 10px;
+  width: 275px;
+  height: 345px;
+}
+.panecoeffright{
+  position: absolute;
+  top: 540px;
+  left: 290px;
+  width: 275px;
+  height: 340px;
+}
+.footnote{
+  position:absolute;
+  top: 860px;
+  left: 1230px;
+  margin: 5px;
+  font-family: Georgia, serif;
+  color: #ddddcc;
+}
+.tooltiptext::after {
+  content: " ";
+  position: absolute;
+  top: 0%; /* At the bottom of the tooltip */
+  left: 0%;
+  margin-left: -9px;
+  margin-top: 8px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent black transparent transparent;
+  z-index: 99;
+}
+.tooltiptrigger .tooltip{
+  position: relative;
+}
+.tooltiptext{
+  visibility: hidden;
+  opacity: 0;
+  width: 300px;
+  background-color: black;
+  color: #fff;
+  text-align: left;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-weight: normal;
+  position: absolute;
+  top: calc(0% - 20px);
+  left: 100%;
+  z-index: 99;
+  transition: opacity 0.2s;
+}
+.tooltiptext2 {
+  top: calc(0% - 22px);
+  left: calc(100% + 75px);
+}
+.tooltiptext3 {
+  left: calc(100% + 250px);
+}
+.tooltiptrigger:hover .tooltiptext{
+  visibility: visible;
+  opacity: 1;
+}
+
+.badinput {
+  /*box-shadow: 0px 0px 0px 1px rgba(255, 0, 0, 1);*/
+  border: 1px solid rgb(255, 100, 100);
+  background-color: rgb(255, 245, 245);
+}
+.badinput:hover, .badinput:focus {
+  border: 1px solid rgb(255, 50, 50);
+  background-color: rgb(255, 230, 230);
+}

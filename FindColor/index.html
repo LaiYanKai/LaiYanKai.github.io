@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="UTF-8"> 
+  <head>
+    <script src="scripts/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="css/style.css"></link>
+    <script src="lib/codemirror.js"></script>
+    <script src="lib/javascript.js"></script>
+    <link rel="stylesheet" href="lib/codemirror.css">
+    <title>FindColor</title>
+  </head>
+  <body>
+    <div class="inputs">
+      <!-- Intro -->
+      <table class="paneintro">
+        <tbody>
+          <tr>
+            <td class="title">FindColor</td>
+          </tr>
+        </tbody>
+      <table>
+      <form autocomplete="false" onsubmit="findColor(); return false;" novalidate  method="post">
+        <table class="pane paneparam">
+          <tbody>
+            <tr class="paneparamrow">
+              <td style="text-align:left" class="tooltiptrigger">
+                <input class="btn" type="button" onclick="document.getElementById('load_rtf').click()" value="Load..."></input>
+                <input style="display:none;" type="file" id="load_rtf" onchange="loadRTF()" accept=".rtf" multiple="false"></input>
+                <span id="load_rtf_name" style="padding-left:3px"><i>No file loaded</i></span>
+                <div class="tooltip">
+                  <div class="tooltiptext"><b>Load the RTF file from EV3 (Ctrl-O)</b>. Use <strong>RTF2NumArrays()</strong> to parse the file into arrays. RTF2NumArrays() return the length of the shortest array. Write the plot information into <strong>plot_info</strong>. plot_info[1] saves to the first plot, up to plot_info[4], which corresponds to the fourth plot.</div>
+                </div>
+              </td>
+              <td style="width: 23px" class="tooltiptrigger">
+                <a class="btn2" onclick="document.getElementById('load_js').click()">
+                  <img src="img/load.svg" alt="Load Javascript" height="20" width="20"/>
+                  <input style="display:none;" type="file" id="load_js" onchange="loadJS()" accept="application/javascript" multiple="false"></input>
+                </a>
+                <div class="tooltip">
+                  <div class="tooltiptext"><b>Load a Javascript file (Ctrl-Shift-O)</b>.</div>
+                </div>
+                <a style="display:none;" id="txt_js"></a>
+              </td>
+              <td style="width: 23px" class="tooltiptrigger">
+                <a class="btn2" onclick="saveJS()">
+                  <img src="img/save.svg" alt="Save Javascript" height="20" width="20"/>
+                </a>
+                <div class="tooltip">
+                  <div class="tooltiptext"><b>Save the Javascript (Ctrl-S)</b>.</div>
+                </div>
+                <a style="display:none;" id="txt_js"></a>
+              </td>
+              <td style="width: 40px" class="tooltiptrigger">
+                <input class="btn" style="width:100%" type="submit" value="Run"></input>
+                <div class="tooltip">
+                  <div class="tooltiptext"><b>Run the Javascript (Ctrl-R)</b>. Load the RTF file first.</div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th class="thl" colspan="4"></th>
+            </tr>
+            <tr class="paneparamcode">
+              <td colspan="4">
+                <div id="code"></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>      
+      <div class="footnote">
+        2019 August 12, 17:30, Lai Yan Kai
+      </div>
+    </div>
+    <div class="plots">
+      <table class="pane paneplot plot1">
+        <tr class="plottitle">
+          <th class="th1" id="plottitle1">Plot 1</th>
+        </tr>
+        <tr>
+          <td class="plot" id="plot1"></td>
+        </tr>
+      </table>
+      <table class="pane paneplot plot2">
+        <tr class="plottitle">
+          <th class="th1" id="plottitle2">Plot 2</th>
+        </tr>
+        <tr>
+          <td class="plot" id="plot2"></td>
+        </tr>
+      </table>
+      <table class="pane paneplot plot3">
+        <tr class="plottitle">
+          <th class="th1" id="plottitle3">Plot 3</th>
+        </tr>
+        <tr>
+          <td class="plot" id="plot3"></td>
+        </tr>
+      </table>
+      <table class="pane paneplot plot4">
+        <tr class="plottitle">
+          <th class="th1" id="plottitle4">Plot 4</th>
+        </tr>
+        <tr>
+          <td class="plot" id="plot4"></td>
+        </tr>
+      </table>
+    </div>
+    <script src="scripts/FindColor.js"></script>
+    
+  </body>
+</html>

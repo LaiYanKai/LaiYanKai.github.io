@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="UTF-8"> 
+  <head>
+    <base target="_top">
+    <script src="scripts/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="css/style.css"></link>
+    <title>Quintic Turn</title>
+  </head>
+  <body>
+    <script src="scripts/quinticTurn.js"></script>
+    <!-- Intro -->
+    <table class="paneintro">
+      <tbody>
+        <tr>
+          <td class="title">2-Wheel Diff.</br>Quintic Turn</td>
+        </tr>
+      </tbody>
+    <table>
+    <!-- Parameter Table -->
+    <form autocomplete="false" onsubmit="quinticTurn(); return false;" novalidate method="post">
+      <table class="pane paneparam">
+        <tbody>
+          <tr>
+            <th class="th1" colspan="3">Parameters</th>
+          </tr>
+          <tr class="tooltiptrigger">
+            <td style="text-align:left"  colspan="3">
+              <input class="btn" type="button" onclick="document.getElementById('fileinput').click()" value="Load..."></input>
+              <input style="display:none;" type="file" id="fileinput" onchange="readSingleFile(this)"></input>
+              <span id="fileinputname" style="padding-left:3px"><i>No file loaded</i></span>
+              <div class="tooltip">
+                <div class="tooltiptext"><b>Load a Param TXT file</b> generated from a previous calculation</div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <th class="thl" colspan="3"></th>
+          </tr>
+          <tr class="tooltiptrigger">
+            <td  colspan="3">
+              <input type="radio" name="calc_type" id="ct_full" onchange="calcTypeInterface()" checked />
+              <label for="calc_type_custom">Full</label>
+              <input type="radio" name="calc_type" id="ct_turn" onchange="calcTypeInterface()"/>
+              <label for="calc_type_turn">Constant Radius</label>
+              <div class="tooltip">
+                <div class="tooltiptext">Calculate based on a <b><u>varying radius (Full)</u></b> or <b><u>Constant Radius</u></b> throughout the turn</div>
+              </div>
+            </td>
+          </tr>
+          <tr id="ct_turns_divider" style="display:none">
+            <th class="thl" colspan="3"></th>
+          </tr>
+          <tr class="tooltiptrigger" id="ct_turns" style="display:none">
+            <td colspan="3">
+              <input class="btn2 radiusbtn" type="button" id="ct_pivot" onclick="calcTypeInterface(this)" value="Pivot Radius"/>
+              <input class="btn2 radiusbtn" type="button" id="ct_spin" onclick="calcTypeInterface(this)" value="Spin Radius"/>
+              <div class="tooltip">
+                <div class="tooltiptext"><b>Set r to a commonly used radius</b>. Select <u>Spin Radius</u> to set radius to zero, or <u>Pivot Radius</u> to set radius to half of L</div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <th class="th2">Sym</th>
+            <th class="th2">Values</th>
+            <th class="th2">Unit</th>
+          </tr>
+          <tr class="tooltiptrigger">
+            <td class="sym">&Delta;&theta;</td>
+            <td class="val">
+              <input type="number" id="of" step="1" value="90" oninput="validateFormatOnInput(this)" required />
+            </td>
+            <td class="unit">deg
+              <div class="tooltip">
+                <div class="tooltiptext"><b>Turn angle (deg)</b>. +ve to turn left, -ve to turn right</div>
+              </div>
+            </td> 
+          </tr>
+          <tr class="tooltiptrigger">
+            <td class="sym">&Delta;t</td>
+            <td class="val">
+              <input type="number" id="Dt" min="0.05" step="0.05" value="0.9" oninput="validateFormatOnInput(this)" required />
+            </td>
+            <td class="unit">s
+              <div class="tooltip">
+                <div class="tooltiptext"><b>Duration of turn (s)</b>. Preferably in multiples of sampling interval</div>
+              </div>
+            </td>
+          </tr>
+          <tr class="tooltiptrigger">
+            <td class="sym" id="hsf_sym">H<sub>f</sub></td>
+            <td class="val">
+              <input type="number" id="hsf" step="0.5" value="945" oninput="validateFormatOnInput(this)" required />
+              <div class="tooltip">
+                <div class="tooltiptext tooltiptext2" id="hsf_tooltip"><b>Final degrees of "faster motor" (deg)</b>, can be -ve. If degrees to turn is -ve, this belongs to the left motor. If +ve, then it is the right motor's</div>
+                <div class="tooltiptext tooltiptext2" id="r_tooltip" style="display:none;"><b>Expected constant radius</b>. +ve for the turn pivot to be on the left, and -ve for right. Radius may not be constant if the velocities are not assigned properly</div>
+              </div>
+            </td>
+            <td class="unit" id="hsf_unit">deg</td>
+          </tr>
+          <tr>
+            <td class="sym tooltiptrigger">L&#x0307;<sub>i</sub>
+              <div class="tooltip">
+                <div class="tooltiptext" style="left: calc(100% + 198px)"><b><u>Left</u> motor's <u>initial</u> velocity</b>, in terms of EV3 medium motor (MM) or EV3 large motor (LM) power. Make sure the magnitude does not exceed the tapering point, which depends on the motor load. In general, the tapering point is 80 for LM, and 70 for MM.</div>
+              </div>
+            </td>
+            <td class="val tooltiptrigger">
+              <input type="number" id="qvi" step="1" value="70" oninput="validateFormatOnInput(this)" required />
+              <div class="tooltip">
+                <div class="tooltiptext tooltiptext2"><b><u>Left</u> motor's <u>initial</u> velocity</b>, in terms of EV3 medium motor (MM) or EV3 large motor (LM) power. Make sure the magnitude does not exceed the tapering point, which depends on the motor load. In general, the tapering point is 80 for LM, and 70 for MM.</div>
+              </div>
+            </td>
+            <td class="unit tooltiptrigger" style = "border: 2px solid rgb(200, 200, 200); padding:5px" rowspan="4">
+              <input type="radio" style="margin:0px" name="powerunit" id="powerunit15" checked />
+              <label for="powerunit15">MM: <br/><span style="font-size: 10px">15.6&middot;deg&middot;s<sup>-1</sup></span></label><br /><br />
+              <input type="radio" style="margin:0px" name="powerunit" id="powerunit10" />
+              <label for="powerunit10">LM: <br/><span style="font-size: 10px">10.5&middot;deg&middot;s<sup>-1</sup></span></label>
+              <div class="tooltip">
+                <div class="tooltiptext" style="left: calc(100% + 10px); top:-90px;"><b>Unit of 1 LEGO Power</b>. LEGO power is a measurement of speed, pegged to the EV3 medium motor's (MM) or EV3 large motor's (LM) maximum rated angular speed. 1 EV3 MM Power = 15.6 deg/s, 1 EV3 LM Power = 10.6 deg/s.</div>
+              </div>
+            </td>
+          </tr>
+          <tr class="tooltiptrigger">
+            <td class="sym">R&#x0307;<sub>i</sub></td>
+            <td class="val">
+              <input type="number" id="pvi" step="1" value="70" oninput="validateFormatOnInput(this)" required />
+              <div class="tooltip">
+                <div class="tooltiptext tooltiptext2"><b><u>Right</u> motor's <u>initial</u> velocity</b>, in terms of MM or LM power</div>
+              </div>
+            </td>        
+          </tr>
+          <tr class="tooltiptrigger">
+            <td class="sym">L&#x0307;<sub>f</sub></td>
+            <td class="val">
+              <input type="number" id="qvf" step="1" value="70" oninput="validateFormatOnInput(this)" required />
+              <div class="tooltip">
+                <div class="tooltiptext tooltiptext2"><b><u>Left</u> motor's <u>final</u> velocity</b>, in terms MM or LM power</div>
+              </div>
+            </td>
+          </tr>
+          <tr class="tooltiptrigger">
+            <td class="sym">R&#x0307;<sub>f</sub></td>
+            <td class="val">
+              <input type="number" id="pvf" step="1" value="70" oninput="validateFormatOnInput(this)" required />
+              <div class="tooltip">
+                <div class="tooltiptext tooltiptext2"><b><u>Right</u> motor's <u>final</u> velocity</b>, in terms MM or LM power</div>
+              </div>
+            </td>
+          </tr>
+          <tr class="tooltiptrigger">
+            <td class="sym">W</td>
+            <td class="val">
+              <input type="number" id="W" step="1" value="64" oninput="validateFormatOnInput(this)" required />
+            </td> <!--92-->
+            <td class="unit">mm
+              <div class="tooltip">
+                <div class="tooltiptext"><b>Motorised wheels diameter (mm)</b>. Assumes both left and right wheels are identical. May be smaller than what you measure.</div>
+              </div>
+            </td>
+          </tr> 
+          <tr class="tooltiptrigger">
+            <td class="sym">L</td>
+            <td class="val">
+              <input type="number" id="L" step="1" value="167" oninput="validateFormatOnInput(this)" onchange="calcHsfRadius()" required />
+            </td> <!--160-->
+            <td class="unit">mm
+              <div class="tooltip">
+                <div class="tooltiptext"><b>Axle track (mm)</b>. Separation between centre of both motorised wheels. May not be centre depending on structure of robot or wheel thickness</div>
+              </div>
+            </td>
+          </tr>
+          <tr class="tooltiptrigger">
+              <td class="sym">T</td>
+              <td class="val">
+                <input type="number" id="dt" min="0.01" max="0.2" step="0.005" value="0.05" oninput="validateFormatOnInput(this)" required />
+              </td>
+              <td class="unit">s
+                <div class="tooltip">
+                  <div class="tooltiptext"><b>Sampling Interval (s)</b>. Preferably at 0.05s. The EV3 processor can respond well enough if the loop iteration interval is at 0.05s</div>
+                </div>
+              </td>
+          </tr>
+          <tr class="tooltiptrigger">
+            <td style = "border: 2px solid rgb(200, 200, 200); padding: 3px;" colspan="3">
+              <center>
+                <input type="checkbox" name="q_invert" id="q_invert" checked />
+                <label for="q_invert">Invert Left</label>
+                <input type="checkbox" name="p_invert" id="p_invert" />
+                <label for="p_invert">Invert Right</label>
+              </center>
+              <div class="tooltip">
+                <div class="tooltiptext"><b>Motor inversion, affects only RTF output</b>. If a motor is inverted, whatever velocity values displayed here will be multiplied by -1 in the RTF file. Useful if MM are used for locomotion</div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <th colspan="3" class="thl"></th>
+          </tr>
+          <tr>
+            <td colspan="3" ><input class="btn" type="submit" style="width:100%" value="Calculate"></input></td>
+          </tr>
+          <tr class="tooltiptrigger">
+            <td colspan="3">
+              <a class="btn2 rtfbtn" id="txt_rtf">RTF</a>
+              <a class="btn2 rtfbtn" id="txt_param">Param</a>
+              <div class="tooltip">
+                <div class="tooltiptext"><b>RTF files and Param TXT file</b>. <u>RTF</u> for velocity output for left and right motors. Odd lines are left, even lines are right. The first line belongs to the left motor. <u>Param</u> contains the RTF file names and all parameters used in the calculation, so you may reload them to view or adjust the parameters at another time</div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </form>
+    <table class="pane panecalcparam">
+      <tbody>
+        <tr>
+          <th class="th1" colspan="5">Calculated Parameters</th>
+        </tr>
+        <tr>
+          <th class="th2">Sym</th>
+          <th class="th2">Min</th>
+          <th class="th2">Max</th>
+          <th class="th2">Final</th>
+          <th class="th2">Unit</th>
+        </tr>
+        <tr class="tooltiptrigger">
+          <th class="th3 sym">L</th>
+          <td class="val" id="qs_min">N/A</td>
+          <td class="val" id="qs_max">N/A</td>
+          <td class="val" id="qs_f">N/A</td>
+          <td class="th3 unit">deg
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Left motor's degrees</b></div>
+            </div>
+          </td>
+        </tr>
+        <tr class="tooltiptrigger">
+          <th class="th3 sym">R</th>
+          <td class="val" id="ps_min">N/A</td>
+          <td class="val" id="ps_max">N/A</td>
+          <td class="val" id="ps_f">N/A</td>
+          <td class="th3 unit">deg
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Right motor's degrees</b></div>
+            </div>
+          </td>
+        </tr>
+        <tr class="tooltiptrigger">
+          <th class="th3 sym">L&#x0307;
+            <div class="tooltip">
+              <div class="tooltiptext tooltiptext3"><b>Left motor's power</b>. Make sure that the magnitude does not exceed 70 (MM) or 80 (LM) or some other power depending on your motor load</div>
+            </div>
+          </th>
+          <td class="val" id="qv_min">N/A</td>
+          <td class="val" id="qv_max">N/A</td>
+          <td class="val" id="qv_f">N/A</td>
+          <td class="th3 unit uvel" style="font-size:10px">N/A</td>
+        </tr>
+        <tr class="tooltiptrigger">
+          <th class="th3 sym">R&#x0307;
+            <div class="tooltip">
+              <div class="tooltiptext tooltiptext3"><b>Right motor's power</b>. Make sure that the magnitude does not exceed 70 (MM) or 80 (LM) or some other power depending on your motor load</div>
+            </div>
+          </th>
+          <td class="val" id="pv_min">N/A</td>
+          <td class="val" id="pv_max">N/A</td>
+          <td class="val" id="pv_f">N/A</td>
+          <td class="th3 unit uvel" style="font-size:10px">N/A</td>
+        </tr>
+        <tr class="tooltiptrigger">
+          <th class="th3 sym">L&#x0308;
+            <div class="tooltip">
+              <div class="tooltiptext tooltiptext3"><b>Left motor's acceleration (power&middot;s<sup>-1</sup>)</b>. This is proportional to <u>force</u>, and hence a high magnitude can result in skidding</div>
+            </div>
+          </th>
+          <td class="val" id="qa_min">N/A</td>
+          <td class="val" id="qa_max">N/A</td>
+          <td class="val" id="qa_f">N/A</td>
+          <td class="th3 unit uacc" style="font-size:10px">N/A</td>
+        </tr>
+        <tr class="tooltiptrigger">
+          <th class="th3 sym">R&#x0308;
+            <div class="tooltip">
+              <div class="tooltiptext tooltiptext3"><b>Right motor's acceleration (power&middot;s<sup>-1</sup>)</b>. This is proportional to <u>force</u>, and hence a high magnitude can result in skidding</div>
+            </div>
+          </th>
+          <td class="val" id="pa_min">N/A</td>
+          <td class="val" id="pa_max">N/A</td>
+          <td class="val" id="pa_f">N/A</td>
+          <td class="th3 unit uacc" style="font-size:10px">N/A</td>
+        </tr>
+        <tr class="tooltiptrigger">
+          <th class="th3 sym">L&#x030A;
+            <div class="tooltip">
+              <div class="tooltiptext tooltiptext3"><b>Left motor's acceleration derivative (power&middot;s<sup>-2</sup>)</b>. This is proportional to <u>jerk</u>, the derivative of force, and hence a high magnitude can result in skidding</div>
+            </div>
+          </th>
+          <td class="val" id="qd_min">N/A</td>
+          <td class="val" id="qd_max">N/A</td>
+          <td class="val" id="qd_f">N/A</td>
+          <td class="th3 unit uacd" style="font-size:10px">N/A</td>
+        </tr>
+        <tr class="tooltiptrigger">
+          <th class="th3 sym">R&#x030A;
+            <div class="tooltip">
+              <div class="tooltiptext tooltiptext3"><b>Right motor's acceleration derivative (power&middot;s<sup>-2</sup>)</b>. This is proportional to <u>jerk</u>, the derivative of force, and hence a high magnitude can result in skidding</div>
+            </div>
+          </th>
+          <td class="val" id="pd_min">N/A</td>
+          <td class="val" id="pd_max">N/A</td>
+          <td class="val" id="pd_f">N/A</td>
+          <td class="th3 unit uacd" style="font-size:10px">N/A</td>
+        </tr>
+        <tr class="tooltiptrigger">
+          <th class="th3 sym">x</th>
+          <td class="val" id="x_min">N/A</td>
+          <td class="val" id="x_max">N/A</td>
+          <td class="val" id="x_f">N/A</td>
+          <td class="th3 unit">mm
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Displacement in the initial forward direction (mm)</b></div>
+            </div>
+          </td>
+        </tr>
+        <tr class="tooltiptrigger">
+          <th class="th3 sym">y</th>
+          <td class="val" id="y_min">N/A</td>
+          <td class="val" id="y_max">N/A</td>
+          <td class="val" id="y_f">N/A</td>
+          <td class="th3 unit">mm
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Displacement in the initial left direction (mm)</b></div>
+            <div class="tooltip">
+          </td>
+        </tr>
+        <tr class="tooltiptrigger">
+          <th class="th3 sym">&theta;</th>
+          <td class="val" id="o_min">N/A</td>
+          <td class="val" id="o_max">N/A</td>
+          <td class="val" id="o_f">N/A</td>
+          <td class="th3 unit">deg
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Turn angle (deg)</b></div>
+            </div>
+          </td>
+        </tr>
+        <tr class="tooltiptrigger">
+          <th class="th3 sym">r</th>
+          <td class="val" id="r_min">N/A</td>
+          <td class="val" id="r_max">N/A</td>
+          <td class="val" id="r_f">N/A</td>
+          <td class="th3 unit">mm
+            <div class="tooltip">
+              <div class="tooltiptext"><b>Turn radius (mm)</b></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <!-- Plots -->
+    <table class="pane paneplotxy">
+      <tr class="plottitle"><th class="th1">Trajectory</th></tr>
+      <tr><td class="plot" id="plot_xy"></td></tr>
+    </table>
+    <table class="pane paneploto">
+      <tr class="plottitle"><th class="th1">Robot Orientation</th></tr>
+      <tr><td class="plot" id="plot_o"></td></tr>
+    </table>
+    <table class="pane paneplots">
+      <tr class="plottitle"><th class="th1">Motor Angle</th></tr>
+      <tr><td class="plot" id="plot_s"></td></tr>
+    </table>
+    <table class="pane paneplotv">
+      <tr class="plottitle"><th class="th1">Motor Angular Velocity</th></tr>
+      <tr><td class="plot" id="plot_v"></td></tr>
+    </table>
+    <table class="pane paneplota">
+      <tr class="plottitle"><th class="th1">Motor Angular Acceleration</th></tr>
+      <tr><td class="plot" id="plot_a"></td></tr>
+    </table>
+    <table class="pane paneplotr">
+      <tr class="plottitle"><th class="th1">Turn Radius</th></tr>
+      <tr><td class="plot" id="plot_r"></td></tr>
+    </table>
+    <!-- Equation Table -->
+    <table class="pane panecoeffleft">
+      <tbody>
+        <tr>
+          <th colspan="5" class="th1">Numeric Equation (Left)</th>
+        </tr>
+        <tr>
+          <th class="th2">Sym</th>
+          <th class="th2" colspan="3">Values</th>
+          <th class="th2">Unit</th>
+        </tr>
+        <tr>
+          <td class="th2 sym" rowspan="4">L</td>
+          <td class="sym val_operator" id="q1o"></td>
+          <td class="val_coeff" id="q1">0</td>
+          <td class="sym val_operand">t</td>
+          <td class="th2 unit" rowspan="4">deg</td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="q3o">+</td>
+          <td class="val_coeff" id="q3">0</td>
+          <td class="sym val_operand">t<sup>3</sup></td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="q4o">+</td>
+          <td class="val_coeff" id="q4">0</td>
+          <td class="sym val_operand">t<sup>4</sup></td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="q5o">+</td>
+          <td class="val_coeff" id="q5">0</td>
+          <td class="sym val_operand">t<sup>5</sup></td>
+        </tr>
+        <tr>
+          <td class="th2 sym" rowspan="4">L&#x0307;</td>
+          <td class="sym val_operator" id="qv0o"></td>
+          <td class="val_coeff" id="qv0">0</td>
+          <td class="val_operand"></td>
+          <td class="th2 unit uvel" rowspan="4">N/A</td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="qv2o">+</td>
+          <td class="val_coeff" id="qv2">0</td>
+          <td class="sym val_operand">t<sup>2</sup></td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="qv3o">+</td>
+          <td class="val_coeff" id="qv3">0</td>
+          <td class="sym val_operand">t<sup>3</sup></td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="qv4o">+</td>
+          <td class="val_coeff" id="qv4">0</td>
+          <td class="sym val_operand">t<sup>4</sup></td>
+        </tr>
+        <tr>
+          <td class="th2 sym" rowspan="3">L&#x0308;</td>
+          <td class="sym val_operator" id="qa1o"></td>
+          <td class="val_coeff" id="qa1">0</td>
+          <td class="sym val_operand">t</td>
+          <td class="th2 unit uacc" rowspan="3">N/A</td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="qa2o">+</td>
+          <td class="val_coeff" id="qa2">0</td>
+          <td class="sym val_operand">t<sup>2</sup></td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="qa3o">+</td>
+          <td class="val_coeff" id="qa3">0</td>
+          <td class="sym val_operand">t<sup>3</sup></td>
+        </tr>
+      </tbody>
+    </table>
+    <table class="pane panecoeffright">
+      <tbody>
+        <tr>
+          <th colspan="5" class="th1">Numeric Equation (Right)</th>
+        </tr>
+        <tr>
+          <th class="th2">Sym</th>
+          <th class="th2" colspan="3">Values</th>
+          <th class="th2">Unit</th>
+        </tr>
+        <tr>
+          <td class="th2 sym" rowspan="4">R</td>
+          <td class="sym val_operator" id="p1o"></td>
+          <td class="val_coeff" id="p1">0</td>
+          <td class="sym val_operand">t</td>
+          <td class="th2 unit" rowspan="4">deg</td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="p3o">+</td>
+          <td class="val_coeff" id="p3">0</td>
+          <td class="sym val_operand">t<sup>3</sup></td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="p4o">+</td>
+          <td class="val_coeff" id="p4">0</td>
+          <td class="sym val_operand">t<sup>4</sup></td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="p5o">+</td>
+          <td class="val_coeff" id="p5">0</td>
+          <td class="sym val_operand">t<sup>5</sup></td>
+        </tr>
+        <tr>
+          <td class="th2 sym" rowspan="4">R&#x0307;</td>
+          <td class="sym val_operator" id="pv0o"></td>
+          <td class="val_coeff" id="pv0">0</td>
+          <td class="val_operand"></td>
+          <td class="th2 unit uvel" rowspan="4">N/A</td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="pv2o">+</td>
+          <td class="val_coeff" id="pv2">0</td>
+          <td class="sym val_operand">t<sup>2</sup></td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="pv3o">+</td>
+          <td class="val_coeff" id="pv3">0</td>
+          <td class="sym val_operand">t<sup>3</sup></td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="pv4o">+</td>
+          <td class="val_coeff" id="pv4">0</td>
+          <td class="sym val_operand">t<sup>4</sup></td>
+        </tr>      
+        <tr>
+          <td class="th2 sym" rowspan="3">R&#x0308;</td>
+          <td class="sym val_operator" id="pa1o"></td>
+          <td class="val_coeff" id="pa1">0</td>
+          <td class="sym val_operand">t</td>
+          <td class="th2 unit uacc" rowspan="3">N/A</td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="pa2o">+</td>
+          <td class="val_coeff" id="pa2">0</td>
+          <td class="sym val_operand">t<sup>2</sup></td>
+        </tr>
+        <tr>
+          <td class="sym val_operator" id="pa3o">+</td>
+          <td class="val_coeff" id="pa3">0</td>
+          <td class="sym val_operand">t<sup>3</sup></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="footnote">
+    2019 July 30, 20:26, Lai Yan Kai
+    </div>
+    <script>
+      // prevent page-refresh auto-complete problems
+      // document.getElementById("ct_full").checked = true;
+      calcTypeInterface();
+    </script>
+  </body>
+</html>
