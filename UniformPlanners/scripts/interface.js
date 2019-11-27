@@ -595,6 +595,15 @@ class UI {
         state.mse_pen = true;
         state.saved = false;
       }, false);
+      // Touchstart Cells - Begin drawing
+      cells.addEventListener("touchstart", function(e) {
+        if (state.sim === true) return;
+        if (e.touches.length > 1)
+          return;
+        state.mse_btn = true;
+        state.mse_pen = true;
+        state.saved = false;
+      }, false);
       // Mouseup Cells - Stop Drawing
       cells.addEventListener("mouseup", function(e) { // required for drawing obstacles / empty cells
         state.mse_pen = false;
@@ -602,6 +611,51 @@ class UI {
       // Mouseout Cells - Same as Mouseup
       cells.addEventListener("mouseleave", function(e) { // required for drawing obstacles / empty cells
         state.mse_pen = false;
+      }, false);
+      html_map_obj.map.addEventListener("touchend", function(e) {
+        state.mse_pen = false;
+        state.mse_start = false;
+        state.mse_goal = false;
+      }, false);
+      // Touchmove Cells - Draw depending on mode
+      html_map_obj.map.addEventListener("touchmove", function(e) {
+        if (state.mse_pen === true) {
+          var m_x = e.touches[0].clientX;
+          var m_y = e.touches[0].clientY;
+          var x_min = state.x_min;
+          var y_min = state.y_min;
+          var map = self.ui_map; // transient
+          var i, j;
+          // check if within cell area
+          if (m_x > x_min && m_y > y_min && m_x < state.x_max && m_y < state.y_max) {
+            [i, j] = data_handlers.window_to_map(m_x, m_y, x_min, y_min, map.num_i, map.num_j)
+            i = Math.round(i);
+            j = Math.round(j);
+            // check pen mode
+            if (state.mse_btn === true)
+              graphic_handlers.set_cell_obstacle(i, j, state.pen);
+            else
+              graphic_handlers.set_cell_obstacle(i, j, state.pen2);
+          }
+        } else if (state.mse_start === true) {
+          var x_min = state.x_min;
+          var y_min = state.y_min;
+          var x = state.mse_dx + e.touches[0].clientX - x_min;
+          var y = e.touches[0].clientY + state.mse_dy - y_min;
+          if (x > 0 && x < state.x_max - x_min && y > 0 && y < state.y_max - y_min) {
+            start.style.top = y + 'px';
+            start.style.left = x + 'px';
+          }
+        } else if (state.mse_goal === true) {
+          var x_min = state.x_min;
+          var y_min = state.y_min;
+          var x = state.mse_dx + e.touches[0].clientX - x_min;
+          var y = e.touches[0].clientY + state.mse_dy - y_min;
+          if (x > 0 && x < state.x_max - x_min && y > 0 && y < state.y_max - y_min) {
+            goal.style.top = y + 'px';
+            goal.style.left = x + 'px';
+          }
+        }
       }, false);
       // Mouseover Cells - Draw depending on mode
       html_map_obj.map.addEventListener("mousemove", function(e) { // required for drawing obstacles / empty cells
@@ -656,6 +710,16 @@ class UI {
       start.addEventListener("mouseup", function(e) {
         state.mse_start = false;
       }, false);
+      // Touchstart Start - Begin Moving Start
+      start.addEventListener("touchstart", function(e) {
+        if (state.sim === true) return;
+        if (e.touches.length > 1) return;
+        graphic_handlers.update_cells_box();
+        var rect = start.getBoundingClientRect();
+        state.mse_dy = rect.top + self.SG / 2 - e.touches[0].clientY;
+        state.mse_dx = rect.left + self.SG / 2 - e.touches[0].clientX;
+        state.mse_start = true;
+      }, false);
       // Mousedown Goal - Begin Moving Goal
       goal.addEventListener("mousedown", function(e) {
         if (state.sim === true) return;
@@ -668,6 +732,16 @@ class UI {
       // Mousedown Goal - Stop Moving Goal
       goal.addEventListener("mouseup", function(e) {
         state.mse_goal = false;
+      }, false);
+      // Touchstart Goal - Begin Moving Goal
+      goal.addEventListener("touchstart", function(e) {
+        if (state.sim === true) return;
+        if (e.touches.length > 1) return;
+        graphic_handlers.update_cells_box();
+        var rect = goal.getBoundingClientRect();
+        state.mse_dy = rect.top + self.SG / 2 - e.touches[0].clientY;
+        state.mse_dx = rect.left + self.SG / 2 - e.touches[0].clientX;
+        state.mse_goal = true;
       }, false);
     }
     function init_info() {
