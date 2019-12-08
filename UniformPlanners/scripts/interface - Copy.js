@@ -54,16 +54,6 @@ class UIMap {
       return arg0 + arg1 * this.num_i;
     }
   }
-  unflatten(k) {
-    // a is the first i row (=0) in the penultimate j column
-    var i, j=-1, kk=0;
-    while (kk <= k) {
-      kk += this.num_i;
-      j += 1;
-    }
-    i = k - kk + this.num_i;
-    return new Vec(i, j);
-  }
 }
 // The cell data structure contianing html element and methods
 class UICell {
@@ -109,7 +99,7 @@ class UIPath {
     }
     this.ele.firstChild.classList = class_list;
   }
-  constructor(window_start, window_end, start_vec, end_vec, type) {
+  constructor(start_pos, end_pos, type) {
     var ele = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     // set path class
     ele.classList = 'path';
@@ -118,22 +108,24 @@ class UIPath {
     //edit
     this.start_pos = new Vec(-1, -1);
     this.end_pos = new Vec(-1, -1);
-    this.edit(window_start, window_end, start_vec, end_vec, type);
+    this.edit(start_pos, end_pos, type);
   }
-  edit(window_start, window_end, start_vec, end_vec, type) {
+  edit(start_pos, end_pos, type) {
     var ele = this.ele;
-    var yf = window_end.y, xf = window_end.x, yi = window_start.y, xi = window_start.x;
-    // line_radius is the cap radius. used when box-sizing css is content-box, height is zero, and border is line_radius px
-    var angle = Math.atan2(yf-yi, xf-xi);
-    var length = Math.sqrt(Math.pow(xf-xi, 2) + Math.pow(yf-yi, 2));
-    UIPath.resize(ele, length);
-    ele.style.width = ''.concat(length + 3, 'px');
-    ele.style.transform = 'rotate('.concat(angle * 180 / Math.PI, 'deg)');
-    ele.style.top = ''.concat(yi+length*Math.sin(angle)/2 - 3.5, 'px');
-    ele.style.left = ''.concat(xi-length*(1-Math.cos(angle))/2 - 1.5, 'px');
-    this.start_pos = start_vec;
-    this.end_pos = end_vec;
-  
+    if (!this.start_pos.equals(start_pos) || !this.end_pos.equals(end_pos)) {
+      var yf = end_pos.y, xf = end_pos.x, yi = start_pos.y, xi = start_pos.x;
+      // line_radius is the cap radius. used when box-sizing css is content-box, height is zero, and border is line_radius px
+      var angle = Math.atan2(yf-yi, xf-xi);
+      var length = Math.sqrt(Math.pow(xf-xi, 2) + Math.pow(yf-yi, 2));
+      UIPath.resize(ele, length);
+      ele.style.width = ''.concat(length + 3, 'px');
+      ele.style.transform = 'rotate('.concat(angle * 180 / Math.PI, 'deg)');
+      ele.style.top = ''.concat(yi+length*Math.sin(angle)/2 - 3.5, 'px');
+      ele.style.left = ''.concat(xi-length*(1-Math.cos(angle))/2 - 1.5, 'px');
+      this.start_pos = start_pos;
+      this.end_pos = end_pos;
+    }
+    
     if (type !== undefined) {
       this.color(type)
     }
@@ -153,17 +145,12 @@ class UIStep {
   constructor() {
     this.actions = [];
   }
-  /*
-  add_record(keys, value) {
-    this.actions.push(['r', arguments]);
-  }
-  set_cell_rgb(i, j, r, g, b, bg=true, border=true) {
-    this.actions.push(['cr', arguments]);
-  }
-  set_cell_hsl(i, j, h, s, l, bg=true, border=true) {
-    this.actions.push(['ch', arguments]);
-  }
-  */
+  // set_cell_rgb(i, j, r, g, b, bg=true, border=true) {
+    // this.actions.push(['r', arguments]);
+  // }
+  // set_cell_hsl(i, j, h, s, l, bg=true, border=true) {
+    // this.actions.push(['h', arguments]);
+  // }
   set_cell_text(vec, txt) {
     this.actions.push(['t', arguments]);
   }
@@ -185,279 +172,12 @@ class UIStep {
   set_cell_class(vec, class_name, remove=false) {
     this.actions.push(['cn', arguments]);
   }
-  insert_list_item(pane_key, i, values) {
-    this.actions.push(['ili', arguments]);
-  }
-  remove_list_item(pane_key, i) {
-    this.actions.push(['ilr', arguments]);
-  }
-  set_list_description(pane_key, description) {
-    this.actions.push(['ild', arguments]);
-  }
-  color_list_item(pane_key, i, highlight) {
-    this.actions.push(['ilc', arguments]);
-  }
-  set_cell_focus(vec, focus) {
-    this.actions.push(['cf', arguments]);
-  }
-  edit_list_item(pane_key, i, new_values) {
-    this.actions.push(['ile', arguments]);
-  }
-}
-// Use to store a snapshot of the global data, too simplistic to implement for current version
-class UIRecord {
-  constructor(data) {
-    // data is a struct containing all relevant data to record
-    this.dat = data;
-    this.rec = [];
-    this.rec_p = [];
-    this.r = 0;
-  }
-  _modify_record(keys, value) {
-    // modify the values
-    var dat = this.data;
-    // keys is an array of keys string
-    for (var k=0; k<keys.length-1; k++)
-      dat = dat[keys(k)];
-    var key = keys(keys.length-1);
-    dat[key] = value;
-  }
-  _peek_record(keys, value) {
-    var dat = this.data;
-    for (var key of keys)
-      dat = dat[key];
-    return dat;
-  }
-  add_record(keys, value) {
-    // key_labels must be an array of key strings, even if there is only one key
-    // peek at previous value and store it
-    var old_value = this._peek_record(keys, value);
-    this.rec_p.push(keys, old_value);
-    // modify the data
-    this._modify_record(keys, value);
-    // record the change
-    this.rec.push(arguments);
-    this.r++;
-  }
-  next_record() {
-    if (r < this.rec.length)
-      this._modify_record.apply(this, this.rec[this.r++]);
-  }
-  prev_record() {
-    if (r >= 0)
-      this._modify_record.apply(this, this.rec_p[this.r--]);
-  }
+  
 }
 // UI Info, each info object is a an info pane with a specific type
 class UIInfo {
-  static get TEXT() {return 0};
-  static get PAIR() {return 1};
-  static get LIST() {return 2};
   constructor() {
-    /* arguments
-    type = UIInfo.TEXT or UIInfo.PAIR or UIInfo.LIST
-    args of new_text_pane / new_pair_pane / new _list_pane
-    */
-    // inits
-    this.display = true;
-    this.eles = undefined;
-    this.type = arguments[0];
-    var args = [];
-    for (var i=1; i<arguments.length; i++)
-      args.push(arguments[i]);
-    switch (this.type) {
-      case UIInfo.TEXT:
-        this.new_text_pane.apply(this, args);
-        break;
-      case UIInfo.PAIR:
-        this.new_pair_pane.apply(this, args);
-        break;
-      case UIInfo.LIST:
-        this.new_list_pane.apply(this, args);
-        break;
-    }
-  }
-  build_pane(title) {
-    /*
-    info_pane
-      - info_pane_title
-      - info_content
-        - text OR pair OR 
-      add
-    */
-    // build pane
-    var ele_pane = document.createElement('DIV');
-    ele_pane.classList.add('info_pane');
     
-    // build pane title
-    var ele_title = document.createElement('DIV');
-    ele_title.classList.add('info_pane_title');
-    ele_title.innerHTML = title;
-    var self = this;
-    ele_title.addEventListener('click', function(e) {
-      self.toggle(self);
-    }, false);
-    ele_pane.appendChild(ele_title);
-    
-    // build content container
-    var ele_content = document.createElement('DIV');
-    ele_content.classList.add('info_content');
-    ele_pane.appendChild(ele_content);
-    this.ele_pane = ele_pane;
-    this.ele_content = ele_content;
-    this.ele_title = ele_title;
-  }
-  new_text_pane(title, value) {
-    // build the new pane
-    this.build_pane(title);
-    
-    // build the container's contents
-    var ele_value = document.createElement('DIV');
-    ele_value.innerHTML = value;
-    
-    // reconfigure the content
-    this.ele_content.classList.add('info_text');
-    this.ele_content.appendChild(ele_value);
-  }
-  new_pair_pane(title, key_subtitle_values) {
-    // build the new pane;
-    this.build_pane(title);
-    // build the pairs
-    var ele_pair, ele_subtitle, ele_value;
-    this.eles = {};
-    for (var i=0; i<key_subtitle_values.length; i++) {
-      // The pair
-      ele_pair = document.createElement('DIV');
-      ele_pair.classList.add('info_pair');
-      // The subtitle
-      ele_subtitle = document.createElement('DIV');
-      ele_subtitle.classList.add('info_cell', 'title');
-      ele_subtitle.innerHTML = key_subtitle_values[i][1];
-      ele_pair.appendChild(ele_subtitle);
-      // The value
-      ele_value = document.createElement('DIV');
-      ele_value.classList.add('info_cell');
-      ele_value.innerHTML = key_subtitle_values[i][2];
-      ele_pair.appendChild(ele_value);
-      // add to dictionary
-      this.eles[key_subtitle_values[i][0]] = {
-        subtitle : ele_subtitle,
-        value : ele_value
-      }
-      // append the element to the content
-      this.ele_content.appendChild(ele_pair);
-    }
-  }
-  new_list_pane(title, description, list_titles) {
-    // list_titles must be a 2D array.
-    //   first dim is the row; second dim is the column
-    this.build_pane(title);
-    
-    // build the container's contents
-    this.ele_content.classList.add('info_list');
-    // build the descriptor
-    var ele_desc = document.createElement('DIV');
-    ele_desc.classList = 'description';
-    this.ele_content.appendChild(ele_desc);
-    this.ele_desc = ele_desc;
-    this.set_list_description(description);
-    
-    // build the list
-    var ele_list = document.createElement('DIV');
-    ele_list.classList.add('list');
-    // build the list titles
-    if (list_titles !== undefined) {
-      var tmp, ele_cell, ele_row;
-      for (var r=0; r<list_titles.length; r++) {
-        tmp = list_titles[r];
-        ele_row = document.createElement('DIV');
-        ele_row.classList = 'title';
-        for (var c=0; c<tmp.length; c++) {
-          ele_cell = document.createElement('DIV');
-          ele_cell.innerHTML = tmp[c];
-          ele_row.appendChild(ele_cell)
-        }
-        ele_list.appendChild(ele_row);
-      }
-    }
-    this.ele_content.appendChild(ele_list);
-    this.ele_list = ele_list;
-    
-    // init the holding list for list items
-    this.eles = [];
-    this.prev_item = [];
-  }
-  color_list_item(i, highlight) {
-    if (highlight === false)
-      this.eles[i].ele_row.classList.remove('new');
-    else 
-      this.eles[i].ele_row.classList.add('new');
-    this.eles[i].highlight = highlight;
-  }
-  get_list_item_color(i) {
-    return this.eles[i].highlight;
-  }
-  edit_list_item(i, new_values) {
-    var ele_cells = this.eles[i].ele_cells;
-    var values = this.eles[i].values;
-    for (var c=0; c<ele_cells.length; c++) {
-      if (new_values[c] !== undefined) {
-        ele_cells[c].innerHTML = new_values[c];
-      } else {
-        new_values[c] = values[c];
-      }
-    }
-    this.eles[i].values = new_values;
-  }
-  insert_list_item(i, values) {
-    // values is a 1D array, representing the row to add
-    // generate the element
-    var ele_row = document.createElement('DIV'), ele_cell, ele_cells = [];
-    for (var c=0; c<values.length; c++) {
-      ele_cell = document.createElement('DIV');
-      ele_cell.innerHTML = values[c];
-      ele_cells.push(ele_cell);
-      ele_row.appendChild(ele_cell);
-    }
-    var list_ele = {
-      ele_row : ele_row,
-      ele_cells : ele_cells,
-      values : values,
-      highlight : false
-    };
-    if (this.eles.length === 0 || i === this.eles.length) {
-      this.ele_list.appendChild(ele_row);
-      this.eles.push(list_ele);
-    } else if (i < this.eles.length) {
-      this.ele_list.insertBefore(ele_row, this.eles[i].ele_row)
-      this.eles.splice(i, 0, list_ele);
-    } else {
-      throw 'UIInfo, insert_list_item: cannot insert list item at index that is longer than list length';
-    }
-  }
-  remove_list_item(i) {
-    var list_ele = this.eles[i];
-    this.ele_list.removeChild(list_ele.ele_row);
-    this.eles.splice(i, 1);
-  }
-  get_list_item(i) {
-    return this.eles[i];
-  }
-  set_list_description(html_string) {
-    this.ele_desc.innerHTML = html_string;
-  }
-  get_list_description() {
-    return this.ele_desc.innerHTML;
-  }
-  toggle(info_obj) {
-    if (info_obj.display === true) {
-      info_obj.ele_content.style.display = 'flex';
-      info_obj.ele_title.classList.remove('closed');
-    } else {
-      info_obj.ele_content.style.display = 'none';
-      info_obj.ele_title.classList.add('closed');
-    }
-    info_obj.display = !info_obj.display;
   }
 }
 // Vector class (2x1)
@@ -607,14 +327,6 @@ class SavedMaps {
 12
 27
 000000000000000000000000000000000010000000000000000000000000001110111101101011111001111100011010000100101010001001010100010010000100011010001011010110000010000101111000001010010010010010000101001010001010000010011010000100001010001010000010001110000111111011111010000010000000000000000000001000000000000000000000000000001000000000011110111111111011111010001111010010000100001000000010001000010010000100001000001010001110010010000100001000001010001000000010000100000000111011011011010010000100001000001010001000010010000100001000001010001000011110000100001011111010001000000000000100000000000000000000`}
-  static get CHEVRONS_12_12() {
-    return `12
-12
-0
-1
-11
-11
-000000000000000000000000000001000000000001010000000001010100001111010100000000010100000111110100000000000100000011111100000000000000000000000000`}
 }
 
 /* -------- UI methods -------- */
@@ -626,8 +338,7 @@ class UI {
     this.initialise_data();
     // Create map at startup
     // this.graphic_handlers.new_map(this, true);
-    this.graphic_handlers.parse_loaded_map(SavedMaps.CHEVRONS_12_12);
-    this.graphic_handlers.hide_tooltip();
+    this.graphic_handlers.parse_loaded_map(SavedMaps.HELLOWORLD_20_30);
     this.state.saved = true;
   }
   instantiate() {
@@ -699,7 +410,7 @@ class UI {
       },
       info : {
         info : document.getElementById('ui_info'),
-        toggler: document.getElementById('ui_info_toggler'),
+        title : document.getElementById('ui_info_title'),
         panes : document.getElementById('ui_info_panes')
       }
     }
@@ -734,8 +445,7 @@ class UI {
     this.steps = {
       steps : [],
       add_step : undefined,
-      steps_compiled : [],
-      records : undefined
+      steps_compiled : []
     };
     /* Contains non-static html cell and path elements */
     this.ui_map = undefined;
@@ -1091,7 +801,7 @@ class UI {
       }, false);
     }
     function init_info() {
-      html_info_obj.toggler.addEventListener('click', function(e) {
+      html_info_obj.title.addEventListener('click', function(e) {
         graphic_handlers.toggle_info(!state.info);
       }, false);
     }
@@ -1216,12 +926,12 @@ class UI {
           ele = html_nav_obj.run.final;
           break;
       }
+      box = ele.getBoundingClientRect();
       html_tooltip_obj.area.innerHTML = help;
       var tooltip = html_tooltip_obj.tooltip;
-      var box = ele.getBoundingClientRect();
-      tooltip.style.top = '' + (ele.offsetTop + ele.offsetHeight + 10) + 'px';
+      tooltip.style.top = '' + (box.bottom + 5) + 'px';
       tooltip.style.display = 'block';
-      tooltip.style.left = '' + (ele.offsetLeft + (ele.offsetWidth - tooltip.offsetWidth) / 2) + 'px';
+      tooltip.style.left = '' + (box.left + (box.width - tooltip.getBoundingClientRect().width) / 2) + 'px';
     }
     // Hide Tooltips
     handlers.hide_tooltip = function() {
@@ -1230,11 +940,19 @@ class UI {
     // Toggle Info bar 
     handlers.toggle_info = function(show) {
       if (show === false) {
-        var panes = html_info_obj.panes;
-        panes.style.display = 'none';
+        html_info_obj.info.style.width = '20px';
+        html_info_obj.title.style.height = 'calc(100% - 10px)';
+        var panes = html_info_obj.panes.childNodes;
+        for (var i=0; i<panes.length; i++)
+          if (panes[i].tagName === 'DIV')
+            panes[i].style.display = 'none';
       } else {
-        var panes = html_info_obj.panes;
-        panes.style.display = 'flex';
+        html_info_obj.info.style.width = '250px';
+        html_info_obj.title.style.height = '10px';
+        var panes = html_info_obj.panes.childNodes;
+        for (var i=0; i<panes.length; i++)
+          if (panes[i].tagName === 'DIV')
+            panes[i].style.display = 'flex';
       }
       state.info = show;
     }
@@ -1299,8 +1017,8 @@ class UI {
         html_nav_obj.file.file.style.display = 'flex';
         html_nav_obj.edit.edit.style.display = 'flex';
         // Delete paths and annotations
+        handlers.reset_sim();
       }
-      handlers.reset_sim();
       state.sim = sim;
     }
     // Reset the simulator area by erasing planner data
@@ -1310,7 +1028,7 @@ class UI {
       self.steps.steps = [];
       self.steps.steps_compiled = [];
       self.info = {};
-      // remove info objects
+      // remove path
       html_info_obj.panes.innerHTML = '';
     }
     // Switch pen modes
@@ -1423,7 +1141,7 @@ class UI {
       ele_title.classList.add('info_pane_title');
       ele_title.innerHTML = key_title[1];
       ele_title.addEventListener('click', function(e) {
-        handlers.toggle_info_pane(this, !self.info[key_title[0]].show, key_title[0]);
+        handlers.toggle_info_pane(!self.info[key_title[0]].show, key_title[0]);
       }, false);
       ele_pane.appendChild(ele_title);
       var ele_content = document.createElement('DIV');
@@ -1478,7 +1196,7 @@ class UI {
       ele_title.classList.add('info_pane_title');
       ele_title.innerHTML = key_title[1];
       ele_title.addEventListener('click', function(e) {
-        handlers.toggle_info_pane(this, !self.info[key_title[0]].show, key_title[0]);
+        handlers.toggle_info_pane(!self.info[key_title[0]].show, key_title[0]);
       }, false);
       ele_pane.appendChild(ele_title);
       // build content
@@ -1501,25 +1219,14 @@ class UI {
       // add to html panes
       html_info_obj.panes.appendChild(ele_pane);
     }
-    // Add new info list pane
-    handlers.new_info_list_pane = function(key, title, description, list_titles) {
-      if (self.info.hasOwnProperty(key))
-        throw 'An Info pane with the key "'.concat(key, '" already exists');
-      var info_obj = new UIInfo(UIInfo.LIST, title, description, list_titles);
-      html_info_obj.panes.appendChild(info_obj.ele_pane);
-      self.info[key] = info_obj;
-    }
     // Toggle info pane
-    handlers.toggle_info_pane = function(ele_title, show, key) {
+    handlers.toggle_info_pane = function(show, key) {
       var info_pane = self.info[key];
       // key is the info pane key
-      if (show === true) {
+      if (show === true)
         info_pane.content.style.display = 'flex';
-        ele_title.classList.remove('closed');
-      } else {
+      else
         info_pane.content.style.display = 'none';
-        ele_title.classList.add('closed');
-      }
       self.info[key].show = show;
     }
     // Change info pair data
@@ -1541,52 +1248,27 @@ class UI {
     handlers.get_info_text = function(pane_key) {
       return self.info[pane_key].value.innerHTML;
     }
-    // Change info list
-    handlers.insert_list_item = function(pane_key, i, values) {
-      self.info[pane_key].insert_list_item(i, values);
-    }
-    handlers.remove_list_item = function(pane_key, i) {
-      self.info[pane_key].remove_list_item(i);
-    }
-    handlers.get_list_item = function(pane_key, i) {
-      return self.info[pane_key].get_list_item(i);
-    }
-    handlers.set_list_description = function(pane_key, description) {
-      self.info[pane_key].set_list_description(description);
-    }
-    handlers.color_list_item =function(pane_key, i, highlight) {
-      self.info[pane_key].color_list_item(i, highlight);
-    }
-    handlers.get_list_item_color = function(pane_key, i) {
-      return self.info[pane_key].get_list_item_color(i);
-    }
-    handlers.get_list_description = function(pane_key) {
-      return self.info[pane_key].get_list_description();
-    }
-    handlers.edit_list_item = function(pane_key, i, new_values) {
-      self.info[pane_key].edit_list_item(i, new_values);
-    }
     // Draw a path
     handlers.draw_path = function(start_vec, end_vec, class_name) {
       var ui_map = self.ui_map;
-      var window_start = data_handlers.map_to_window_cells(start_vec, ui_map.num_i, ui_map.num_j);
-      var window_end = data_handlers.map_to_window_cells(end_vec, ui_map.num_i, ui_map.num_j);
+      var start_pos = data_handlers.map_to_window_cells(start_vec, ui_map.num_i, ui_map.num_j);
+      var end_pos = data_handlers.map_to_window_cells(end_vec, ui_map.num_i, ui_map.num_j);
       var ki = ui_map.flatten(start_vec);
       var kf = ui_map.flatten(end_vec);
       if (ui_map.paths[ki] === undefined) {
         // when starting vertex does not contain paths from it
-        var path  = new UIPath(window_start, window_end, start_vec, end_vec, class_name);
+        var path  = new UIPath(start_pos, end_pos, class_name);
         ui_map.paths[ki] = [];
         ui_map.paths[ki][kf] = path;
         html_map_obj.map.appendChild(path.ele);
       } else if (ui_map.paths[ki][kf] === undefined) {
         // path does not exist
-        var path = new UIPath(window_start, window_end, start_vec, end_vec, class_name);
+        var path = new UIPath(start_pos, end_pos, class_name);
         ui_map.paths[ki][kf] = path;
         html_map_obj.map.appendChild(path.ele);
       } else {
         // some paths already exists, edit
-        ui_map.paths[ki][kf].edit(window_start, window_end, start_vec, end_vec, class_name);
+        ui_map.paths[ki][kf].edit(start_pos, end_pos, class_name);
       }
     }
     // Hide a path
@@ -1621,8 +1303,6 @@ class UI {
         var ki = self.ui_map.flatten(start_vec);
         if (paths[ki] === undefined)
           return
-        if (start_vec.i == 19 && start_vec.j == 29)
-          var b = 'a';
         for (kf of Object.keys(paths[ki])) {
           node = paths[ki][kf];
           parent_ele.removeChild(node.ele);
@@ -1646,7 +1326,7 @@ class UI {
       var tmp = paths[ki];
       if (tmp === undefined) 
         return undefined;
-      if (end_vec === undefined)        
+      if (end_vec === undefined)
         return tmp;
       var kf = self.ui_map.flatten(end_vec)
       tmp = tmp[kf];
@@ -1699,20 +1379,12 @@ class UI {
         cell.weight = 0;
       }
     }
-    handlers.set_cell_focus = function(vec, focus) {
-      var cell = self.ui_map.cells(vec);
-      if (cell === null)
-        return; // cell does not exist
-      if (focus === false)
-        cell.ele.classList.remove('focus');
-      else // true or undefined
-        cell.ele.classList.add('focus');
-    }
     // Compile actions
     handlers.compile_steps = function() {
       // reset the steps;
       state.step = 0;
       var steps = steps_obj.steps;
+      // compiled = [{fwd_handler, fwd_arguments, bck_handler, bck_arguments}]
       var compiled_action, compiled_step, actions, action, args;
       for (var s=0; s<steps.length; s++) {
         // for each step
@@ -1723,18 +1395,9 @@ class UI {
           action = actions[a];
           args = action[1];
           switch (action[0]) {
-            /*
-            case 'r':
-              records.add_record(args);
-              compiled_action = {
-                fwd_handler : records.next_record,
-                fwd_args : null,
-                bck_handler : records.prev_record,
-                bck_args : null
-              }*/
-            /* // action is to color the cell
-            case 'ch': // set hsl
-            case 'cr': // set rgb
+            // action is to color the cell
+            case 'h': // set hsl
+            case 'r': // set rgb
               // compile the backward arguments
               var i=args[0], j=args[1], bg=args[5], border=args[6];
               // get the current color
@@ -1753,7 +1416,7 @@ class UI {
               }
               // apply the forward step
               compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
-              break; */
+              break;
             // action is to set the text of the cell
             case 't': // set text
               compiled_action = {
@@ -1793,22 +1456,22 @@ class UI {
               if (args[1] === undefined) {// multiple paths need to be removed
                 // prev_paths is an array of paths
                 // get all path properties
-                var h_args = [];
+                var properties = [];
                 var kfs = Object.keys(prev_paths);
                 for (const kf of kfs) {
                   prev_path = prev_paths[kf];
-                  h_args.push([prev_path.start_pos, prev_path.end_pos, prev_path.type]);
+                  properties.push([prev_path.start_pos, prev_path.end_pos, prev_path.type]);
                 }
-                var h = function(h_args) {
-                  for (var i=0; i<h_args.length; i ++) {
-                    handlers.draw_path.apply(null, h_args[i]);
+                var bck_handler = function(e) {
+                  for (const p of properties) {
+                    handlers.draw_path.apply(null, p);
                   }
                 }
                 compiled_action = {
                   fwd_handler : handlers.remove_paths,
                   fwd_args : args,
-                  bck_handler : h,
-                  bck_args : [h_args]
+                  bck_handler : bck_handler,
+                  bck_args : undefined
                 }
               } else {
                 // prev_paths is just a path
@@ -1818,9 +1481,9 @@ class UI {
                   bck_handler : handlers.draw_path,
                   bck_args : [args[0], args[1], prev_paths.type]
                 }
+                // apply the forward step
+                compiled_action.fwd_handler.apply(null, compiled_action.fwd_args);
               }
-              // apply the forward step
-              compiled_action.fwd_handler.apply(null, compiled_action.fwd_args);
               break;
             case 'dp': // display path
               var prev_path = handlers.get_paths(args[0], args[1]);
@@ -1877,76 +1540,6 @@ class UI {
               // apply the forward step
               compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
               break;
-            case 'ili': // info: insert list item
-              // console.log('insertlist:', args[0], args[1], args[2]);
-              compiled_action = {
-                fwd_handler : handlers.insert_list_item,
-                fwd_args : args,
-                bck_handler : handlers.remove_list_item,
-                bck_args : [args[0], args[1]]
-              }
-              // apply the forward step
-              compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
-              // console.log('insertListEles', Object.keys(self.info[args[0]].eles));
-              break;
-            case 'ilr': // info: remove list item
-              var values = handlers.get_list_item(args[0], args[1]).values;
-              // console.log('remlist:', args[0], args[1], values);
-              // console.log(self.info[args[0]].eles[args[1]].values);
-              compiled_action = {
-                fwd_handler : handlers.remove_list_item,
-                fwd_args : args,
-                bck_handler : handlers.insert_list_item,
-                bck_args : [args[0], args[1], values]
-              }
-              // apply the forward step
-              compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
-              // console.log('removeListEles', Object.keys(self.info[args[0]].eles));
-              break;
-            case 'ild': // info: set list description
-              var desc = handlers.get_list_description(args[0]);
-              compiled_action = {
-                fwd_handler : handlers.set_list_description,
-                fwd_args : args,
-                bck_handler : handlers.set_list_description,
-                bck_args : [args[0], desc]
-              }
-              // apply the forward step
-              compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
-              break;
-            case 'ilc':
-              var prev_highlight = handlers.get_list_item_color(args[0], args[1]);
-              if (args[2] === prev_highlight)
-                return // skip this step since this won't change the color
-              compiled_action = {
-                fwd_handler : handlers.color_list_item,
-                fwd_args : args,
-                bck_handler : handlers.color_list_item,
-                bck_args : [args[0], args[1], prev_highlight]
-              }
-              // apply the forward step
-              compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
-              break;
-            case 'ile':
-              var values = handlers.get_list_item(args[0], args[1]).values;
-              compiled_action = {
-                fwd_handler : handlers.edit_list_item,
-                fwd_args : args,
-                bck_handler : handlers.edit_list_item,
-                bck_args : [args[0], args[1], values]
-              }
-              compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
-              break;
-            case 'cf':
-              compiled_action = {
-                fwd_handler : handlers.set_cell_focus,
-                fwd_args : args,
-                bck_handler : handlers.set_cell_focus,
-                bck_args : [args[0], !args[1]]
-              }
-              // apply the forward step
-              compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
-              break;
           }
           // append the compiled step to steps_compiled
           compiled_step.push(compiled_action);
@@ -1980,8 +1573,6 @@ class UI {
     }
     // Previous step
     handlers.step_backward = function() {
-      if (state.step === 395)
-        var b = 'b';
       if (state.step === 0)
         return false; // return if at the first state
       // state.step is always at the current sttep, first step is 1
@@ -1989,8 +1580,6 @@ class UI {
       var action;
       // iterate through every action in the step
       for (var a=step.length-1; a>=0; a--) {
-        if (a === 9)
-          var b = 'b';
         action = step[a];
         // run the forward handler
         action.bck_handler.apply(null, action.bck_args);
@@ -2192,9 +1781,7 @@ class UI {
       self.state.unique_map++;
       state.saved = true;
     }
-    
   }
-  
   initialise_data_handlers() {
     var handlers = this.data_handlers;
     var self = this;
@@ -2247,14 +1834,10 @@ class Planner {
     this.add_step = this.ui.steps.add_step;
     this.new_info_pair_pane = this.ui.graphic_handlers.new_info_pair_pane;
     this.new_info_text_pane = this.ui.graphic_handlers.new_info_text_pane;
-    this.new_info_list_pane = this.ui.graphic_handlers.new_info_list_pane;
     this.reset_positions();
   }
   get map() {
     return this.ui.ui_map;
-  }
-  initialise_records(data) {
-    this.ui.steps.records = new UIRecord(data);
   }
   reset_positions() {
     this.ui.graphic_handlers.update_cells_box();
@@ -2280,9 +1863,3 @@ for (f of file_names) {
   script.src = 'scripts/planners/'.concat(f, '.js');  // set its src to the provided URL
   document.body.appendChild(script); 
 }
-
-/*var h = Math.round(Math.random()*360);
-var s = 80;
-var l = 70;
-document.body.style.background = 'hsl('.concat(h,',', s, '%,', l, '%)');
-*/

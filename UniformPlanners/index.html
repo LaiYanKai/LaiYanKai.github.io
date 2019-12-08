@@ -12,67 +12,103 @@
     <form autocomplete="false" id="ui_form_build" onsubmit="return false;" style="display:none;" novalidate method="post">
       <input type="submit" /></input>
     </form>
-    <div class="nav">
-      <div class="nav_title">
-        Uniform Planners
+    <div class="page">
+      <div class="nav">
+        <div class="nav_title">
+          Uniform Planners
+        </div>
+        <div class="nav_pane" id="ui_file">
+          <div class="nav_btn" id="ui_build">
+            <img src="img/build.svg"/>
+          </div>
+          <div class="nav_btn" id="ui_load">
+            <img src="img/load.svg"/>
+          </div>
+          <div class="nav_btn" id="ui_save">
+            <img src="img/save.svg"/>
+          </div>
+        </div>
+        <div class="nav_pane" id="ui_edit">       
+          <div class="nav_btn" id="ui_pen">
+            <img src="img/pen.svg"/>
+          </div>
+        </div>
+        <div class="nav_pane" id="ui_run">
+          <div class="nav_btn" id="ui_exit">
+            <img src="img/exit.svg"/>
+          </div>
+          <div class="nav_btn" id="ui_initial">
+            <img src="img/initial.svg"/>
+          </div>
+          <div class="nav_btn" id="ui_prev">
+            <img src="img/prev.svg"/>
+          </div>
+          <div class="nav_btn" id="ui_play">
+            <img src="img/play.svg" id="ui_play_img"/>
+          </div>
+          <div class="nav_btn" id="ui_next">
+            <img src="img/next.svg"/>
+          </div>
+          <div class="nav_btn" id="ui_final">
+            <img src="img/final.svg"/>
+          </div>
+        </div>
+        <div class="nav_pane" id="ui_options">
+          <div class="nav_btn nav_btn_long" id="ui_planners"></div>
+        </div>
       </div>
-      <div class="nav_pane" id="ui_file">
-        <div class="nav_btn" id="ui_build">
-          <img src="img/build.svg"/>
+      <div class="containers">
+        <div class ="info_container" id="ui_info">
+          <div class="info_toggler" id="ui_info_toggler">Toggle the information panel</div>
+          <div class="info_panes" id="ui_info_panes">
+            <!-- start here
+            <div class="info_pane">
+              <div class="info_pane_title">Open List</div>
+              <div class="info_content info_list">
+                <div class="description">hi</div>
+                <div class="list">
+                  <div class="title">
+                    <div>Expanded Vertex</div>
+                    <div>Source Vertex</div>
+                  </div>
+                  <div class="title">
+                    <div>i</div><div>j</div>
+                    <div>i</div><div>j</div>
+                  </div>
+                  <div>
+                    <div>1</div><div>3</div>
+                    <div>322</div><div>33</div>
+                  </div>
+                  <div> 
+                    <div>32</div><div>6</div>
+                    <div>19</div><div>3</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- stop here -->
+          </div>
         </div>
-        <div class="nav_btn" id="ui_load">
-          <img src="img/load.svg"/>
-        </div>
-        <div class="nav_btn" id="ui_save">
-          <img src="img/save.svg"/>
+        <div class="sim_container">
+          <div class="sim">
+            <div class="ruler_h ruler_top" id="ui_ruler_top"></div>
+            <div class="ruler_v ruler_left" id="ui_ruler_left"></div>
+            <div class="map" id="ui_map">
+              <div class="cells" id="ui_cells"></div>
+              <div class="start" id="ui_start"></div>
+              <div class="goal" id="ui_goal"></div>
+            </div>
+            <div class="ruler_v ruler_right" id="ui_ruler_right"></div>
+            <div class="ruler_h ruler_bottom" id="ui_ruler_bottom"></div>
+          </div>
         </div>
       </div>
-      <div class="nav_pane" id="ui_edit">       
-        <div class="nav_btn" id="ui_pen">
-          <img src="img/pen.svg"/>
-        </div>
+      <div class="footer">
+        <span>© National University of Singapore</span>
+        <span>Developed by <a href="https://laiyankai.github.io">Lai Yan Kai</a> for EE4308</span>
       </div>
-      <div class="nav_pane" id="ui_run">
-        <div class="nav_btn" id="ui_exit">
-          <img src="img/exit.svg"/>
-        </div>
-        <div class="nav_btn" id="ui_initial">
-          <img src="img/initial.svg"/>
-        </div>
-        <div class="nav_btn" id="ui_prev">
-          <img src="img/prev.svg"/>
-        </div>
-        <div class="nav_btn" id="ui_play">
-          <img src="img/play.svg" id="ui_play_img"/>
-        </div>
-        <div class="nav_btn" id="ui_next">
-          <img src="img/next.svg"/>
-        </div>
-        <div class="nav_btn" id="ui_final">
-          <img src="img/final.svg"/>
-        </div>
-      </div>
-      <div class="nav_pane" id="ui_options">
-        <div class="nav_btn nav_btn_long" id="ui_planners"></div>
-      </div>
-    </div>
-    <div class ="info_container">
-      <div class="info" id="ui_info">
-        <div class="info_title" id="ui_info_title"></div>
-        <div class="info_panes" id="ui_info_panes"></div>
-      </div>
-    </div>
-    <div class="sim_container">
-      <div class="sim">
-        <div class="ruler_h ruler_top" id="ui_ruler_top"></div>
-        <div class="ruler_v ruler_left" id="ui_ruler_left"></div>
-        <div class="map" id="ui_map">
-          <div class="cells" id="ui_cells"></div>
-          <div class="start" id="ui_start"></div>
-          <div class="goal" id="ui_goal"></div>
-        </div>
-        <div class="ruler_v ruler_right" id="ui_ruler_right"></div>
-        <div class="ruler_h ruler_bottom" id="ui_ruler_bottom"></div>
+      <div class="tooltip" id="ui_tooltip">
+        <div class="tooltip_area" id="ui_tooltip_area"></div>
       </div>
     </div>
     <div class="dialog" id="ui_dialog">
@@ -108,9 +144,6 @@
           </tbody>
         </table>
       </div>
-    </div>
-    <div class="tooltip" id="ui_tooltip">
-      <div class="tooltip_area" id="ui_tooltip_area"></div>
     </div>
     <script src="scripts/interface.js"></script>
   </body>

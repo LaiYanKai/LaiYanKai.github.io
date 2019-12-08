@@ -159,12 +159,12 @@ class Dijkstra extends Planner {
             next_vertex = vertex.source;
             if (next_vertex === undefined)
               break;
-            step = this.add_step();
+            // step = this.add_step();
             if (start_trace === true) {
               step.set_info_text('info', 'Tracing back to start...');
               start_trace = false;
             }
-            step.draw_path(vertex.position, next_vertex.position);
+            step.draw_path(vertex.position, next_vertex.position, UIPath.PATH);
             vertex = next_vertex;
           }
           path_found = true;
@@ -188,7 +188,7 @@ class Dijkstra extends Planner {
         if (next_vertex.check_for_cheaper_source(vertex)) { 
           // it is cheaper. Add it to the unvisited_list
           this.unvisited_list.add_encounter(next_vertex);
-          step.draw_path(next_vertex.position, vertex.position, 'path_trace');
+          step.draw_path(next_vertex.position, vertex.position, UIPath.TRACE);
           
           // GUI
           step.set_cell_text(next_position, next_vertex.cost.toFixed(1));
@@ -204,7 +204,7 @@ class Dijkstra extends Planner {
       step = this.add_step();
       step.set_info_text('info', 'NO PATH FOUND!!');
     } else {
-      step.set_info_text('info', 'Complete! Goal cost is $'.concat(goal_cost.toFixed(3)));
+      step.set_info_text('info', 'Complete! The path costs $'.concat(goal_cost.toFixed(2)));
     }
   }
 }
