@@ -21,11 +21,10 @@
   -moz-user-select: none; /* Firefox 2+ */
   -ms-user-select: none; /* IE 10+ */
   user-select: none; /* Standard syntax */
-  font-size: 13px;
-  font-family: arial, sans-serif;
 }
 html {
   height: 100%;
+  overflow-y: scroll;
 }
 @media (min-width: 600px) {
   body {
@@ -42,6 +41,8 @@ html {
     justify-content: center;
     align-content: flex-start;
     flex: 1 1 max-content;
+    font-size: 13px;
+    font-family: arial, sans-serif;
   }
 }
 @media (max-width: 600px) {
@@ -173,6 +174,7 @@ sub {
   background: var(--theme-2);
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
+  z-index: 10;
 }
 .nav_pane {
   display: flex;
@@ -406,7 +408,7 @@ input.nav_num {
   margin: 0 0 5px 0;
 }
 .info_list > div.list {
-  display: inline-flex;
+  display: inline-table;
   flex-flow: column wrap;
   justify-content: center;
   border-radius: 5px;
@@ -416,18 +418,14 @@ input.nav_num {
   width: 100%;
 }
 .info_list > div.list > div {
-  display: flex;
-  flex: 1 1 0;
-  width: 100%;
-  justify-content: space-evenly;
+  display: table-row;
   border-top: 1px solid rgba(150, 150, 170, 0.8);
   box-sizing: border-box;
+  transition: 0.1s ease-in;
+  background-color: white;
 }
 .info_list > div.list > div > div {
-  display: flex;
-  flex: 1 1 0;
-  justify-content: space-around;
-  align-content: center;
+  display: table-cell;
   padding: 2px;
   font-family: 'Courier New', sans-serif;
   font-size: 10px;
@@ -471,24 +469,23 @@ input.nav_num {
   left: 0;
   align-items: center;
   justify-content: center;
+  z-index: 200;
 }
 .dialog_container {
-  position: fixed;
   display: flex;
-  padding: 2px 0 7px 0;
-  margin: 0 0 5px 0;
-  width: auto;
+  padding: 2px 5px 7px 5px;
+  min-width: 300px;
   min-height: 100px;
   text-align: center;
   box-shadow: 0 0 5px 1px rgba(0,0,0,0.3);
   background: rgba(255, 255, 255, 0.9);
   box-sizing: border-box;
   border: 1px solid rgb(80, 80, 150);
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  flex-flow: row wrap;
+  align-content: center;
   border-radius: 15px;
-  z-index: 200;
+  flex-flow: column wrap;
 }
 .dialog_title {
   padding: 5px;
@@ -496,18 +493,16 @@ input.nav_num {
   font-size: 30px;
 }
 .dialog_area {
-  position:relative;
   display: flex;
   padding: 5px;
-  margin: 5px;
-  top: 0;
-  left: 0;
-  width: calc(100% - 10px);
-  align-items: flex-start;
+  width: 100%;
+  align-content: flex-start;
   justify-content: center;
-  flex-flow: row wrap;
+  flex-flow: column wrap;
   border-top: 1px solid rgba(120, 120, 150, 0.8);
   border-bottom: 1px solid rgba(120, 120, 150, 0.8);
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 .dialog_confirmation {
   position: relative;
@@ -521,33 +516,68 @@ input.nav_num {
   justify-content: center;
   flex-flow: row wrap;
 }
-/**************************** TOOLTIP  *******************************/
-.tooltip {
-  display: block;
-  position: absolute;
-  z-index: 100;
+.dialog_planners {
+   border-collapse: collapse;
 }
-.tooltip_area {
-  display: block;
-  top :0px;
+.dialog_planners td {
+  vertical-align: top;
   padding: 5px;
-  position: relative;
-  background: rgba(0,0,0,0.8);
-  color: white;
-  border-radius: 5px;
-  text-align: center;
-  box-shadow: 0 0 5px 1px rgba(0,0,0,0.3);
 }
-.tooltip_area::before {
+.dialog_planners tr:not(:last-child) td {
+  border-bottom: 1px solid rgba(120, 120, 150, 0.5);
+}
+.dialog_planners .title {
+  font-family: "Unica One", sans-serif;
+  font-size: 15px;
+}
+.dialog_planners .description {
+  font-family: courier new, sans-serif;
+  font-size: 10px;
+  text-align: justify;
+  max-width: 300px;
+}
+.dialog_planners .description em {
+  color: var(--theme-2);
+  font-weight: bold;
+  font-style: italics;
+  font-family: "Trebuchet MS", sans-serif;
+  quotes: "“" "”";
+}
+.dialog_planners .input {
+  min-width: 100px;
+}
+.dialog_planners .input input, 
+.dialog_planners .input select {
+  width: 100%;
+}
+/**************************** TOOLTIP  *******************************/
+.nav div[alt] {
+  display: flex;
+  justify-content: center;
+}
+.nav div[alt]:hover::after { /* tooltip */
+  content: attr(alt);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px;
+  text-align: center;
+  border-radius: 7px;
+  position: absolute;
+  top: 100%;
+  margin-top: 4px;
+  box-sizing: border-box;
+  font-size: 13px;
+  font-family: arial, sans-serif;
+}
+.nav div[alt]:hover::before { /* arrow */
   display: block;
   position: absolute;
-  top: -9px;
-  width: 0px;
-  left: calc(50% - 5px);
+  top: 100%;
+  margin-top: -5px;
   content: ' ';
-  box-sizing: content-box;
   border: 5px solid transparent;
-  border-bottom: 5px solid rgba(0,0,0,0.8);
+  border-bottom: 5px solid rgba(0,0,0,0.7);
+  box-sizing: border-box;
 }
 /**************************** WORKSPACE *******************************/
 .sim_container {

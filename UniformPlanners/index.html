@@ -55,6 +55,9 @@
         </div>
         <div class="nav_pane" id="ui_options">
           <div class="nav_btn nav_btn_long" id="ui_planners"></div>
+          <div class="nav_btn" id="ui_big_steps">
+            <img src="img/big_steps.svg"/>
+          </div>
         </div>
       </div>
       <div class="containers">
@@ -107,9 +110,6 @@
         <span>© National University of Singapore</span>
         <span>Developed by <a href="https://laiyankai.github.io">Lai Yan Kai</a> for EE4308</span>
       </div>
-      <div class="tooltip" id="ui_tooltip">
-        <div class="tooltip_area" id="ui_tooltip_area"></div>
-      </div>
     </div>
     <div class="dialog" id="ui_dialog">
       <div class="dialog_container">
@@ -127,18 +127,29 @@
     </div>
     <div id="ui_dialog_templates">
       <div key="planners" id="ui_dialog_planners">
-        <select name="algorithms" id="ui_algorithms">
-        </select>
+        <table class="dialog_planners">
+          <tbody>
+            <tr>
+              <td class="title">Algorithm</td>
+              <td class="input"><select name="algorithms" id="ui_algorithms"></select></td>
+              <td class="description">Choose the path planner to run</td>
+            </tr>
+            <tr key="directions"></tr>
+            <tr key="blocking"></tr>
+            <tr key="origin"></tr>
+            <tr key="anticlockwise"></tr>
+          </tbody>
+        </table>
       </div>
       <div key="build" id="ui_dialog_build">
         <table>
           <tbody>
             <tr>
-              <td>Rows (x)</td>
+              <td class="title">Rows (x)</td>
               <td><input class="nav_num" id="ui_build_i" value="20"></input></td>
             </tr>
             <tr>
-              <td>Columns (y)</td>
+              <td class="title">Columns (y)</td>
               <td><input class="nav_num" id="ui_build_j" value="30"></input></td>
             </tr>
           </tbody>

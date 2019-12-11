@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <!-- <line id="l" y1="3" x1="1" y2="3" x2 = "20" marker-end='url(#m)' stroke-width='2' fill='none' stroke='rgba(120, 120, 255, 0.9)' stroke-linecap="round"/> -->
-  <path fill='black' d="M 2 3
-          A 2 2, 0, 0, 0, 2 7
-          h 15 v 3 l 8 -5
-          l -8 -5 v 3 z" />
-</svg>

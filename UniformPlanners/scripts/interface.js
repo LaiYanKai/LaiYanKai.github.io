@@ -150,8 +150,11 @@ class UIPath {
 }
 // Contains a step of changes made to the UI
 class UIStep {
-  constructor() {
+  constructor(major=false, merge=false) {
+    // merge are for steps that need to be merged with the next step. This is useful for initial steps.
     this.actions = [];
+    this.major = major;
+    this.merge = merge;
   }
   /*
   add_record(keys, value) {
@@ -318,6 +321,13 @@ class UIInfo {
     // reconfigure the content
     this.ele_content.classList.add('info_text');
     this.ele_content.appendChild(ele_value);
+    this.ele_value = ele_value;
+  }
+  set_text(innerHTML) {
+    this.ele_value.innerHTML = innerHTML;
+  }
+  get_text() {
+    return this.ele_value.innerHTML;
   }
   new_pair_pane(title, key_subtitle_values) {
     // build the new pane;
@@ -385,7 +395,6 @@ class UIInfo {
     
     // init the holding list for list items
     this.eles = [];
-    this.prev_item = [];
   }
   color_list_item(i, highlight) {
     if (highlight === false)
@@ -489,8 +498,8 @@ class Vec {
   get x() {return this.i;}
   get y() {return this.j;}
 }
-// Octal directions class
-class Ord {
+// directions class
+class Dir {
   static get N() {return 0}
   static get NW() {return 1}
   static get W() {return 2}
@@ -499,30 +508,92 @@ class Ord {
   static get SE() {return 5}
   static get E() {return 6}
   static get NE() {return 7}
-  static get list() {return [0,1,2,3,4,5,6,7]}
-  static ord_to_vec(ord) {
-    switch (ord) {
-      case Ord.N:
-        return new Vec(1, 0);
-      case Ord.NW:
-        return new Vec(1, 1);
-      case Ord.W:
-        return new Vec(0, 1);
-      case Ord.SW:
-        return new Vec(-1, 1);
-      case Ord.S:
-        return new Vec(-1, 0);
-      case Ord.SE:
-        return new Vec(-1, -1);
-      case Ord.E:
-        return new Vec(0, -1);
-      case Ord.NE:
-        return new Vec(1, -1);
+  static get ALL() {return 0}
+  static get CARDINAL() {return 1}
+  static get ORDINAL() {return 2}
+  static list_dirs(origin_dir=Dir.N, anticlockwise=true, which_dirs=Dir.ALL) {
+    var num_dirs=4, d=origin_dir, arr = [];
+    var step = anticlockwise === true ? 1 : -1;
+    switch (which_dirs) {
+      case Dir.ALL:
+        num_dirs = 8;
+        break;
+      case Dir.CARDINAL:
+        if (Dir.is_ordinal(d) === true) // rotate to cardinal 
+          d = Dir.rotate(d, step);
+        step *= 2;
+        break;
+      case Dir.ORDINAL:
+        if (Dir.is_cardinal(d) === true) // rotate to ordinal 
+          d = Dir.rotate(d, step);
+        step *= 2;
+        break;
       default:
-        throw 'ord_to_vecs: Invalid ordinal "'.concat(ord, '"');
+        throw ('Dir: Invalid direction '.concat(which_dirs));
+    }
+    for (var n=0; n<num_dirs; n++) {
+      arr.push(d);
+      d = Dir.rotate(d, step);
+    }
+    return arr;
+  }
+  static list_vecs(origin_dir=Dir.N, anticlockwise=true, which_dirs=Dir.ALL) {
+    var arr = Dir.list_dirs.call(null, arguments);
+    for (var i=0; i<arr.length; i++)
+      arr[i] = Dir.dir_to_vec(arr[i]);
+    return arr;
+  }
+  static list_strings(origin_dir=Dir.N, anticlockwise=true, which_dirs=Dir.ALL) {
+    var arr = Dir.list_dirs.call(null, arguments);
+    for (var i=0; i<arr.length; i++)
+      arr[i] = Dir.dir_to_string(arr[i]);
+    return arr;
+  }
+  static dir_to_string(ord) {
+    switch (ord) {
+      case Dir.N:
+        return 'N';
+      case Dir.NW:
+        return 'NW';
+      case Dir.W:
+        return 'W';
+      case Dir.SW:
+        return 'SW';
+      case Dir.S:
+        return 'S';
+      case Dir.SE:
+        return 'SE';
+      case Dir.E:
+        return 'E';
+      case Dir.NE:
+        return 'NE';
+      default:
+        throw 'dir_to_string: Invalid direction "'.concat(ord, '"');
     }
   }
-  static vecs_to_ord(arg0, arg1, arg2, arg3) {
+  static dir_to_vec(ord) {
+    switch (ord) {
+      case Dir.N:
+        return new Vec(1, 0);
+      case Dir.NW:
+        return new Vec(1, 1);
+      case Dir.W:
+        return new Vec(0, 1);
+      case Dir.SW:
+        return new Vec(-1, 1);
+      case Dir.S:
+        return new Vec(-1, 0);
+      case Dir.SE:
+        return new Vec(-1, -1);
+      case Dir.E:
+        return new Vec(0, -1);
+      case Dir.NE:
+        return new Vec(1, -1);
+      default:
+        throw 'dir_to_vecs: Invalid direction "'.concat(ord, '"');
+    }
+  }
+  static vecs_to_dir(arg0, arg1, arg2, arg3) {
     var i0, j0, i1, j1, di, dj, di_a, dj_a;
     if (arg0 instanceof Vec) {
       i0 = arg0.i;
@@ -552,49 +623,49 @@ class Ord {
     // Normalise the vectors
     if (di_a < dj_a) {
       if (dj_a === 0)
-        throw 'vecs_to_ord: there is no difference in vecs';
+        throw 'vecs_to_dir: there is no difference in vecs';
       di /= dj_a;
       dj /= dj_a;
     } else {
       if (di_a === 0)
-        throw 'vecs_to_ord: there is no difference in vecs';
+        throw 'vecs_to_dir: there is no difference in vecs';
       di /= di_a;
       dj /= di_a;
     }
     // 
     if (di === -1) {
       if (dj === -1) {
-        return Ord.SE
+        return Dir.SE
       } else if (dj === 0) {
-        return Ord.S
+        return Dir.S
       } else if (dj === 1) {
-        return  Ord.SW
+        return  Dir.SW
       }
     } else if (di === 0) {
       if (dj === -1) 
-        return Ord.E
+        return Dir.E
       else if (dj === 1)
-        return Ord.W
+        return Dir.W
     } else if (di === 1) {
       if (dj === -1) {
-        return Ord.NE
+        return Dir.NE
       } else if (dj === 0) {
-        return Ord.N
+        return Dir.N
       } else if (dj === 1) {
-        return Ord.NW
+        return Dir.NW
     }
-    throw 'vecs_to_ord: inputs do not result in octal directions. Either the inputs are wrong, or there were floating point issues when dividing: '.concat(arg0, ', ', arg1, 
+    throw 'vecs_to_dir: inputs do not result in 8 directions. Either the inputs are wrong, or there were floating point issues when dividing: '.concat(arg0, ', ', arg1, 
       arg2 === undefined ? '' : ', '.concat(
       arg3 === undefined ? ', '.concat(arg2) : ', '.concat(arg2, ',', arg3)));
     }
   }
-  static is_diagonal(ord) {return ord % 2 === 1}
-  static is_cardinal(ord) {return ord % 2 === 0}
-  static rotate(ord, steps) {
-    ord += steps;
-    while (ord < 0)
-      ord += 8;
-    return ord % 8;
+  static is_ordinal(d) {return d % 2 === 1}
+  static is_cardinal(d) {return d % 2 === 0}
+  static rotate(d, steps) {
+    d += steps;
+    while (d < 0)
+      d += 8;
+    return d % 8;
   }
 }
 
@@ -627,7 +698,6 @@ class UI {
     // Create map at startup
     // this.graphic_handlers.new_map(this, true);
     this.graphic_handlers.parse_loaded_map(SavedMaps.CHEVRONS_12_12);
-    this.graphic_handlers.hide_tooltip();
     this.state.saved = true;
   }
   instantiate() {
@@ -666,7 +736,8 @@ class UI {
         options: {
           options : document.getElementById('ui_options'),
           planners : document.getElementById('ui_planners'),
-          algorithms: document.getElementById('ui_algorithms')
+          algorithms: document.getElementById('ui_algorithms'),
+          big_steps : document.getElementById('ui_big_steps')
         }
       },
       dialog : {
@@ -727,22 +798,24 @@ class UI {
       dialog_handler : undefined,
       planner : undefined,
       blob : null,
-      unique_map : 0
+      unique_map : 0,
+      big_steps : false
     };
     this.graphic_handlers = {};
     this.data_handlers = {};
     this.steps = {
       steps : [],
       add_step : undefined,
-      steps_compiled : [],
-      records : undefined
+      steps_compiled : []
     };
     /* Contains non-static html cell and path elements */
     this.ui_map = undefined;
     /* Contains non-static html info elements */
     this.info = {};
     /* Contains all plannes */
-    this.planners = {}
+    this.planners = {};
+    // The global planner options
+    this.options = {};
   }
   initialise_data() {
     var self = this;
@@ -753,8 +826,114 @@ class UI {
     var html_nav_obj = self.html.nav;
     var html_tooltip_obj = self.html.tooltip;
     var html_dialog = self.html.dialog;
+    var html_options_obj = html_nav_obj.options;
     var graphic_handlers = self.graphic_handlers;
     var data_handlers = self.data_handlers;
+    var options_obj = self.options;
+    // Options
+    function init_options() {
+      function template() {
+        var ele = document.createElement('TR');
+        var ele_title = document.createElement('TD');
+        ele_title.classList = 'title';
+        var ele_desc = document.createElement('TD');
+        ele_desc.classList = 'description';
+        var ele_input = document.createElement('TD');
+        ele_input.classList = 'input';
+        var ele_select = document.createElement('SELECT');
+        ele_input.appendChild(ele_select);
+        ele.appendChild(ele_title);
+        ele.appendChild(ele_input);
+        ele.appendChild(ele_desc);
+        return [ele, ele_title, ele_desc, ele_select];
+      };
+      function gen_origin_dirs() {
+        switch(options_obj.directions.choice) {
+          case Dir.ALL:
+            return '<option value="0">N</option><option value="1">NW</option><option value="2">W</option><option value="3">SW</option><option value="4">S</option><option value="5">SE</option><option value="6">E</option><option value="7">NE</option>';
+          case Dir.CARDINAL:
+            return '<option value="0" selected>N</option><option value="2">W</option><option value="4">S</option><option value="6">E</option>';
+          case Dir.ORDINAL:
+            return '<option value="1">NW</option><option value="3">SW</option><option value="5">SE</option><option value="7">NE</option>'
+        }
+      };
+      function gen_directions() {
+        var [ele, ele_title, ele_desc, ele_select] = template();
+        ele_title.innerHTML = 'Neighbor Connections';
+        ele_desc.innerHTML = '<em>8-connected</em> when all neighbors surrounding the each cell are searched.<br/><em>4-connected cardinals</em> when neighbors in N,W,S,E (cardinal) directions are searched.<br/><em>4-connected ordinals</em> when neighbors in NW,SW,SE,NE (ordinal) directions are searched. Note that this option may not result in a complete search.'
+        ele_select.innerHTML = '<option value ="0" selected>8-connected</option><option value="1">4-connected cardinals</option><option value="2">4-connected ordinals</option>';
+        ele_select.onchange = function(e) {
+          switch (e.target.selectedOptions[0].value) {
+            case '0':
+              options_obj.directions.choice = Dir.ALL;
+              break;
+            case '1':
+              options_obj.directions.choice = Dir.CARDINAL;
+              break;
+            case '2':
+              options_obj.directions.choice = Dir.ORDINAL;
+              break;
+          }
+          console.log(e.target.selectedOptions[0].value)
+          options_obj.origin.ele_select.innerHTML = gen_origin_dirs();
+        }
+        // inits
+        self.options.directions = {
+          choice : Dir.ALL,
+          ele_select: ele_select,
+          ele : ele
+        }
+      };
+      function gen_blocking() {
+        var [ele, ele_title, ele_desc, ele_select] = template();
+        ele_title.innerHTML = 'Diagonal Blocking';
+        ele_desc.innerHTML = '<em>Block</em> connection to an ordinal neighbor (e.g. NW) if there are obstacles in its applicable cardinal directions (e.g. N, W). <br/><em>Unblock</em> to ignore this constraint'
+        ele_select.innerHTML = '<option value ="1" selected>Block</option><option value="0">Unblock</option>';
+        ele_select.onchange = function(e) {
+          options_obj.blocking.choice = e.target.selectedOptions[0].value !== '0';
+        };
+        // inits
+        self.options.blocking = {
+          choice : true,
+          ele_select: ele_select,
+          ele : ele
+        }
+      };
+      function gen_origin() {
+        var [ele, ele_title, ele_desc, ele_select] = template();
+        ele_title.innerHTML = 'First Neighbor';
+        ele_desc.innerHTML = 'The first direction to begin neighbour searching. Can be used for breaking ties. <em>N</em> is upwards (+i, row). <br/><em>W</em> is leftwards (+j, column).'
+        ele_select.innerHTML = gen_origin_dirs();
+        ele_select.onchange = function(e) {
+          options_obj.origin.choice = parseInt(e.target.selectedOptions[0].value);
+        };
+        // inits
+        self.options.origin = {
+          choice : Dir.N,
+          ele_select: ele_select,
+          ele : ele
+        }
+      };
+      function gen_anticlockwise() {
+        var [ele, ele_title, ele_desc, ele_select] = template();
+        ele_title.innerHTML = 'Search Direction';
+        ele_desc.innerHTML = 'The rotating direction to search neighbors. Can be used for breaking ties.<br/><em>Anticlockwise</em> means the rotation from N to W. <br/><em>Clockwise</em> for the opposite rotation'
+        ele_select.innerHTML = '<option value ="1" selected>Anticlockwise</option><option value="0">Clockwise</option>';
+        ele_select.onchange = function(e) {
+          options_obj.anticlockwise.choice = e.target.selectedOptions[0].value !== '0';
+        };
+        // inits
+        self.options.anticlockwise = {
+          choice : true,
+          ele_select: ele_select,
+          ele : ele
+        }
+      };
+      gen_directions();
+      gen_blocking();
+      gen_origin();
+      gen_anticlockwise();
+    };
     // Dialog
     function init_dialog() {
       var templates_ui = document.getElementById('ui_dialog_templates');
@@ -762,10 +941,41 @@ class UI {
       var dialog_templates = html_dialog.templates;
       var key, template;
       for (var t=0; t<templates.length; t++) {
-        template = templates[t]
-        if (template.nodeType == 1) {
+        template = templates[t];
+        if (template.nodeType === 1) {
           key = template.getAttribute('key');
           dialog_templates[key] = template;
+          // for planners, append the options
+          if (key === 'planners') {
+            // table, tbody, tr
+            var opts_parent = template.firstElementChild.firstElementChild;
+            var opt = opts_parent.firstElementChild.nextElementSibling;
+            var opts = [];
+            // iterate over the options
+            while (opt !== null) {
+              switch(opt.getAttribute('key')) {
+                case 'directions':
+                  opts_parent.insertBefore(self.options.directions.ele, opt);
+                  opts.push(opt);
+                  break;
+                case 'blocking':
+                  opts_parent.insertBefore(self.options.blocking.ele, opt);
+                  opts.push(opt);
+                  break;
+                case 'origin':
+                  opts_parent.insertBefore(self.options.origin.ele, opt);
+                  opts.push(opt);
+                  break;
+                case 'anticlockwise':
+                  opts_parent.insertBefore(self.options.anticlockwise.ele, opt);
+                  opts.push(opt);
+                  break;
+              }
+              opt = opt.nextElementSibling;
+            }
+            for(const opt of opts)
+              opts_parent.removeChild(opt);
+          }
         }
       }
       templates_ui.parentNode.removeChild(templates_ui);
@@ -806,7 +1016,7 @@ class UI {
           state.pen2 === 0 ? Infinity : 0
         );
         // update tooltip
-        graphic_handlers.display_tooltip('pen');
+        graphic_handlers.update_tooltip('pen');
       }, false);
       // Click initial - step to initial
       html_nav_obj.run.initial.addEventListener('click', function(e) {
@@ -832,78 +1042,13 @@ class UI {
       html_nav_obj.file.build_j.addEventListener('input', function(e) {
         graphic_handlers.validate_map_size(e.target);
       }, false)
+      // Change big steps
+      html_options_obj.big_steps.addEventListener('click', function(e) {
+        graphic_handlers.set_big_steps(!state.big_steps);
+      }, false);
       // Tooltips
-      // Tooltips - Build
-      html_tooltip_obj.tooltip.style.display = 'none';
-      html_nav_obj.file.build.addEventListener('mouseenter', function(e) {
-        graphic_handlers.display_tooltip('build');
-      }, false);
-      html_nav_obj.file.build.addEventListener('mouseleave', function(e) {
-          graphic_handlers.hide_tooltip();
-        }, false);
-      // Tooltips - Save
-      html_nav_obj.file.save.addEventListener('mouseenter', function(e) {
-        graphic_handlers.display_tooltip('save');
-      }, false);
-      html_nav_obj.file.save.addEventListener('mouseleave', function(e) {
-          graphic_handlers.hide_tooltip();
-        }, false);
-      // Tooltips - Load
-      html_nav_obj.file.load.addEventListener('mouseenter', function(e) {
-        graphic_handlers.display_tooltip('load');
-      }, false);
-      html_nav_obj.file.load.addEventListener('mouseleave', function(e) {
-          graphic_handlers.hide_tooltip();
-        }, false);
-      // Tooltips - Pen
-      html_nav_obj.edit.pen.addEventListener('mouseenter', function(e) {
-        graphic_handlers.display_tooltip('pen');
-      }, false);
-      html_nav_obj.edit.pen.addEventListener('mouseleave', function(e) {
-          graphic_handlers.hide_tooltip();
-        }, false);
-      // Tooltips - Exit
-      html_nav_obj.run.exit.addEventListener('mouseenter', function(e) {
-        graphic_handlers.display_tooltip('exit');
-      }, false); 
-      html_nav_obj.run.exit.addEventListener('mouseleave', function(e) {
-          graphic_handlers.hide_tooltip();
-        }, false);
-      // Tooltips - Initial
-      html_nav_obj.run.initial.addEventListener('mouseenter', function(e) {
-        graphic_handlers.display_tooltip('initial');
-      }, false);    
-      html_nav_obj.run.initial.addEventListener('mouseleave', function(e) {
-          graphic_handlers.hide_tooltip();
-        }, false);
-      // Tooltips - Prev
-      html_nav_obj.run.prev.addEventListener('mouseenter', function(e) {
-        graphic_handlers.display_tooltip('prev');
-      }, false);      
-      html_nav_obj.run.prev.addEventListener('mouseleave', function(e) {
-          graphic_handlers.hide_tooltip();
-        }, false);
-      // Tooltips - Play
-      html_nav_obj.run.play.addEventListener('mouseenter', function(e) {
-        graphic_handlers.display_tooltip('play');
-      }, false); 
-      html_nav_obj.run.play.addEventListener('mouseleave', function(e) {
-          graphic_handlers.hide_tooltip();
-        }, false);
-      // Tooltips - Next
-      html_nav_obj.run.next.addEventListener('mouseenter', function(e) {
-        graphic_handlers.display_tooltip('next');
-      }, false);    
-      html_nav_obj.run.next.addEventListener('mouseleave', function(e) {
-          graphic_handlers.hide_tooltip();
-        }, false);      
-      // Tooltips - Final
-      html_nav_obj.run.final.addEventListener('mouseenter', function(e) {
-        graphic_handlers.display_tooltip('final');
-      }, false);   
-      html_nav_obj.run.final.addEventListener('mouseleave', function(e) {
-        graphic_handlers.hide_tooltip();
-      }, false);
+      for (const k of ['build', 'save', 'load', 'pen', 'exit', 'initial', 'prev', 'play', 'next', 'final', 'planners', 'big_steps'])
+        graphic_handlers.update_tooltip(k);
       html_nav_obj.options.planners.addEventListener('click', function(e) {
         graphic_handlers.display_dialog('planners');
       }, false);
@@ -1098,13 +1243,13 @@ class UI {
     function init_steps() {
       // The user level method for adding a step of steps
       // step methods are located in UIStep
-      self.steps.add_step = function() {
-        var step = new UIStep();
+      self.steps.add_step = function(major, merge) {
+        var step = new UIStep(major, merge);
         self.steps.steps.push(step);
         return step;
       }
     }
-    
+    init_options();
     init_dialog();
     init_nav();
     init_sim();
@@ -1125,6 +1270,7 @@ class UI {
     var html_tooltip_obj = self.html.tooltip;
     var html_options_obj = html_nav_obj.options;
     var steps_obj = self.steps;
+    var options_obj = self.options;
     // Display Dialog
     handlers.display_dialog = function(dialog_key) {
       state.dialog = true;
@@ -1140,6 +1286,7 @@ class UI {
           handlers.validate_map_size(nav_file.build_j);
           break;
         case 'planners':
+          var opt;
           state.dialog_handler = handlers.update_planner;
           title = 'Choose Planners';
           template = html_dialog_obj.templates[dialog_key];
@@ -1166,66 +1313,54 @@ class UI {
       }
     };
     // Display Tooltips
-    handlers.display_tooltip = function(tooltip_key) {
+    handlers.update_tooltip = function(tooltip_key) {
       var box, ele, help;
       switch (tooltip_key) {
         case 'build':
-          help = 'New map';
-          ele = html_nav_obj.file.build;
-          break;
+          html_nav_obj.file.build.setAttribute('alt', 'New map');
+          return;
         case 'save':
-          help = 'Save the map';
-          ele = html_nav_obj.file.save;
-          break;
+          html_nav_obj.file.save.setAttribute('alt', 'Save map');
+          return;
         case 'load':
-          help = 'Load a map';
-          ele = html_nav_obj.file.load;
-          break;
+          html_nav_obj.file.load.setAttribute('alt', 'Load map');
+          return;
         case 'pen':
           if (state.pen === Infinity)
-            help = 'Switch to obstacle-clearing mode';
+            html_nav_obj.edit.pen.setAttribute('alt', 'Switch to obstacle-clearing mode');
           else
-            help = 'Switch to obstacle-drawing mode';
-          ele = html_nav_obj.edit.pen;
-          break;
+            html_nav_obj.edit.pen.setAttribute('alt', 'Switch to obstacle-drawing mode');
+          return;
         case 'exit':
-          help = 'Switch to editing mode';
-          ele = html_nav_obj.run.exit;
-          break;
+          html_nav_obj.run.exit.setAttribute('alt', 'Switch to editing mode');
+          return;
         case 'initial':
-          help = 'Go back to the start';
-          ele = html_nav_obj.run.initial;
-          break;
+          html_nav_obj.run.initial.setAttribute('alt', 'Go to start');
+          return;
         case 'prev':
-          help = 'Step back';
-          ele = html_nav_obj.run.prev
-          break;
+          html_nav_obj.run.prev.setAttribute('alt', 'Step back');
+          return;
         case 'play':
-          if (state.play == true)
-            help = 'Pause'
+          if (state.play === true)
+            html_nav_obj.run.play.setAttribute('alt', 'Pause');
           else
-            help = 'Play'
-          ele = html_nav_obj.run.play;
-          break;
+            html_nav_obj.run.play.setAttribute('alt', 'Play');
+          return;
         case 'next':
-          help = 'Step forward';
-          ele = html_nav_obj.run.next;
-          break;
+          html_nav_obj.run.next.setAttribute('alt', 'Step forward');
+          return;
         case 'final':
-          help = 'Go to the end';
-          ele = html_nav_obj.run.final;
-          break;
+          html_nav_obj.run.final.setAttribute('alt', 'Go to end');
+          return;
+        case 'big_steps':
+          if (state.big_steps === true)
+            html_nav_obj.options.big_steps.setAttribute('alt', 'Switch to a more detailed sim');
+          else 
+            html_nav_obj.options.big_steps.setAttribute('alt', 'Switch to a less detailed sim');
+          return;
+        case 'planners':
+          html_nav_obj.options.planners.setAttribute('alt', 'Choose the algorithm to sim');
       }
-      html_tooltip_obj.area.innerHTML = help;
-      var tooltip = html_tooltip_obj.tooltip;
-      var box = ele.getBoundingClientRect();
-      tooltip.style.top = '' + (ele.offsetTop + ele.offsetHeight + 10) + 'px';
-      tooltip.style.display = 'block';
-      tooltip.style.left = '' + (ele.offsetLeft + (ele.offsetWidth - tooltip.offsetWidth) / 2) + 'px';
-    }
-    // Hide Tooltips
-    handlers.hide_tooltip = function() {
-      html_tooltip_obj.tooltip.style.display = 'none';
     }
     // Toggle Info bar 
     handlers.toggle_info = function(show) {
@@ -1268,7 +1403,7 @@ class UI {
         handlers.play();
       }
       // update tooltip
-      handlers.display_tooltip('play');
+      handlers.update_tooltip('play');
     }
     // Switch modes between sim and edit
     handlers.switch_mode = function(sim) {
@@ -1284,6 +1419,7 @@ class UI {
         nav_run.next.style.display = 'flex';
         nav_run.final.style.display = 'flex';
         html_info_obj.info.style.display = 'flex';
+        html_nav_obj.options.big_steps.style.display = 'flex';
       } else {
         // Update play button
         handlers.play_pause(false);
@@ -1295,6 +1431,7 @@ class UI {
         nav_run.next.style.display = 'none';
         nav_run.final.style.display = 'none';
         html_info_obj.info.style.display = 'none';
+        html_nav_obj.options.big_steps.style.display = 'none';
         // Display elements
         html_nav_obj.file.file.style.display = 'flex';
         html_nav_obj.edit.edit.style.display = 'flex';
@@ -1312,6 +1449,16 @@ class UI {
       self.info = {};
       // remove info objects
       html_info_obj.panes.innerHTML = '';
+    }
+    // Toggle big steps
+    handlers.set_big_steps = function(big_steps) {
+      if (big_steps === true) {
+        html_options_obj.big_steps.classList.add('nav_btn_on');
+      } else {
+        html_options_obj.big_steps.classList.remove('nav_btn_on');
+      }
+      state.big_steps = big_steps;
+      handlers.update_tooltip('big_steps');
     }
     // Switch pen modes
     handlers.set_pens = function(pen, pen2) {
@@ -1464,42 +1611,12 @@ class UI {
       html_info_obj.panes.appendChild(ele_pane);
     }
     // Add new info text pane 
-    handlers.new_info_text_pane = function(key_title, value) {
-      // key_title[0] is key for title; [1] is title string
-      // value is initial value
-      // Check if info pane with key already exists
-      if (self.info.hasOwnProperty(key_title[0]))
-        throw 'An Info pane with the key "'.concat(key_title[0], '" already exists');
-      // build pane
-      var ele_pane = document.createElement('DIV');
-      ele_pane.classList.add('info_pane');
-      // build pane title
-      var ele_title = document.createElement('DIV');
-      ele_title.classList.add('info_pane_title');
-      ele_title.innerHTML = key_title[1];
-      ele_title.addEventListener('click', function(e) {
-        handlers.toggle_info_pane(this, !self.info[key_title[0]].show, key_title[0]);
-      }, false);
-      ele_pane.appendChild(ele_title);
-      // build content
-      var ele_content = document.createElement('DIV');
-      ele_content.classList.add('info_content');
-      // build the text
-      var ele_value = document.createElement('DIV');
-      ele_content.classList.add('info_text');
-      ele_value.innerHTML = value;
-      // append the nodes
-      ele_content.appendChild(ele_value);
-      ele_pane.appendChild(ele_content);
-      // add to dictionary
-      self.info[key_title[0]] = {
-        show : true,
-        title : ele_title, 
-        content : ele_content, 
-        value : ele_value
-      };
-      // add to html panes
-      html_info_obj.panes.appendChild(ele_pane);
+    handlers.new_info_text_pane = function(key, title, value) {
+      if (self.info.hasOwnProperty(key))
+        throw 'An Info pane with the key "'.concat(key, '" already exists');
+      var info_obj = new UIInfo(UIInfo.TEXT, title, value);
+      html_info_obj.panes.appendChild(info_obj.ele_pane);
+      self.info[key] = info_obj;
     }
     // Add new info list pane
     handlers.new_info_list_pane = function(key, title, description, list_titles) {
@@ -1536,10 +1653,10 @@ class UI {
     }
     // Change info text data
     handlers.set_info_text = function(pane_key, value) {
-      self.info[pane_key].value.innerHTML = value;
+      self.info[pane_key].set_text(value);
     }
     handlers.get_info_text = function(pane_key) {
-      return self.info[pane_key].value.innerHTML;
+      return self.info[pane_key].get_text();
     }
     // Change info list
     handlers.insert_list_item = function(pane_key, i, values) {
@@ -1717,7 +1834,11 @@ class UI {
       for (var s=0; s<steps.length; s++) {
         // for each step
         actions = steps[s].actions;
-        compiled_step = [];
+        compiled_step = {
+          actions: [],
+          major: steps[s].major,
+          merge: steps[s].merge
+        };
         // get the actions in the step
         for (var a=0; a<actions.length; a++) {
           action = actions[a];
@@ -1949,7 +2070,7 @@ class UI {
               break;
           }
           // append the compiled step to steps_compiled
-          compiled_step.push(compiled_action);
+          compiled_step.actions.push(compiled_action);
         }
         // compile the step
         steps_obj.steps_compiled.push(compiled_step);
@@ -1962,40 +2083,58 @@ class UI {
       if (state.step === steps_obj.steps_compiled.length)
         return false; // return if at the last state
       // state.step is always at the current step, first step is 1
-      state.step++;
-      var step = steps_obj.steps_compiled[state.step-1];
-      var action;
-      // iterate through every action in the step
-      for (var a=0; a<step.length; a++) {
-        action = step[a];
-        // run the forward handler
-        action.fwd_handler.apply(null, action.fwd_args);
+      var step, action, actions;
+      var steps = steps_obj.steps_compiled;
+      while (state.step < steps.length) {
+        step = steps[state.step++];
+        actions = step.actions;
+        // iterate through every action in the step
+        for (var a=0; a<actions.length; a++) {
+          action = actions[a];
+          // run the forward handler
+          action.fwd_handler.apply(null, action.fwd_args);
+        }
+        if (step.merge === true) {
+          continue;
+        }
+        if (state.big_steps === false || 
+          state.step !== steps.length && 
+          steps[state.step].major === true) {
+          break;
+        }
       }
       // for the play part
-      if (state.step === steps_obj.steps_compiled.length)
+      if (state.step === steps.length)
         if (state.play_handler_id !== undefined){
           handlers.play_pause(false);
         }
+      console.log('fwd out', state.step);
       return true;
     }
     // Previous step
     handlers.step_backward = function() {
-      if (state.step === 395)
-        var b = 'b';
       if (state.step === 0)
         return false; // return if at the first state
       // state.step is always at the current sttep, first step is 1
-      var step = steps_obj.steps_compiled[state.step-1];
-      var action;
-      // iterate through every action in the step
-      for (var a=step.length-1; a>=0; a--) {
-        if (a === 9)
-          var b = 'b';
-        action = step[a];
-        // run the forward handler
-        action.bck_handler.apply(null, action.bck_args);
+      var action, step, actions, steps;
+      steps = steps_obj.steps_compiled;
+      while (state.step > 0) {
+        step = steps[--state.step];
+        actions = step.actions;
+        // iterate through every action in the step
+        for (var a=actions.length-1; a>=0; a--) {
+          action = actions[a];
+          // run the forward handler
+          action.bck_handler.apply(null, action.bck_args);
+        }
+        if (state.step !== 0 && steps[state.step-1].merge === true) {
+          continue;
+        }
+        if (state.big_steps === false || step.major === true) {
+          break;
+        }
       }
-      state.step--;
+      console.log('bck out', state.step);
       return true;
     }
     // Step to end
@@ -2045,7 +2184,7 @@ class UI {
       html_map_obj.goal.style.top = xy.y + 'px';
       html_map_obj.goal.style.left = xy.x + 'px';
     }
-    handlers.add_planner = function(key, display_name) {
+    handlers.add_planner = function(key, display_name, options) {
       var planner_dialog = html_dialog_obj.templates.planners;
       var ele_algorithms = html_options_obj.algorithms;
       // add the option to the dropdown in the dialog
@@ -2057,8 +2196,6 @@ class UI {
         if (c.nodeType == 1)
           c.removeAttribute('selected');
       ele_algorithms.appendChild(ele_option);
-      // set the chosen planner
-      state.planner = key;
       // set the button to display display_name
       html_options_obj.planners.innerHTML = display_name;
     }
@@ -2194,7 +2331,6 @@ class UI {
     }
     
   }
-  
   initialise_data_handlers() {
     var handlers = this.data_handlers;
     var self = this;
@@ -2242,7 +2378,13 @@ ui = new UI();
 class Planner {
   constructor(key, display_name) {
     this.ui = window.ui;
-    this.ui.planners[key] = {display_name: display_name, planner: this};
+    var ui = this.ui;
+    this.ui.planners[key] = {
+      display_name: display_name, 
+      planner: this
+      };
+    // set the chosen planner
+    this.ui.state.planner = key;
     this.ui.graphic_handlers.add_planner(key, display_name);
     this.add_step = this.ui.steps.add_step;
     this.new_info_pair_pane = this.ui.graphic_handlers.new_info_pair_pane;
@@ -2250,11 +2392,11 @@ class Planner {
     this.new_info_list_pane = this.ui.graphic_handlers.new_info_list_pane;
     this.reset_positions();
   }
+  get big_steps() {
+    return this.ui.state.big_steps;
+  }
   get map() {
     return this.ui.ui_map;
-  }
-  initialise_records(data) {
-    this.ui.steps.records = new UIRecord(data);
   }
   reset_positions() {
     this.ui.graphic_handlers.update_cells_box();
@@ -2265,6 +2407,10 @@ class Planner {
   }
   compile() {
     this.reset_positions();
+    var opts = this.ui.options;
+    this.options = {};
+    for (const key of Object.keys(opts))
+      this.options[key] = opts[key].choice;
     this.run();
     this.ui.graphic_handlers.compile_steps();
   }
