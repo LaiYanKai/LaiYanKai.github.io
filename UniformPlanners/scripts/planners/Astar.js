@@ -1,9 +1,8 @@
 class AStar extends Planner {
   constructor() {
     super('astar', 'A*');
-    this.init();
   }
-  init() {
+  run() {
     this.graph = new AStar.Graph();
     // init start_vertex
     var start_vertex = this.graph.vertices(this.start_position);
@@ -11,19 +10,16 @@ class AStar extends Planner {
     start_vertex.source = undefined;
     this.open_list = new AStar.OpenList();
     this.open_list.add(undefined, start_vertex);
-    this.new_info_text_pane(['info', 'Status'], '<b>Initialising...</b>');
-    this.new_info_list_pane('c', 'Current (Expanded) Vertex', 'Put the starting vertex in the open list, so it is programmatically simpler (in terms of looping) to implement.', [['Current', 'F', 'G', 'H', 'Parent']]);
+    this.new_info_text_pane('i', 'Status', '<b>Initialising...</b>');
+    this.new_info_list_pane('c', 'Expanded (Current) Vertex', 'Put the starting vertex in the open list, so it is programmatically simpler (in terms of looping) to implement.', [['Current', 'F', 'G', 'H', 'Parent']]);
     this.new_info_list_pane('ol', 'Open List', '', [['Neighbor', 'F','G','H', 'Parent']]);
-  }
-  run() {
-    this.init();
-    var neighbors, expanded_vertex, expanded_node, step, tentative_g, neighbor_vertex, expanded_pos, neighbor_pos, idx=0;
+    var neighbors, neighbor, expanded_vertex, expanded_node, step, tentative_g, neighbor_vertex, expanded_pos, neighbor_pos, idx=0;
     var path_found = false;
     var front_pos, prev_front_pos = undefined;
     var open_list = this.open_list;
     var goal_cost = Infinity;
     // fill the cost of the start vertex
-    step = this.add_step();
+    step = this.add_step(false, false);
     step.set_cell_text(this.start_position, open_list.peek_lowest_fcost_node().vertex.fcost.toFixed(1));
     step.set_list_description('ol', 'Added the starting vertex');
     // add the start vertex
@@ -42,7 +38,7 @@ class AStar extends Planner {
       // get the vertex with lowest fcost from open_list
       expanded_node = open_list.get_lowest_fcost_node();
       step.remove_list_item('ol', 0);
-      step.set_info_text('info', '<b>Exploring...</b></br>- Retrieve lowest cost vertex from open-list.');
+      step.set_info_text('i', '<b>Exploring...</b></br>- Retrieve lowest cost vertex from open-list.');
       step.set_list_description('c', 'Retrieved vertex with <b>lowest f-cost</b> <i>(vanilla implementation)</i> from open-list. If there are ties in f-costs, take the one with the <b>lowest h-cost</b> <i>(optimised)</i>.');
       step.set_list_description('ol', 'Removed first element, because the list was already sorted');      
       expanded_vertex = expanded_node.vertex;
@@ -74,9 +70,10 @@ class AStar extends Planner {
       
       // get neighbors
       step = this.add_step();
-      step.set_info_text('info', '<b>Exploring...</b></br>- Retrieve lowest cost node from open-list.</br>&nbsp;&nbsp;- Check its neighbors');
+      step.set_info_text('i', '<b>Exploring...</b></br>- Retrieve lowest cost vertex from open-list.</br>&nbsp;&nbsp;- Check its neighbors');
       neighbors = this.get_neighbors(expanded_vertex);
-      for (const neighbor of neighbors) {
+      for (var n=0; n<neighbors.length; n++) {
+        neighbor = neighbors[n];
         neighbor_vertex = neighbor.vertex;
         neighbor_pos = neighbor.position;
         
@@ -108,14 +105,15 @@ class AStar extends Planner {
           
           // GUI - update the information with new step
           step = this.add_step();
-          step.set_info_text('info', '<b>Path found!</b><br/>- Trace back to the starting vertex by iterating over their parents.');
+          step.set_cell_class(expanded_pos, 'cell_visited');
+          step.set_info_text('i', '<b>Path found!</b><br/>- Trace back to the starting vertex by iterating over their parents.');
           // GUI - set the goal as the front and remove current as front
           step.set_cell_class(neighbor_pos, 'cell_front');
           step.set_cell_class(expanded_pos, 'cell_front', true);
           step.set_list_description('c', 'Neighbor ('.concat(neighbor_pos.i, ', ', neighbor_pos.j, ') is the <b>GOAL</b>!'));
           
           // trace back to start
-          step = this.add_step();
+          step = this.add_step(true);
           step.edit_list_item('c', 0, [
             '('.concat(neighbor_pos.i, ', ', neighbor_pos.j, ')'), 
             goal_cost.toFixed(2), 
@@ -189,6 +187,7 @@ class AStar extends Planner {
         }
         step.set_cell_focus(neighbor_pos, false);
       }
+      step.major = true;
       // break out of while loop here if path is found
       if (path_found === true)
         break;
@@ -197,20 +196,20 @@ class AStar extends Planner {
     }
     // check if the while loop found the path
     if (path_found === false) {
-      step = this.add_step();
-      step.set_info_text('info', 'NO PATH FOUND!!');
+      step = this.add_step(true);
+      step.set_info_text('i', 'NO PATH FOUND!!');
     } else {
-      step.set_info_text('info', '<b>Complete</b>! The path costs (g-cost) $'.concat(goal_cost.toFixed(2)));
+      step.set_info_text('i', '<b>Complete</b>! The path costs (g-cost) $'.concat(goal_cost.toFixed(2)));
+      step.set_list_description('c', '<b>The <em>Goal</em> Vertex</b>');
     }
     step.set_list_description('ol', 'Items left in open list');
-    step.set_list_description('c', '<b>The <em>Goal</em> Vertex</b>');
   }
   get_neighbors(expanded_vertex) {
     // the neighboring vertex fcost, source are not initialised / recalculated
     var vertex, next_position, next_cell, d, c, obs;
     var neighbors = [];
-    for (const ord of Ord.list) {
-      next_position = expanded_vertex.position.add(Ord.ord_to_vec(ord));
+    for (const ord of Dir.list_dirs()) {
+      next_position = expanded_vertex.position.add(Dir.dir_to_vec(ord));
       next_cell = this.map.cells(next_position);
       if (next_cell === null) {
         vertex = null;
@@ -219,14 +218,14 @@ class AStar extends Planner {
         vertex = this.graph.vertices(next_position)
         obs = next_cell.is_obstacle();
       }
-      // get diagonal / cardinal steps
-      if (Ord.is_diagonal(ord)) {
+      // get ordinal / cardinal steps
+      if (Dir.is_ordinal(ord)) {
         d = 1; c = 0;
       } else {
         d = 0; c = 1;
       }
       neighbors[ord] = {
-        num_diagonals: d,
+        num_ordinals: d,
         num_cardinals: c,
         vertex: vertex,
         obstacle : obs,
@@ -240,7 +239,7 @@ class AStar extends Planner {
     // calculate g cost object
     var gs = source.f.g;
     return new AStar.Cost(
-      gs.diagonals + neighbor.num_diagonals,
+      gs.ordinals + neighbor.num_ordinals,
       gs.cardinals + neighbor.num_cardinals
     );
   }
@@ -248,11 +247,11 @@ class AStar extends Planner {
     vertex.f.g = g;
     var h = vertex.f.h;
     // the below needs to be calculated this way to avoid floating point problems
-    vertex.f.total = h.cardinals + g.cardinals + (g.diagonals + h.diagonals) * Math.SQRT2;
+    vertex.f.total = h.cardinals + g.cardinals + (g.ordinals + h.ordinals) * Math.SQRT2;
   }
   get_h(vertex) {
     // calculate h cost object
-    // get diagonal distance betw. neighbor and goal;
+    // get ordinal distance betw. neighbor and goal;
     var p = vertex.position;
     var di = Math.abs(this.goal_position.i - p.i);
     var dj = Math.abs(this.goal_position.j - p.j);
@@ -269,27 +268,27 @@ class AStar extends Planner {
     vertex.f.g = g;
     vertex.f.h = h;
     // the below needs to be calculated this way to avoid floating point problems
-    vertex.f.total = h.cardinals + g.cardinals + (g.diagonals + h.diagonals) * Math.SQRT2;
+    vertex.f.total = h.cardinals + g.cardinals + (g.ordinals + h.ordinals) * Math.SQRT2;
   }
 };
 AStar.Cost = class {
-  constructor(num_diagonals, num_cardinals) {
-    this.diagonals = num_diagonals;
+  constructor(num_ordinals, num_cardinals) {
+    this.ordinals = num_ordinals;
     this.cardinals = num_cardinals;
-    this.total = num_diagonals * Math.SQRT2 + num_cardinals;
+    this.total = num_ordinals * Math.SQRT2 + num_cardinals;
   }
 }
 AStar.FCost = class {
   constructor() {
-    // var d = prev_gcost.diagonals + add_diagonals;
+    // var d = prev_gcost.ordinals + add_ordinals;
     // var c = prev_gcost.cardinals + add_cardinals
     this.g = {
-      diagonals: Infinity,
+      ordinals: Infinity,
       cardinals: Infinity,
       total : Infinity
     };
     this.h = {
-      diagonals: Infinity,
+      ordinals: Infinity,
       cardinals: Infinity,
       total: Infinity
     };
