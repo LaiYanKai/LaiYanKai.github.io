@@ -117,6 +117,23 @@ sup, sub {
 sub { 
   top: 0.4em; 
 }
+.loading {
+  color: white;
+  background: black;
+  display: flex;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  align-items: center;
+  justify-content: center;
+  align-items: center;
+  font-size: 100px;
+  font-family: 'Trebuchet MS', sans-serif;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.8);
+}
 .containers {
   display: flex;
   align-content: flex-start;
@@ -368,8 +385,6 @@ input.nav_num {
 /* text */
 .info_text {
   display: block;
-  font-family: Arial, sans-serif;
-  font-size: 12px;
   flex-grow: 1;
   text-align: left;
 }
@@ -458,18 +473,53 @@ input.nav_num {
   font-weight: bold;
   font-style: italic;
 }
-/**************************** DIALOG **********************************/
-.dialog {
-  position: fixed;
-  display: flex;
-  background-color: rgba(0, 0, 50, 0.5);
+.info_container h1 {
+  color: red;
+  font-family: "Unica One", serif;
+  font-size: 30px;
+  padding: 5px 0 5px 0;
+  font-weight: bold;
+  line-height: 35px;
+  text-align: center;
   width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
+  margin: 5px 0 5px 0;
+}
+.info_container h1:not(:last-child) {
+  border-bottom: 1px solid var(--theme-3);
+  padding: 0px 0 5px 0;
+}
+.info_container p {
+  margin: 10px 0 10px 0;
+}
+/**************************** DIALOG **********************************/
+@media (min-height: 600px) {
+  .dialog {
+    position: fixed;
+    display: flex;
+    background-color: rgba(0, 0, 50, 0.5);
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+  }
+}
+@media (max-height: 600px) {
+  .dialog {
+    position: absolute;
+    display: flex;
+    background-color: rgba(0, 0, 50, 0.5);
+    min-width: 100%;
+    min-height: 100%;
+    top: 0;
+    left: 0;
+    align-content: flex-start;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 200;
+  }
 }
 .dialog_container {
   display: flex;
@@ -486,6 +536,7 @@ input.nav_num {
   align-content: center;
   border-radius: 15px;
   flex-flow: column wrap;
+  max-width: 100%;
 }
 .dialog_title {
   padding: 5px;
@@ -496,7 +547,8 @@ input.nav_num {
   display: flex;
   padding: 5px;
   width: 100%;
-  align-content: flex-start;
+  align-items: center;
+  align-content: center;
   justify-content: center;
   flex-flow: column wrap;
   border-top: 1px solid rgba(120, 120, 150, 0.8);
@@ -523,8 +575,8 @@ input.nav_num {
   vertical-align: top;
   padding: 5px;
 }
-.dialog_planners tr:not(:last-child) td {
-  border-bottom: 1px solid rgba(120, 120, 150, 0.5);
+.dialog_planners tr:nth-child(even) td {
+  background: rgba(120, 120, 150, 0.1);
 }
 .dialog_planners .title {
   font-family: "Unica One", sans-serif;
@@ -534,20 +586,20 @@ input.nav_num {
   font-family: courier new, sans-serif;
   font-size: 10px;
   text-align: justify;
-  max-width: 300px;
+  max-width: 500px;
 }
 .dialog_planners .description em {
   color: var(--theme-2);
   font-weight: bold;
-  font-style: italics;
+  font-style: italic;
   font-family: "Trebuchet MS", sans-serif;
   quotes: "“" "”";
 }
 .dialog_planners .input {
   min-width: 100px;
 }
-.dialog_planners .input input, 
-.dialog_planners .input select {
+.dialog_planners input, 
+.dialog_planners select {
   width: 100%;
 }
 /**************************** TOOLTIP  *******************************/

@@ -1,396 +1,583 @@
 class AStar extends Planner {
   constructor() {
-    super('astar', 'A*');
+    super ('astar', 'A*', [
+      'blocking',
+      'directions',
+      'origin',
+      'anticlockwise',
+      'metric',
+      'fh_optimisation'
+    ]);
   }
   run() {
-    this.graph = new AStar.Graph();
-    // init start_vertex
-    var start_vertex = this.graph.vertices(this.start_position);
-    this.update_f(start_vertex, new AStar.Cost(0, 0), this.get_h(start_vertex));
-    start_vertex.source = undefined;
-    this.open_list = new AStar.OpenList();
-    this.open_list.add(undefined, start_vertex);
+    var prev_front_pos = undefined, idx=0;
+    var step;
+    // ==== Inits - Data ====
+    // Get the options
+    var opt_blocking = this.options.blocking;
+    var opt_directions = this.options.directions;
+    var opt_origin = this.options.origin;
+    var opt_anticlockwise = this.options.anticlockwise;
+    var opt_metric = this.options.metric;
+    this.opt_directions = opt_directions;
+    // Build the graph using the goal_position to do a one-pass calculation of the h-costs
+    var graph = new AStar.Graph(this.map.num_i, this.map.num_j, this.goal_position, opt_metric);
+    this.graph = graph;
+    var list = new AStar.OpenList(this.options.fh_optimisation);
+    
+    // add start vertex to unvisited list
+    var expanded_vertex = graph.vertices(this.start_position);
+    expanded_vertex.set_g(); // set g-cost to zero
+    list.add(expanded_vertex, expanded_node);
+   // Get the search directions
+    var neighbor_dirs = Dir.list_dirs(opt_origin, opt_anticlockwise, opt_directions);
+    // neighbor_vecs : the relative vectors of the neighbors
+    this.neighbor_vecs = neighbor_dirs.map(Dir.dir_to_vec);
+    // get the neighbor dirs as string
+    // also get the direction type (ordinal is true)
+    var dir_to_string = neighbor_dirs.map(Dir.dir_to_string);
+    var dir_is_ordinal = neighbor_dirs.map(Dir.is_ordinal);
+    
+    // ==== Inits - GUI ====
     this.new_info_text_pane('i', 'Status', '<b>Initialising...</b>');
-    this.new_info_list_pane('c', 'Expanded (Current) Vertex', 'Put the starting vertex in the open list, so it is programmatically simpler (in terms of looping) to implement.', [['Current', 'F', 'G', 'H', 'Parent']]);
-    this.new_info_list_pane('ol', 'Open List', '', [['Neighbor', 'F','G','H', 'Parent']]);
-    var neighbors, neighbor, expanded_vertex, expanded_node, step, tentative_g, neighbor_vertex, expanded_pos, neighbor_pos, idx=0;
-    var path_found = false;
-    var front_pos, prev_front_pos = undefined;
-    var open_list = this.open_list;
-    var goal_cost = Infinity;
-    // fill the cost of the start vertex
+    this.new_info_list_pane('c', 'Visited (Current) Vertex', 'Put the starting vertex in the Unvisited List. It is programmatically simpler to implement it this way', [['Position', 'F-cost', 'G-cost', 'H-cost', 'Parent']]);
+    this.new_info_list_pane('n', 'Neighbors', '', [['Dir.', 'Position', 'F-cost', 'G-cost', 'H-cost', 'State']]);
+    this.new_info_list_pane('u', 'Open List', '', [['Vertex', 'F-cost', 'G-cost', 'H-cost', 'Parent']]);
     step = this.add_step(false, false);
-    step.set_cell_text(this.start_position, open_list.peek_lowest_fcost_node().vertex.fcost.toFixed(1));
-    step.set_list_description('ol', 'Added the starting vertex');
-    // add the start vertex
-    var start_vertex = open_list.peek_lowest_fcost_node().vertex;
-    step.insert_list_item('ol', idx, [
-      '('.concat(this.start_position.i, ', ', this.start_position.j, ')'), 
-      start_vertex.fcost.toFixed(2),
-      0,
-      start_vertex.hcost.toFixed(2),
-      '-'
-      ]);
+    // update the starting vertex cell with cost information
+    step.set_cell_text(this.start_position, this.cost_to_string(expanded_vertex.f, 1));
+    // update the unvisited info description with starting vertex
+    step.set_list_description('u', 'Added the starting vertex');
+    // add the start vertex into the unvisited info list
+    step.insert_list_item('u', 0, [
+      this.start_position.string(), 
+      this.cost_to_string(expanded_vertex.f, 2),
+      this.cost_to_string(expanded_vertex.f.g, 2),
+      this.cost_to_string(expanded_vertex.f.h, 2),
+      'undefined']);
+    // color the new entry in the unvisited info list
+    step.color_list_item('u', 0, true);
+    // add a N/A entry to the current vertex
     step.insert_list_item('c', 0, ['-', '-', '-', '-', '-']);
-    step.color_list_item('ol', 0, true);
-    step = this.add_step();
-    while (open_list.is_not_empty()) {
-      // get the vertex with lowest fcost from open_list
-      expanded_node = open_list.get_lowest_fcost_node();
-      step.remove_list_item('ol', 0);
-      step.set_info_text('i', '<b>Exploring...</b></br>- Retrieve lowest cost vertex from open-list.');
-      step.set_list_description('c', 'Retrieved vertex with <b>lowest f-cost</b> <i>(vanilla implementation)</i> from open-list. If there are ties in f-costs, take the one with the <b>lowest h-cost</b> <i>(optimised)</i>.');
-      step.set_list_description('ol', 'Removed first element, because the list was already sorted');      
+    // add entries to the neighbors info
+    for (var n=0; n<dir_to_string.length; n++) {
+      step.insert_list_item('n', n, [dir_to_string[n], '-', '-', '-', '-', '-']);
+    }
+    
+    
+    // ======================== Exploring part ================================
+    var expanded_pos, neighbor_vertex, neighbor_pos, neighbor_nodes, neighbor_poses, neighbor_pos_string, 
+      neighbor_gc_string, neighbor_hc_string, neighbor_fc_string, expanded_pos_string, tentative_g, 
+      neighbor, expanded_node, prior_g_cost, num_expansions=0;
+    var path_found = false;
+    step = this.add_step(true);
+    while(list.is_populated()) {
+      // ======================== Retrieve Lowest Cost Vertex ================================
+      // get the lowest cost vertex from the unvisited list
+      expanded_node = list.get_cheapest_node();
       expanded_vertex = expanded_node.vertex;
+      // get its position
       expanded_pos = expanded_vertex.position;
+      // get the string
+      expanded_pos_string = expanded_pos.string();
+      // ==== GUI ====
+      // remove the first item in the unvisited info list
+      step.remove_list_item('u', 0);
+      // set sim status string
+      step.set_info_text('i', '<b>Exploring...</b></br>- Retrieve cheapest (f-cost) vertex from open-list.')
+      // set current vertex status to reflect removal
+      step.set_list_description('c', 'Retrieved cheapest vertex.');
+      // set unvisited vertex status to reflect removal
+      step.set_list_description('u', 'Removed first element, because the list was already sorted'); 
+      // empty the neighbor status
+      step.set_list_description('n', ''); 
+      // set the current vertex info to the lowest cost node
       step.edit_list_item('c', 0, [
-        '('.concat(expanded_pos.i, ', ', expanded_pos.j, ')'), 
-        expanded_vertex.fcost.toFixed(2),
-        expanded_vertex.gcost.toFixed(2),
-        expanded_vertex.hcost.toFixed(2),
-        expanded_vertex.source === undefined ? 
-          'Starting vertex has no parent' :
-          '('.concat(expanded_vertex.source.position.i, ', ', expanded_vertex.source.position.j, ')')
+        expanded_pos_string, 
+        this.cost_to_string(expanded_vertex.f, 2),
+        this.cost_to_string(expanded_vertex.f.g, 2),
+        this.cost_to_string(expanded_vertex.f.h, 2),
+        expanded_vertex.parent === undefined ? 
+          'undefined' : 
+          expanded_vertex.parent.position.string()
       ]);
-      // ignore if expanded vertex has a source vertex that is different from the source vertex recorded in the open list. 
-      // This is because the expanded vertex already has a cheaper source.
-      // current vertex may have already been added prior to the cheaper source update
-      if (expanded_node.source !== undefined && expanded_vertex.source.position.equals(expanded_node.source.position) === false) {
-        continue;
-        step.set_list_description('c', 'The parent of the expanded vertex is different as the one recorded in the open list. This means a cheaper path to the vertex was found, so this open-list item is ignored');
-        step.set_cell_focus(expanded_pos, true);
-        step = this.add_step();
-        step.set_cell_focus(expanded_pos, false);
-      }
-      // add a GUI Step - update the front cell
-      if (prev_front_pos !== undefined)
+      // set current cell as visited
+      step.set_cell_class(expanded_pos, 'cell_visited');
+      // update the "front" cell of the algorithm
+      if (prev_front_pos !== undefined) // for the start
         step.set_cell_class(prev_front_pos, 'cell_front', true);
       step.set_cell_class(expanded_pos, 'cell_front');
-      prev_front_pos = expanded_pos;
+      prev_front_pos = expanded_pos
+      // reset the neighbors info
+      for (var n=0; n<dir_to_string.length; n++) {
+        step.edit_list_item('n', n, [dir_to_string[n], '?', '?', '?', '?', '?']);
+      }
       
-      // get neighbors
+      // ======================== Ignore Vertex if Parent is Different as Recorded ================================
+      if (expanded_node.parent !== undefined && expanded_node.has_equal_parents() === false) {
+        // === GUI ===
+        // Set current vertex status to reflect skipping
+        step.set_list_description('c', 'A cheaper path was already found. <em>Skip</em>');
+        // Add a new step for the next retrieval
+        step = this.add_step();
+        continue;
+      }
+      // Increment the number of expansions
+      num_expansions++;
+      
+      // ======================== Get the neighbors ================================
+      neighbor_nodes = this.get_neighbor_nodes(expanded_pos);
+      // ==== GUI ====
       step = this.add_step();
-      step.set_info_text('i', '<b>Exploring...</b></br>- Retrieve lowest cost vertex from open-list.</br>&nbsp;&nbsp;- Check its neighbors');
-      neighbors = this.get_neighbors(expanded_vertex);
-      for (var n=0; n<neighbors.length; n++) {
-        neighbor = neighbors[n];
-        neighbor_vertex = neighbor.vertex;
+      // update the sim status to reflect neighbor checking
+      step.set_info_text('i', '<b>Exploring...</b></br>- Retrieve cheapest (f-cost) vertex from open-list.</br>&ensp;- Check its neighbors');
+      step.set_list_description('c', 'Checking neighbors...');
+      // For each neighbor
+      for (var n=0; n<neighbor_nodes.length; n++) {
+        // get pos and graph vertex
+        neighbor = neighbor_nodes[n];
         neighbor_pos = neighbor.position;
+        neighbor_pos_string = neighbor_pos.string();
+        neighbor_vertex = neighbor.vertex;
         
+        // ======================== Is Neighbor in Map? ================================
         if (neighbor_vertex === null) {
-          step.set_list_description('c', 'Neighbor ('.concat(neighbor_pos.i, ', ', neighbor_pos.j, ') is <b>out of map</b>. <em>Skip</em>'));
+          // ==== GUI ====
+          // update current vertex information
+          step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' is <b>out of map</b>. <em>Skip</em>'));
+          // update neighbor information
+          step.edit_list_item('n', n, [
+            dir_to_string[n],
+            neighbor_pos_string,
+            '-',
+            '-',
+            '-',
+            '<i>Not in map</i>'
+          ]);
+          // highlight neighbor info row
+          step.color_list_item('n', n, true);
+          // add a step for next neighbor
           step = this.add_step();
-          // out of map, continue
+          // unhighlight
+          step.color_list_item('n', n, false);
           continue;
         }
-        
+        // set cell focus if in map
         step.set_cell_focus(neighbor_pos, true);
-        if (neighbor.obstacle ===  true) {
-          // neighbor is an obstacle, continue
-          step.set_cell_text(neighbor_pos, 'OBS');
-          step.set_list_description('c', 'Neighbor ('.concat(neighbor_pos.i, ', ', neighbor_pos.j, ') is an <b>obstacle</b>. <em>Skip</em>'));
+        // get the cell h cost as string
+        neighbor_hc_string = this.cost_to_string(neighbor_vertex.f.h, 2);
+        
+        // ======================== Is Neighbor Parent? ================================
+        if (expanded_vertex.parent !== undefined && neighbor_vertex.position.equals(expanded_vertex.parent.position)) {
+          // ==== GUI ====
+          // update current vertex information
+          step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' is the <b>parent</b>. <em>Skip</em>'));
+          // update neighbor information
+          step.edit_list_item('n', n, [
+            dir_to_string[n],
+            neighbor_pos_string,
+            'skip',
+            'skip',
+            'skip',
+            '<i>Parent</i>'
+          ]);
+          // highlight neighbor info row
+          step.color_list_item('n', n, true);
+          // add a step for next neighbor
           step = this.add_step();
+          // unhighlight
+          step.color_list_item('n', n, false);
+          // blur
           step.set_cell_focus(neighbor_pos, false);
           continue;
         }
         
-        // check if the neighbor is a goal
-        if (neighbor_pos.equals(this.goal_position) === true) {
-          // neighbor is goal, prepare to trace back to start
-          // this is different from the vanilla implementation. this is very slightly more efficient.
-          // this checks if the neighbor is the goal rather than checking if expanded vertex is the goal.
-          // write the source.
-          neighbor_vertex.source = expanded_vertex;
-          goal_cost = this.get_g(expanded_vertex, neighbor).total;
-          
-          // GUI - update the information with new step
-          step = this.add_step();
-          step.set_cell_class(expanded_pos, 'cell_visited');
-          step.set_info_text('i', '<b>Path found!</b><br/>- Trace back to the starting vertex by iterating over their parents.');
-          // GUI - set the goal as the front and remove current as front
-          step.set_cell_class(neighbor_pos, 'cell_front');
-          step.set_cell_class(expanded_pos, 'cell_front', true);
-          step.set_list_description('c', 'Neighbor ('.concat(neighbor_pos.i, ', ', neighbor_pos.j, ') is the <b>GOAL</b>!'));
-          
-          // trace back to start
-          step = this.add_step(true);
-          step.edit_list_item('c', 0, [
-            '('.concat(neighbor_pos.i, ', ', neighbor_pos.j, ')'), 
-            goal_cost.toFixed(2), 
-            goal_cost.toFixed(2), 
-            0, 
-            '('.concat(expanded_pos.i, ', ', expanded_pos.j, ')'), 
+        // ======================== Is Neighbor an Obstacle? ================================
+        if (neighbor.is_obstacle === true) {
+          // ==== GUI ====
+          // Update the cell with the words 'OBS' to reflect encounter
+          step.set_cell_text(neighbor_pos, 'OBS');
+          // Update current vertex information 
+          step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' is an <b>obstacle</b>. <em>Skip</em>'));
+          // update neighbor information
+          step.edit_list_item('n', n, [
+            dir_to_string[n],
+            neighbor_pos_string,
+            '&infin;',
+            '&infin;',
+            neighbor_hc_string,
+            '<i>Obstacle</i>'
           ]);
+          // highlight neighbor info row
+          step.color_list_item('n', n, true);
+          // add a new step for next neighbor
+          step = this.add_step();
+          // blur the current neighbor focus
+          step.set_cell_focus(neighbor_pos, false);
+          //unhighlight neighbors info row
+          step.color_list_item('n', n, false);
+          continue;
+        } else if (opt_directions === Dir.DIAGONAL && opt_blocking === true && dir_is_ordinal[n] === true) {
+          // ======================== Check Diagonal Blocking? ================================
+          var prev_nb = neighbor_nodes[Dir.rotate(n, -1)]; // not technically correct but works
+          var next_nb = neighbor_nodes[Dir.rotate(n, 1)];
+          if ((prev_nb === null || prev_nb.is_obstacle === true) && 
+            (next_nb === null || next_nb.is_obstacle === true)) {
+            // block the passage to the ordinal cell if cardinal cells have obstacles
+            // Update current vertex information 
+            step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' is <b>not an obstacle</b>, but passage to it is blocked. <em>Skip</em>'));
+            // update neighbor information
+            step.edit_list_item('n', n, [
+              dir_to_string[n],
+              neighbor_pos_string,
+              'skip',
+              'skip',
+              'skip',
+              '<i>Blocked</i>'
+            ]);
+            // highlight neighbor info row
+            step.color_list_item('n', n, true);
+            // add a new step for next neighbor
+            step = this.add_step();
+            // blur the current neighbor focus
+            step.set_cell_focus(neighbor_pos, false);
+            // unhighlight neighbors info row
+            step.color_list_item('n', n, false);
+            continue;
+          }
+        }
+        
+        // ======================== Is Neighbor the GOAL? ================================
+        if (neighbor_pos.equals(this.goal_position) === true) {
+          // set the goal node's parent as the current vertex
+          neighbor_vertex.parent = expanded_vertex;
+          // update the cost of the goal vertex
+          neighbor_vertex.set_g(neighbor_vertex.find_g(expanded_vertex));
+          
+          // ==== GUI ====
+          step = this.add_step();
+          // update the sim state info to reflect path found
+          step.set_info_text('i', '<b>Path found!</b><br/>- Trace back to the starting vertex by iterating over the parent vertices');
+          // update the current vertex info to reflect that goal is found in one of its neighbors
+          step.set_list_description('c', '<em>GOAL</em> found in neighbor!');
+          // update neighbor info
+          step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' is the <em>GOAL</em>!'));
+          // update the front to the goal
+          step.set_cell_class(neighbor_pos, 'cell_front');
+          // remove the current cell as the front
+          step.set_cell_class(expanded_pos, 'cell_front', true);
+          // update the neighbor info panel
+          step.edit_list_item('n', n, [
+            dir_to_string[n],
+            neighbor_pos_string,
+            this.cost_to_string(neighbor_vertex.f, 2),
+            this.cost_to_string(neighbor_vertex.f.g, 2),
+            neighbor_hc_string,
+            '<em>GOAL</em>'
+          ]);
+          // highlight neighbor info row
+          step.color_list_item('n', n, true);
+          
+          // ======================== Trace to start ================================
+          // ==== GUI ====
+          step = this.add_step(true); // major step
+          // clear the description
+          step.set_list_description('n', '');
+          // unhighlight neighbors info row
+          step.color_list_item('n', n, false);
+          // reset the neighbors info panel
+          for (var n=0; n<dir_to_string.length; n++)
+            step.edit_list_item('n', n, [dir_to_string[n], '-', '-', '-', '-', '-']);
+          // set the current vertex info panel as the goal
+          step.edit_list_item('c', 0, [
+            neighbor_pos_string,
+            this.cost_to_string(neighbor_vertex.f, 2),
+            this.cost_to_string(neighbor_vertex.f.g, 2),
+            neighbor_hc_string,
+            expanded_pos_string
+          ]);
+          // update the current vertex description
+          step.set_list_description('c', '<b>The <em>Goal</em> Vertex</b>');
+          
+          // ---- Begin Tracing ----
           while (true) {
-            expanded_vertex = neighbor_vertex.source;
+            expanded_vertex = neighbor_vertex.parent;
             if (expanded_vertex === undefined)
-              break; // at start
-            // step = this.add_step();
+              break; // at the start vertex
+            // Draw the optimal path
             step.draw_path(neighbor_vertex.position, expanded_vertex.position, UIPath.PATH);
+            // Move down the chain
             neighbor_vertex = expanded_vertex;
           }
           path_found = true;
           break;
         }
         
-        // for a valid neighbor
-        // calculate the tentative g cost
-        
-        tentative_g = this.get_g(expanded_vertex, neighbor);
-        if (neighbor_vertex.gcost > tentative_g.total) {
-          // add neighbor to open list if it has cheaper g cost
-          // calculate h cost?
-          if (neighbor_vertex.hcost === Infinity) {
-            // calculate h cost because this is a new vertex
-            this.update_f(neighbor_vertex, tentative_g, this.get_h(neighbor_vertex));
-            step.set_list_description('c', 'Neighbor ('.concat(neighbor_pos.i, ', ', neighbor_pos.j, ') is <b>new</b>. Add this to the open-list with the current vertex as parent.'));
-          } else {
-            // vertex encountered before, just update g cost, no need recalc h cost
-            this.update_g(neighbor_vertex, tentative_g);
-            step.set_list_description('c', "Neighbor's (".concat(
-              neighbor_pos.i, ', ', neighbor_pos.j, 
-              ') parent is (', 
-              neighbor_vertex.source.position.i, ', ', neighbor_vertex.source.position.j, 
-              '), but it is <b>g-cost cheaper to go to it from the current vertex</b>. Update the neighbor with the current vertex as parent, and put it into the open-list. </br>The previous open-list item, added with the neighbor and its previous parent, will be ignored.'));
+        // ======================== Neighbor can be Visited if Cheaper than Before ================================
+        // Calculate the tentative cost
+        tentative_g = neighbor_vertex.find_g(expanded_vertex);
+        if (neighbor_vertex.g_cost > tentative_g.total) {
+          // there is a cheaper path to neighbor vertex (vertices initialised with Infinity cost)
+          prior_g_cost = neighbor_vertex.g_cost;
+          // update its cost object
+          neighbor_vertex.set_g(tentative_g);
+          // ==== GUI ====
+          // get the costs
+          neighbor_gc_string = this.cost_to_string(neighbor_vertex.f.g, 2);
+          neighbor_fc_string = this.cost_to_string(neighbor_vertex.f, 2);
+          if (prior_g_cost === Infinity) { 
+            // ---- new encounter ----
+            // current vertex info to reflect the new vertex encounter
+            step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' is <b>new</b>. Add this to the open-list with the current vertex as parent.'));
+            // update neighbor information
+            step.edit_list_item('n', n, [
+              dir_to_string[n], 
+              neighbor_pos_string,
+              neighbor_fc_string,
+              neighbor_gc_string,
+              neighbor_hc_string, 
+              '<i>New encounter</i>'
+            ]);
+          } else { 
+            // ---- vertex was encountered before ----
+            // current vertex info to reflect a cheaper encounter
+            step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' was <b>encountered before, but not yet visited</b>. This means that it is cheaper to get to it from the current vertex. Add this to the open-list with the current vertex as parent.</br>Its previous open-list entry will be ignored.'));
+            // update neighbor information
+            step.edit_list_item('n', n, [
+              dir_to_string[n], 
+              neighbor_pos_string, 
+              neighbor_fc_string,
+              neighbor_gc_string,
+              neighbor_hc_string, 
+              '<i>Replaced parent</i>'
+            ]);
           }
           
-          // update this neighbor_vertex with the expanded_vertex
-          neighbor_vertex.source = expanded_vertex;
+          // ======================== Add Neighbor to Open List ================================
+          // update the neighbor vertex with the new parent
+          neighbor_vertex.parent = expanded_vertex;
+          // Add to open ist
+          idx = list.add(neighbor_vertex);
           
-          // add to open list
-          idx = this.open_list.add(expanded_vertex, neighbor_vertex);
-          step.insert_list_item('ol', idx, [
-            '('.concat(neighbor_pos.i, ', ', neighbor_pos.j, ')'), 
-            neighbor_vertex.fcost.toFixed(2),
-            neighbor_vertex.gcost.toFixed(2),
-            neighbor_vertex.hcost.toFixed(2),
-            '('.concat(expanded_pos.i, ', ', expanded_pos.j, ')')
-            ]);
-          step.set_list_description('ol', 'Added neighbor vertex ('.concat(neighbor_pos.i, ', ', neighbor_pos.j, ') after f-cost and h-cost sorting'));
-          step.color_list_item('ol', idx, true);
-          
-          // GUI - add a path to cheapest source, and erase any existing paths
+          // ==== GUI ====
+          // modify the open info list
+          step.insert_list_item('u', idx, [
+            neighbor_pos_string,
+            neighbor_fc_string,
+            neighbor_gc_string,
+            neighbor_hc_string, 
+            expanded_pos_string,
+          ]);
+          // modify the open info list description
+          step.set_list_description('u', 'Added neighbor vertex '.concat(neighbor_pos_string, ' after cost sorting'));
+          // highlight the current list row
+          step.color_list_item('u', idx, true);
+          // remove the previous paths to the neighbor
           step.remove_paths(neighbor_pos);
+          // draw a new path to the neighbor
           step.draw_path(neighbor_pos, expanded_pos, UIPath.TRACE);
-          
-          // GUI - update cell class and text
-          step.set_cell_text(neighbor_pos, neighbor_vertex.fcost.toFixed(1));
+          // update the neighbor cell class as encountered
           step.set_cell_class(neighbor_pos, 'cell_encountered');
-          
+          // update the neighbor cell cost
+          step.set_cell_text(neighbor_pos, this.cost_to_string(tentative_g, 1));
+          // highlight the neighbor info row
+          step.color_list_item('n', n, true);
+          // add a new step for the next neighbor
           step = this.add_step();
-          step.color_list_item('ol', idx, false);
-        } else {
-          step.set_list_description('c', 'Neighbor ('.concat(
-            neighbor_pos.i, ', ', neighbor_pos.j, 
-            ') is <b>g-cost cheaper to visit from its parent</b> than from the current vertex. <em>Skip</em>'));
+          // unhighlight the current list row
+          step.color_list_item('u', idx, false);
+        } else { 
+          // ======================== Neighbor is not Cheaper than before ================================
+          // ==== GUI ====
+          // update the current vertex info
+          step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' is <b>cheaper to visit from its parent</b> than from the current vertex. <em>Skip</em>'));
+          // update neighbor info
+          step.edit_list_item('n', n, [
+            dir_to_string[n], 
+            neighbor_pos_string, 
+            this.cost_to_string(neighbor_vertex.f, 2),
+            this.cost_to_string(neighbor_vertex.f.g, 2), 
+            neighbor_gc_string,
+            '<i>Not a child</i>'
+          ]);
+          // highlight the neighbor info row
+          step.color_list_item('n', n, true);
+          // add a new step for the next neighbor
           step = this.add_step();
         }
+        // unhighlight the neighbor info row
+        step.color_list_item('n', n, false);
+        // blur the focus from the cell
         step.set_cell_focus(neighbor_pos, false);
-      }
+        
+      } // end of for loop of neighbors
+      // assign the current step as a major step because we are retrieving a new node from the list
       step.major = true;
-      // break out of while loop here if path is found
+      //
       if (path_found === true)
         break;
-      // GUI - update expanded vertex as visited
-      step.set_cell_class(expanded_pos, 'cell_visited');
-    }
+    } // end of while loop
+    // ======================== End the Search ================================
     // check if the while loop found the path
-    if (path_found === false) {
+    if (path_found === false) { // no path found
       step = this.add_step(true);
-      step.set_info_text('i', 'NO PATH FOUND!!');
-    } else {
-      step.set_info_text('i', '<b>Complete</b>! The path costs (g-cost) $'.concat(goal_cost.toFixed(2)));
-      step.set_list_description('c', '<b>The <em>Goal</em> Vertex</b>');
+      step.set_info_text('i', '<center><h1>No Path Found!</h1><em>'.concat(num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p></center>'));
+    } else { // path found
+      step.set_info_text('i', '<center><h1>Complete!</h1><p>$<em>'.concat(this.cost_to_string(graph.vertices(this.goal_position).f.g, 2), "</em> is the path's G-cost</p><p><em>", num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p></center>'));
     }
-    step.set_list_description('ol', 'Items left in open list');
+    // update the unvisited list info panel
+    step.set_list_description('u', 'Items left in the unvisited list');
+    
   }
-  get_neighbors(expanded_vertex) {
-    // the neighboring vertex fcost, source are not initialised / recalculated
-    var vertex, next_position, next_cell, d, c, obs;
-    var neighbors = [];
-    for (const ord of Dir.list_dirs()) {
-      next_position = expanded_vertex.position.add(Dir.dir_to_vec(ord));
-      next_cell = this.map.cells(next_position);
-      if (next_cell === null) {
-        vertex = null;
-        obs = undefined;
-      } else {
-        vertex = this.graph.vertices(next_position)
-        obs = next_cell.is_obstacle();
-      }
-      // get ordinal / cardinal steps
-      if (Dir.is_ordinal(ord)) {
-        d = 1; c = 0;
-      } else {
-        d = 0; c = 1;
-      }
-      neighbors[ord] = {
-        num_ordinals: d,
-        num_cardinals: c,
-        vertex: vertex,
-        obstacle : obs,
-        position: next_position
-      }
+  get_neighbor_nodes(vec) {
+    // returns position, the graph vertex, and obstacle information
+    var nodes=[], neighbor_pos, v;
+    for (var i=0; i<this.neighbor_vecs.length; i++) {
+      neighbor_pos = vec.add(this.neighbor_vecs[i]);
+      v = this.graph.vertices(neighbor_pos);
+      nodes[i] = {
+        position : neighbor_pos,
+        vertex : v,
+        is_obstacle : (v === null) ? true : this.map.cells(neighbor_pos).is_obstacle()
+      };
     }
-    return neighbors;
+    return nodes;
   }
-  get_g(source, neighbor) {
-    // neighbor returned from get_neighbors above. Must contain
-    // calculate g cost object
-    var gs = source.f.g;
-    return new AStar.Cost(
-      gs.ordinals + neighbor.num_ordinals,
-      gs.cardinals + neighbor.num_cardinals
-    );
-  }
-  update_g(vertex, g) {
-    vertex.f.g = g;
-    var h = vertex.f.h;
-    // the below needs to be calculated this way to avoid floating point problems
-    vertex.f.total = h.cardinals + g.cardinals + (g.ordinals + h.ordinals) * Math.SQRT2;
-  }
-  get_h(vertex) {
-    // calculate h cost object
-    // get ordinal distance betw. neighbor and goal;
-    var p = vertex.position;
-    var di = Math.abs(this.goal_position.i - p.i);
-    var dj = Math.abs(this.goal_position.j - p.j);
-    var c = di - dj, d;
-    if (c > 0) {
-      d = dj;
-    } else {
-      d = di;
-      c = -c;
-    }
-    return new AStar.Cost(d, c);
-  }
-  update_f(vertex, g, h) {
-    vertex.f.g = g;
-    vertex.f.h = h;
-    // the below needs to be calculated this way to avoid floating point problems
-    vertex.f.total = h.cardinals + g.cardinals + (g.ordinals + h.ordinals) * Math.SQRT2;
-  }
-};
-AStar.Cost = class {
-  constructor(num_ordinals, num_cardinals) {
-    this.ordinals = num_ordinals;
-    this.cardinals = num_cardinals;
-    this.total = num_ordinals * Math.SQRT2 + num_cardinals;
+  cost_to_string(cost_obj, dp=1) {
+    return cost_obj.total.toFixed(dp);
   }
 }
 AStar.FCost = class {
-  constructor() {
-    // var d = prev_gcost.ordinals + add_ordinals;
-    // var c = prev_gcost.cardinals + add_cardinals
-    this.g = {
-      ordinals: Infinity,
-      cardinals: Infinity,
-      total : Infinity
-    };
-    this.h = {
-      ordinals: Infinity,
-      cardinals: Infinity,
-      total: Infinity
-    };
+  constructor(metric, is_start=false) {
+    this.g = new Dist(Infinity, Infinity, metric);
+    this.h = new Dist(Infinity, Infinity, metric);
     this.total = Infinity;
+    this.metric = metric;
   }
-}
+};
 AStar.Vertex = class {
-  constructor(vec) {
-    this.position = vec;
-    this.f = new AStar.FCost();
-    this.source = undefined;
+  constructor(i, j, metric) {
+    this.position = new Vec(i, j);
+    this.parent = undefined;
+    this.f = new AStar.FCost(metric);
   }
-  get fcost() {
+  get f_cost() {
     return this.f.total;
   }
-  get hcost() {
-    return this.f.h.total;
-  }
-  get gcost() {
+  get g_cost() {
     return this.f.g.total;
   }
-};
+  get h_cost() {
+    return this.f.h.total;
+  }
+  get i() {
+    return this.position.i;
+  }
+  get j() {
+    return this.position.j;
+  }
+  set_f() {
+    this.f.total = this.f.g.add(this.f.h).total;
+  }
+  find_g(parent_vertex) {
+    var f = this.f;
+    var g = Dist.vecs_separation(parent_vertex.position, this.position, f.metric);
+    g = parent_vertex.f.g.add(g);
+    return g;
+  }
+  set_g(g) {
+    var f = this.f;
+    if (g === undefined) {
+      f.g = new Dist(0, 0, f.metric);
+    } else {
+      f.g = g;
+    }
+    this.set_f();
+  }
+  set_h(goal_position) {
+    var f = this.f;
+    f.h = Dist.vecs_separation(this.position, goal_position, f.metric);
+    this.set_f();
+  }
+}
 AStar.Graph = class {
-  constructor() {
-    this._v = [];
+  constructor(num_i, num_j, goal_position, metric=Dist.DIAGONAL) {
+    this._v = Array(num_i);
+    var row, cell;
+    for (var i=0; i<num_i; i++) {
+      row = Array(num_j);
+      for (var j=0; j<num_j; j++) {
+        cell = new AStar.Vertex(i, j, metric);
+        row[j] = cell;
+      }
+      this._v[i] = row;
+    }
+    this.ni = num_i;
+    this.nj = num_j;
+    this.set_h_costs(goal_position);
+  }
+  set_h_costs(goal_position) {
+    var row;
+    for (var i=0; i<this.ni; i++) {
+      row = this._v[i];
+      for (var j=0; j<this.nj; j++) {
+        row[j].set_h(goal_position);
+      }
+    }
+  }
+  in_map(vec) {
+    return (vec.i >= 0 && vec.i < this.ni && vec.j >= 0 && vec.j < this.nj);
   }
   vertices(vec) {
-    // used for creating new vertex or getting a previous vertex
-    var tmp = this._v[vec.i];
-    if (tmp === undefined) {
-      // create new vertex
-      var row = [];
-      var vertex = new AStar.Vertex(vec);
-      row[vec.j] = vertex;
-      this._v[vec.i] = row;
-      return vertex;
-    } 
-    tmp = tmp[vec.j];
-    if (tmp === undefined)  {
-      var vertex = new AStar.Vertex(vec);
-      this._v[vec.i][vec.j] = vertex;
-      return vertex;
+    if (this.in_map(vec)) {
+      return this._v[vec.i][vec.j];
+    } else {
+      return null;
     }
-    // return vertex
-    return tmp;
   }
-};
+}
+AStar.OpenNode = class {
+  constructor(vertex, parent_vertex) {
+    this.vertex = vertex;
+    this.parent = parent_vertex;
+  }
+  has_equal_parents() {
+    return this.vertex.parent.position.equals(this.vertex.position);
+  }
+}
 AStar.OpenList = class {
-  constructor() {
-    this.list = [];
+  constructor(fh_optimisation=true) {
+    this._q = [];
+    if (fh_optimisation === true) { // f cost sorting is optimised
+      this.is_cheaper = function(vertex1, vertex2) {
+        return vertex1.f_cost < vertex2.f_cost || vertex1.f_cost === vertex2.f_cost && vertex1.h_cost < vertex2.h_cost;
+      }
+    } else { // vanilla
+      this.is_cheaper = function(vertex1, vertex2) {
+        return vertex1.f_cost < vertex2.f_cost;
+      }
+    }
   }
-  add(source, vertex) {
-    var fcost = vertex.fcost, hcost = vertex.hcost;
-    var v;
-    for (var q=0; q<this.list.length; q++) {
-      v = this.list[q].vertex;
-      if (fcost == v.fcost && hcost < v.hcost || fcost < v.fcost) {
-        // comparing hcost is actly an optimisation and tie breaker
-        this.list.splice(q, 0, {source: source, vertex: vertex});
+  add(vertex, parent_vertex) {
+    var node = new AStar.OpenNode(vertex, parent_vertex);
+    for (var q=0; q<this._q.length; q++) {
+      if (this.is_cheaper(vertex, this._q[q].vertex) === true) {
+        this._q.splice(q, 0, node);
         return q;
       }
     }
     // not encountered, most expensive
-    this.list.push({source: source, vertex: vertex});
-    return this.list.length - 1;
+    this._q.push(node);
+    return this._q.length - 1;
   }
-  get_lowest_fcost_node() {
-    return this.list.shift();
+  get_cheapest_node() {
+    return this._q.shift();
   }
-  peek_lowest_fcost_node() {
-    return this.list[0];
+  peek_cheapest_node() {
+    return this._q[0];
   }
-  is_not_empty() {
-    return this.list.length !== 0;
-  }
-};
-/*
-AStar.GraphRecord = class {
-  constructor(num_i, num_j) {
-    this.cells = [];
-    var row;
-    for (var i=0; i<num_i; i++) {
-      row = [];
-      for (var j=0; j<num_j; j++) {
-        row.push(new AStar.VertexRecord(i, j))
-      }
-    }
-  }
-};
-AStar.VertexRecord = class {
-  constructor(i, j) {
-    this.position = new Vec(i,j);
-    this.f = Infinity;
-    this.g = Infinity;
-    this.h = Infinity;
-    this.source = undefined;
-  }
-};
-AStar.Records = class {
-  constructor(graph, open_list) {
-    this.graph;
+  is_populated() {
+    return this._q.length !== 0;
   }
 }
-*/
 new AStar();

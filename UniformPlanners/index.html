@@ -9,6 +9,7 @@
     <title>Uniform Planners</title>
   </head>
   <body>
+    <div class='loading' id='ui_load_overlay'>Loading</div>
     <form autocomplete="false" id="ui_form_build" onsubmit="return false;" style="display:none;" novalidate method="post">
       <input type="submit" /></input>
     </form>
@@ -130,20 +131,25 @@
         <table class="dialog_planners">
           <tbody>
             <tr>
-              <td class="title">Algorithm</td>
-              <td class="input"><select name="algorithms" id="ui_algorithms"></select></td>
+              <td class="title">Algorithm<br/><select name="algorithms" id="ui_algorithms"></select></td>
               <td class="description">Choose the path planner to run</td>
             </tr>
             <tr key="directions"></tr>
+            <tr key="metric"></tr>
             <tr key="blocking"></tr>
             <tr key="origin"></tr>
             <tr key="anticlockwise"></tr>
+            <tr key="fh_optimisation"></tr>
           </tbody>
         </table>
       </div>
       <div key="build" id="ui_dialog_build">
         <table>
           <tbody>
+            <tr key="templates">
+              <td class="title">Template</td>
+              <td><select id="ui_saved_maps"></select></td>
+            </tr>
             <tr>
               <td class="title">Rows (x)</td>
               <td><input class="nav_num" id="ui_build_i" value="20"></input></td>

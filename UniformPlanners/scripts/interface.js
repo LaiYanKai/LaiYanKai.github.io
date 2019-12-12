@@ -497,6 +497,101 @@ class Vec {
   }
   get x() {return this.i;}
   get y() {return this.j;}
+  string(dp) {
+    if (dp === undefined)
+      return '('.concat(this.i, ', ', this.j, ')');
+    else
+      return '('.concat(this.i.toFixed(dp), ', ', this.j.toFixed(dp), ')');
+  }
+}
+// Distance class (metrics)
+class Dist {
+  static get DIAGONAL() {return 0}
+  static get MANHATTAN() {return 1}
+  static get EUCLIDEAN() {return 2}
+  static vecs_separation(vec0, vec1, metric=Dist.DIAGONAL) {
+    var di = Math.abs(vec1.i - vec0.i);
+    var dj = Math.abs(vec1.j - vec0.j);
+    switch (metric) {
+      case Dist.DIAGONAL:
+        // assume integers
+        if (di > dj) {
+          var dd = dj;
+          var dc = di - dj;
+        } else {
+          var dd = di;
+          var dc = dj - di;
+        }
+        return new Dist(dd, dc, metric);
+      case Dist.MANHATTAN:
+        return new Dist(di, dj, metric);
+      case Dist.EUCLIDEAN:
+        return new Dist(di, dj, metric);
+    }
+  }
+  constructor(arg0, arg1, metric) {
+    switch (metric) {
+      case Dist.DIAGONAL:
+        this.ordinals = arg0;
+        this.cardinals = arg1;
+        this.total = arg0 * Math.SQRT2 + arg1;
+        break;
+      case Dist.MANHATTAN:
+        this.di = arg0;
+        this.dj = arg1;
+        this.total = arg0 + arg1;
+        break;
+      case Dist.EUCLIDEAN:
+        this.di = arg0;
+        this.dj = arg1;
+        this.total = Math.sqrt(arg0*arg0 + arg1*arg1);
+        break;
+      default:
+        throw('The distance metric is not valid: '.concat(metric));
+    }
+    this.metric = metric;
+  }
+  add(arg0, arg1) { // add to reflect correct change in total distance  
+    if (this.metric === Dist.EUCLIDEAN) {
+      if (arg0 instanceof Dist) {
+        var d = new Dist(NaN, NaN, this.metric);
+        d.total = arg0.total + this.total;
+      } else {
+        var d = new Dist(arg0, arg1, this.metric);
+        d.total += this.total;
+        d.di = 0;
+        d.dj = 0;
+      }
+      return d;
+    }
+    if (arg0 instanceof Dist) { // assume same metric
+      return new Dist(this.ax0 + arg0.ax0, this.ax1 + arg0.ax1, this.metric)
+    } else {
+      return new Dist(this.ax0 + arg0, this.ax1 + arg1, this.metric);
+    }
+  }
+  get ax0() {
+    switch (this.metric) {
+      case Dist.DIAGONAL:
+        return this.ordinals;
+      case Dist.EUCLIDEAN:
+      case Dist.MANHATTAN:
+        return this.di;
+      default:
+        return undefined;
+    }
+  }
+  get ax1() {
+    switch (this.metric) {
+      case Dist.DIAGONAL:
+        return this.cardinals;
+      case Dist.EUCLIDEAN:
+      case Dist.MANHATTAN:
+        return this.dj
+      default:
+        return undefined;
+    }
+  }
 }
 // directions class
 class Dir {
@@ -508,14 +603,14 @@ class Dir {
   static get SE() {return 5}
   static get E() {return 6}
   static get NE() {return 7}
-  static get ALL() {return 0}
+  static get DIAGONAL() {return 0}
   static get CARDINAL() {return 1}
   static get ORDINAL() {return 2}
-  static list_dirs(origin_dir=Dir.N, anticlockwise=true, which_dirs=Dir.ALL) {
+  static list_dirs(origin_dir=Dir.N, anticlockwise=true, which_dirs=Dir.DIAGONAL) {
     var num_dirs=4, d=origin_dir, arr = [];
     var step = anticlockwise === true ? 1 : -1;
     switch (which_dirs) {
-      case Dir.ALL:
+      case Dir.DIAGONAL:
         num_dirs = 8;
         break;
       case Dir.CARDINAL:
@@ -537,13 +632,13 @@ class Dir {
     }
     return arr;
   }
-  static list_vecs(origin_dir=Dir.N, anticlockwise=true, which_dirs=Dir.ALL) {
+  static list_vecs(origin_dir=Dir.N, anticlockwise=true, which_dirs=Dir.DIAGONAL) {
     var arr = Dir.list_dirs.call(null, arguments);
     for (var i=0; i<arr.length; i++)
       arr[i] = Dir.dir_to_vec(arr[i]);
     return arr;
   }
-  static list_strings(origin_dir=Dir.N, anticlockwise=true, which_dirs=Dir.ALL) {
+  static list_strings(origin_dir=Dir.N, anticlockwise=true, which_dirs=Dir.DIAGONAL) {
     var arr = Dir.list_dirs.call(null, arguments);
     for (var i=0; i<arr.length; i++)
       arr[i] = Dir.dir_to_string(arr[i]);
@@ -593,6 +688,7 @@ class Dir {
         throw 'dir_to_vecs: Invalid direction "'.concat(ord, '"');
     }
   }
+  /*
   static vecs_to_dir(arg0, arg1, arg2, arg3) {
     var i0, j0, i1, j1, di, dj, di_a, dj_a;
     if (arg0 instanceof Vec) {
@@ -658,7 +754,7 @@ class Dir {
       arg2 === undefined ? '' : ', '.concat(
       arg3 === undefined ? ', '.concat(arg2) : ', '.concat(arg2, ',', arg3)));
     }
-  }
+  }*/
   static is_ordinal(d) {return d % 2 === 1}
   static is_cardinal(d) {return d % 2 === 0}
   static rotate(d, steps) {
@@ -669,25 +765,6 @@ class Dir {
   }
 }
 
-class SavedMaps {
-  static get HELLOWORLD_20_30() {
-    return `20
-30
-1
-1
-12
-27
-000000000000000000000000000000000010000000000000000000000000001110111101101011111001111100011010000100101010001001010100010010000100011010001011010110000010000101111000001010010010010010000101001010001010000010011010000100001010001010000010001110000111111011111010000010000000000000000000001000000000000000000000000000001000000000011110111111111011111010001111010010000100001000000010001000010010000100001000001010001110010010000100001000001010001000000010000100000000111011011011010010000100001000001010001000010010000100001000001010001000011110000100001011111010001000000000000100000000000000000000`}
-  static get CHEVRONS_12_12() {
-    return `12
-12
-0
-1
-11
-11
-000000000000000000000000000001000000000001010000000001010100001111010100000000010100000111110100000000000100000011111100000000000000000000000000`}
-}
-
 /* -------- UI methods -------- */
 class UI {
   constructor() {
@@ -696,8 +773,7 @@ class UI {
     this.initialise_data_handlers();
     this.initialise_data();
     // Create map at startup
-    // this.graphic_handlers.new_map(this, true);
-    this.graphic_handlers.parse_loaded_map(SavedMaps.CHEVRONS_12_12);
+    this.graphic_handlers.parse_loaded_map(this.saved_maps.CHEVRONS_12_12);
     this.state.saved = true;
   }
   instantiate() {
@@ -717,7 +793,8 @@ class UI {
           build_i : document.getElementById('ui_build_i'),
           build_j : document.getElementById('ui_build_j'),
           load : document.getElementById('ui_load'),
-          save : document.getElementById('ui_save')
+          save : document.getElementById('ui_save'),
+          saved_maps : document.getElementById('ui_saved_maps')
         }, 
         edit : {
           edit : document.getElementById('ui_edit'),
@@ -816,6 +893,23 @@ class UI {
     this.planners = {};
     // The global planner options
     this.options = {};
+    // saved maps
+    this.saved_maps = {
+  HELLOWORLD_20_30 : `20
+30
+1
+1
+12
+27
+000000000000000000000000000000000010000000000000000000000000001110111101101011111001111100011010000100101010001001010100010010000100011010001011010110000010000101111000001010010010010010000101001010001010000010011010000100001010001010000010001110000111111011111010000010000000000000000000001000000000000000000000000000001000000000011110111111111011111010001111010010000100001000000010001000010010000100001000001010001110010010000100001000001010001000000010000100000000111011011011010010000100001000001010001000010010000100001000001010001000011110000100001011111010001000000000000100000000000000000000`,
+  CHEVRONS_12_12 : `12
+12
+0
+1
+11
+11
+000000000000000000000000000001000000000001010000000001010100001111010100000000010100000111110100000000000100000011111100000000000000000000000000`
+}
   }
   initialise_data() {
     var self = this;
@@ -832,61 +926,55 @@ class UI {
     var options_obj = self.options;
     // Options
     function init_options() {
-      function template() {
+      function template(title) {
         var ele = document.createElement('TR');
         var ele_title = document.createElement('TD');
         ele_title.classList = 'title';
+        ele_title.innerHTML = title.concat('</br>');
         var ele_desc = document.createElement('TD');
         ele_desc.classList = 'description';
-        var ele_input = document.createElement('TD');
-        ele_input.classList = 'input';
         var ele_select = document.createElement('SELECT');
-        ele_input.appendChild(ele_select);
+        ele_title.appendChild(ele_select);
         ele.appendChild(ele_title);
-        ele.appendChild(ele_input);
         ele.appendChild(ele_desc);
         return [ele, ele_title, ele_desc, ele_select];
       };
       function gen_origin_dirs() {
         switch(options_obj.directions.choice) {
-          case Dir.ALL:
+          case Dir.DIAGONAL:
             return '<option value="0">N</option><option value="1">NW</option><option value="2">W</option><option value="3">SW</option><option value="4">S</option><option value="5">SE</option><option value="6">E</option><option value="7">NE</option>';
           case Dir.CARDINAL:
             return '<option value="0" selected>N</option><option value="2">W</option><option value="4">S</option><option value="6">E</option>';
-          case Dir.ORDINAL:
-            return '<option value="1">NW</option><option value="3">SW</option><option value="5">SE</option><option value="7">NE</option>'
         }
       };
       function gen_directions() {
-        var [ele, ele_title, ele_desc, ele_select] = template();
-        ele_title.innerHTML = 'Neighbor Connections';
-        ele_desc.innerHTML = '<em>8-connected</em> when all neighbors surrounding the each cell are searched.<br/><em>4-connected cardinals</em> when neighbors in N,W,S,E (cardinal) directions are searched.<br/><em>4-connected ordinals</em> when neighbors in NW,SW,SE,NE (ordinal) directions are searched. Note that this option may not result in a complete search.'
-        ele_select.innerHTML = '<option value ="0" selected>8-connected</option><option value="1">4-connected cardinals</option><option value="2">4-connected ordinals</option>';
+        var [ele, ele_title, ele_desc, ele_select] = template('Neighbor Connections');
+        ele_desc.innerHTML = '<em>8-connected</em> when all 8 neighbors surrounding the each cell are searched.<br/><em>4-connected</em> when 4 neighbors in N,W,S,E (cardinal) directions are searched.<br/>'
+        ele_select.innerHTML = '<option value ="0" selected>8-connected</option><option value="1">4-connected</option>';
         ele_select.onchange = function(e) {
           switch (e.target.selectedOptions[0].value) {
             case '0':
-              options_obj.directions.choice = Dir.ALL;
+              options_obj.directions.choice = Dir.DIAGONAL;
+              options_obj.metric.ele_select.selectedIndex = 0;
+              options_obj.blocking.ele.style.display = 'revert';
               break;
             case '1':
               options_obj.directions.choice = Dir.CARDINAL;
-              break;
-            case '2':
-              options_obj.directions.choice = Dir.ORDINAL;
+              options_obj.metric.ele_select.selectedIndex = 1;
+              options_obj.blocking.ele.style.display = 'none';
               break;
           }
-          console.log(e.target.selectedOptions[0].value)
           options_obj.origin.ele_select.innerHTML = gen_origin_dirs();
         }
         // inits
         self.options.directions = {
-          choice : Dir.ALL,
+          choice : Dir.DIAGONAL,
           ele_select: ele_select,
           ele : ele
         }
       };
       function gen_blocking() {
-        var [ele, ele_title, ele_desc, ele_select] = template();
-        ele_title.innerHTML = 'Diagonal Blocking';
+        var [ele, ele_title, ele_desc, ele_select] = template('Diagonal Blocking');
         ele_desc.innerHTML = '<em>Block</em> connection to an ordinal neighbor (e.g. NW) if there are obstacles in its applicable cardinal directions (e.g. N, W). <br/><em>Unblock</em> to ignore this constraint'
         ele_select.innerHTML = '<option value ="1" selected>Block</option><option value="0">Unblock</option>';
         ele_select.onchange = function(e) {
@@ -900,9 +988,8 @@ class UI {
         }
       };
       function gen_origin() {
-        var [ele, ele_title, ele_desc, ele_select] = template();
-        ele_title.innerHTML = 'First Neighbor';
-        ele_desc.innerHTML = 'The first direction to begin neighbour searching. Can be used for breaking ties. <em>N</em> is upwards (+i, row). <br/><em>W</em> is leftwards (+j, column).'
+        var [ele, ele_title, ele_desc, ele_select] = template('First Neighbor');
+        ele_desc.innerHTML = 'The first direction to begin neighbour searching. Can be used for breaking ties. <br/><em>N</em> is upwards (+i/+x/-row). <em>W</em> is leftwards (+j/+y/-column).'
         ele_select.innerHTML = gen_origin_dirs();
         ele_select.onchange = function(e) {
           options_obj.origin.choice = parseInt(e.target.selectedOptions[0].value);
@@ -915,8 +1002,7 @@ class UI {
         }
       };
       function gen_anticlockwise() {
-        var [ele, ele_title, ele_desc, ele_select] = template();
-        ele_title.innerHTML = 'Search Direction';
+        var [ele, ele_title, ele_desc, ele_select] = template('Search Direction');
         ele_desc.innerHTML = 'The rotating direction to search neighbors. Can be used for breaking ties.<br/><em>Anticlockwise</em> means the rotation from N to W. <br/><em>Clockwise</em> for the opposite rotation'
         ele_select.innerHTML = '<option value ="1" selected>Anticlockwise</option><option value="0">Clockwise</option>';
         ele_select.onchange = function(e) {
@@ -929,10 +1015,59 @@ class UI {
           ele : ele
         }
       };
-      gen_directions();
-      gen_blocking();
-      gen_origin();
+      function gen_metric() {
+        var [ele, ele_title, ele_desc, ele_select] = template('Distance Metric');
+        ele_desc.innerHTML = 'The metrics used for calculating distances.<br/><em>Diagonal</em> is commonly used for grids which allow movement in 8 directions. It sums the maximum number of diagonal movements, with the residual cardinal movements.<br/><em>Manhattan</em> is used for grids which allow movement in 4 cardinal directions. It sums the absolute number of rows and columns (all cardinal) between two cells.<br/><em>Euclidean</em> takes the L2-norm between two cells, which is the real-world distance between two points. This is commonly used for any angle paths.'
+        ele_select.innerHTML = '<option value ="0" selected>Diagonal</option><option value="1">Manhattan</option><option value="2">Euclidean</option>';
+        ele_select.onchange = function(e) {
+          switch(e.target.selectedOptions[0].value) {
+            case '0':
+              options_obj.metric.choice = Dist.DIAGONAL;
+              return;
+            case '1':
+              options_obj.metric.choice = Dist.MANHATTAN;
+              return;
+            case '2':
+              options_obj.metric.choice = Dist.EUCLIDEAN;
+              return;
+          }
+        };
+        // inits
+        self.options.metric = {
+          choice : Dist.DIAGONAL,
+          ele_select: ele_select,
+          ele : ele
+        }
+      };
+      function gen_fh_optimisation() {
+        var [ele, ele_title, ele_desc, ele_select] = template('F-H-cost optimisation');
+        ele_desc.innerHTML = 'For algorithms like A* and Jump Point Search, F-cost = G-cost + H-cost. <br/>If <em>Optimise</em> is selected, when retrieving the cheapest vertex from the open list, the vertex with the lowest H-cost among the lowest F-cost vertices will be chosen. This has the effect of doing a Depth-First-Search on equal F-cost paths, which can be faster.<br/>Select <em>Vanilla</em> to use their original, vanilla implementations.'
+        ele_select.innerHTML = '<option value ="0" selected>Optimise</option><option value="1">Vanilla</option>';
+        ele_select.onchange = function(e) {
+          switch(e.target.selectedOptions[0].value) {
+            case '0':
+              options_obj.fh_optimisation.choice = true;
+              return;
+            case '1':
+              options_obj.fh_optimisation.choice = false;
+              return;
+          }
+        };
+        // inits
+        self.options.fh_optimisation = {
+          choice : true,
+          ele_select: ele_select,
+          ele : ele
+        }
+      };
+      html_options_obj.algorithms.onchange = graphic_handlers.change_planner_options;
+      // need to sort according to alphabetical order
       gen_anticlockwise();
+      gen_blocking();
+      gen_directions();
+      gen_fh_optimisation();
+      gen_metric();
+      gen_origin();
     };
     // Dialog
     function init_dialog() {
@@ -946,35 +1081,70 @@ class UI {
           key = template.getAttribute('key');
           dialog_templates[key] = template;
           // for planners, append the options
-          if (key === 'planners') {
-            // table, tbody, tr
-            var opts_parent = template.firstElementChild.firstElementChild;
-            var opt = opts_parent.firstElementChild.nextElementSibling;
-            var opts = [];
-            // iterate over the options
-            while (opt !== null) {
-              switch(opt.getAttribute('key')) {
-                case 'directions':
-                  opts_parent.insertBefore(self.options.directions.ele, opt);
-                  opts.push(opt);
-                  break;
-                case 'blocking':
-                  opts_parent.insertBefore(self.options.blocking.ele, opt);
-                  opts.push(opt);
-                  break;
-                case 'origin':
-                  opts_parent.insertBefore(self.options.origin.ele, opt);
-                  opts.push(opt);
-                  break;
-                case 'anticlockwise':
-                  opts_parent.insertBefore(self.options.anticlockwise.ele, opt);
-                  opts.push(opt);
-                  break;
+          switch(key) {
+            case 'build':
+              var ele_select = document.getElementById('ui_saved_maps');
+              var ele_option;
+              ele_option = document.createElement('OPTION');
+              ele_option.setAttribute('value', 'new');
+              ele_option.innerHTML = 'Create New...'
+              ele_select.appendChild(ele_option);
+              for (const k of Object.keys(self.saved_maps)) {
+                ele_option = document.createElement('OPTION');
+                ele_option.setAttribute('value', k);
+                ele_option.innerHTML = k;
+                ele_select.appendChild(ele_option);
               }
-              opt = opt.nextElementSibling;
-            }
-            for(const opt of opts)
-              opts_parent.removeChild(opt);
+              ele_select.selectedIndex = 0;
+              ele_select.onchange = function(e) {
+                var ele = e.target.parentNode.parentNode.nextElementSibling;
+                while (ele !== null) {
+                  if (e.target.selectedIndex !== 0)
+                    ele.style.display = 'none';
+                  else
+                    ele.style.display = 'revert';
+                  ele = ele.nextElementSibling;
+                }
+              }
+              break;
+            case 'planners':
+              // table, tbody, tr
+              var opts_parent = template.firstElementChild.firstElementChild;
+              var opt = opts_parent.firstElementChild.nextElementSibling;
+              var opts = [];
+              // iterate over the options
+              while (opt !== null) {
+                switch(opt.getAttribute('key')) {
+                  case 'directions':
+                    opts_parent.insertBefore(self.options.directions.ele, opt);
+                    opts.push(opt);
+                    break;
+                  case 'metric':
+                    opts_parent.insertBefore(self.options.metric.ele, opt);
+                    opts.push(opt);
+                    break;
+                  case 'blocking':
+                    opts_parent.insertBefore(self.options.blocking.ele, opt);
+                    opts.push(opt);
+                    break;
+                  case 'origin':
+                    opts_parent.insertBefore(self.options.origin.ele, opt);
+                    opts.push(opt);
+                    break;
+                  case 'anticlockwise':
+                    opts_parent.insertBefore(self.options.anticlockwise.ele, opt);
+                    opts.push(opt);
+                    break;
+                  case 'fh_optimisation':
+                    opts_parent.insertBefore(self.options.fh_optimisation.ele, opt);
+                    opts.push(opt);
+                    break;
+                }
+                opt = opt.nextElementSibling;
+              }
+              for(const opt of opts)
+                opts_parent.removeChild(opt);
+              break;
           }
         }
       }
@@ -1297,6 +1467,9 @@ class UI {
       html_dialog_obj.dialog.style.display = 'flex';
       html_dialog_obj.title.appendChild(document.createTextNode(title));
       html_dialog_obj.area.appendChild(template);
+      
+      if (dialog_key === 'planners')
+        handlers.change_planner_options();
     };
     // Close Dialog
     handlers.close_dialog = function(input) {
@@ -1485,6 +1658,11 @@ class UI {
     handlers.new_map = function(input) {
       if (input == false)
         return true;// cancel map generation
+      var k = html_nav_obj.file.saved_maps.selectedOptions[0].value;
+      if (k !== 'new') {
+        handlers.parse_loaded_map(self.saved_maps[k]);
+        return true;
+      }
       var ele_i = html_nav_obj.file.build_i;
       var ele_j = html_nav_obj.file.build_j;
       // Data validation check
@@ -1771,6 +1949,7 @@ class UI {
         return undefined;
       return tmp;
     }
+    /*
     // Colour cell
     handlers.set_cell_hsl = function(i, j, h, s, l, bg=true) {
       // all from 0 to 1
@@ -1795,11 +1974,15 @@ class UI {
     handlers.get_cell_color_css = function(i, j) {
       return getComputedStyle(self.ui_map.cells(i,j).ele)['background-color'];
     }
+    */
     handlers.set_cell_class = function(vec, class_name, remove=false) {
       if (remove === true)
         self.ui_map.cells(vec).ele.classList.remove(class_name)
       else
         self.ui_map.cells(vec).ele.classList.add(class_name)
+    }
+    handlers.contains_cell_class = function(vec, class_name) {
+      return self.ui_map.cells(vec).ele.classList.contains(class_name);
     }
     // Write cell
     handlers.set_cell_text = function(vec, txt) {
@@ -1989,6 +2172,8 @@ class UI {
               compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
               break;
             case 'cn': // set class
+              if (handlers.contains_cell_class(args[0], args[1]) && args[2] === false)
+                continue; // adding the cell class will have no effect
               compiled_action = {
                 fwd_handler : handlers.set_cell_class,
                 fwd_args : args,
@@ -2108,7 +2293,6 @@ class UI {
         if (state.play_handler_id !== undefined){
           handlers.play_pause(false);
         }
-      console.log('fwd out', state.step);
       return true;
     }
     // Previous step
@@ -2134,7 +2318,6 @@ class UI {
           break;
         }
       }
-      console.log('bck out', state.step);
       return true;
     }
     // Step to end
@@ -2184,7 +2367,14 @@ class UI {
       html_map_obj.goal.style.top = xy.y + 'px';
       html_map_obj.goal.style.left = xy.x + 'px';
     }
-    handlers.add_planner = function(key, display_name, options) {
+    handlers.add_planner = function(planner_obj, key, display_name, options) {
+      state.planner = key;
+      options.sort();
+      self.planners[key] = {
+        display_name: display_name,
+        planner: planner_obj,
+        options: options
+      }
       var planner_dialog = html_dialog_obj.templates.planners;
       var ele_algorithms = html_options_obj.algorithms;
       // add the option to the dropdown in the dialog
@@ -2192,12 +2382,29 @@ class UI {
       ele_option.setAttribute('value', key);
       ele_option.innerHTML = display_name;
       ele_option.setAttribute('selected', '');
-      for (const c of ele_algorithms.childNodes)
-        if (c.nodeType == 1)
-          c.removeAttribute('selected');
       ele_algorithms.appendChild(ele_option);
       // set the button to display display_name
       html_options_obj.planners.innerHTML = display_name;
+    }
+    handlers.change_planner_options = function() {
+      var key = html_options_obj.algorithms.selectedOptions[0].value;
+      var p_opts = self.planners[key].options;
+      var opts = Object.keys(self.options);
+      var p_opt, opt;
+      var p=0, o=0;
+      while (p < p_opts.length && o < opts.length) {
+        p_opt = p_opts[p];
+        opt = opts[o];
+        if (p_opt === opt) {// same key
+          self.options[opt].ele.style.display = 'revert';
+          o++; p++;
+        } else if (p_opt < opt) { // invalid key
+          p++;
+        } else { // not the same key (p_opt > opt)
+          self.options[opt].ele.style.display = 'none';
+          o++;
+        }
+      }
     }
     handlers.update_planner = function(input) {
       if (input === false) {
@@ -2376,16 +2583,10 @@ ui = new UI();
 
 /* ----------------- Path Planners ------------------- */
 class Planner {
-  constructor(key, display_name) {
+  constructor(key, display_name, options) {
     this.ui = window.ui;
     var ui = this.ui;
-    this.ui.planners[key] = {
-      display_name: display_name, 
-      planner: this
-      };
-    // set the chosen planner
-    this.ui.state.planner = key;
-    this.ui.graphic_handlers.add_planner(key, display_name);
+    this.ui.graphic_handlers.add_planner(this, key, display_name, options);
     this.add_step = this.ui.steps.add_step;
     this.new_info_pair_pane = this.ui.graphic_handlers.new_info_pair_pane;
     this.new_info_text_pane = this.ui.graphic_handlers.new_info_text_pane;
@@ -2432,3 +2633,4 @@ var s = 80;
 var l = 70;
 document.body.style.background = 'hsl('.concat(h,',', s, '%,', l, '%)');
 */
+document.getElementById('ui_load_overlay').parentNode.removeChild(document.getElementById('ui_load_overlay'));
