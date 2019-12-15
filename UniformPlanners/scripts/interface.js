@@ -592,6 +592,9 @@ class Dist {
         return undefined;
     }
   }
+  string(dp=2) {
+    return this.total.toFixed(dp);
+  }
 }
 // directions class
 class Dir {
@@ -2377,14 +2380,19 @@ class UI {
       }
       var planner_dialog = html_dialog_obj.templates.planners;
       var ele_algorithms = html_options_obj.algorithms;
-      // add the option to the dropdown in the dialog
-      var ele_option = document.createElement('option');
-      ele_option.setAttribute('value', key);
-      ele_option.innerHTML = display_name;
-      ele_option.setAttribute('selected', '');
-      ele_algorithms.appendChild(ele_option);
-      // set the button to display display_name
-      html_options_obj.planners.innerHTML = display_name;
+      var found = false, ele_opt;
+      for (ele_opt of ele_algorithms) {
+        if (ele_opt.innerHTML > display_name) {
+          found = true;
+          break;
+        }
+      }
+      if (found === true) { // not the last one
+        ele_algorithms.insertBefore(new Option(display_name, key), ele_opt);
+      } else {
+        ele_algorithms.appendChild(new Option(display_name, key, false, true));
+        html_options_obj.planners.innerHTML = display_name;
+      }
     }
     handlers.change_planner_options = function() {
       var key = html_options_obj.algorithms.selectedOptions[0].value;
@@ -2620,7 +2628,10 @@ class Planner {
 // Dynamically load all other planners
 file_names = [
   'Dijkstra',
-  'Astar'
+  'AStar',
+  'FloodFill',
+  'DepthFirst',
+  'GreedyBestFirst'
 ];
 for (f of file_names) {
   var script = document.createElement("script");  // create a script DOM node
@@ -2634,3 +2645,4 @@ var l = 70;
 document.body.style.background = 'hsl('.concat(h,',', s, '%,', l, '%)');
 */
 document.getElementById('ui_load_overlay').parentNode.removeChild(document.getElementById('ui_load_overlay'));
+

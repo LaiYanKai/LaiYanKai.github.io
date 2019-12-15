@@ -1,6 +1,6 @@
-class Dijkstra extends Planner {
+class GBF extends Planner {
   constructor() {
-    super('dijkstra', 'Dijkstra', [
+    super('gbf', 'GreedyBestFirst', [
       'blocking',
       'directions',
       'origin',
@@ -12,19 +12,18 @@ class Dijkstra extends Planner {
     // ======================== Inits ================================
     var prev_front_pos = undefined, idx=0;
     var step;
-    // ==== Inits - Data ====
-    var graph = new Dijkstra.Graph(this.map.num_i, this.map.num_j);
-    this.graph = graph;
-    var list = new Dijkstra.UnvisitedList();
     // Get the options
     var opt_blocking = this.options.blocking;
     var opt_directions = this.options.directions;
     var opt_origin = this.options.origin;
     var opt_anticlockwise = this.options.anticlockwise;
+    // ==== Inits - Data ====
+    var graph = new GBF.Graph(this.map.num_i, this.map.num_j, this.goal_position, this.options.metric);
+    this.graph = graph;
+    var list = new GBF.OpenList();
    
-    // add start vertex to unvisited list
+    // add start vertex to open list
     var expanded_vertex = graph.vertices(this.start_position);
-    expanded_vertex.set_cost_obj();
     list.add(expanded_vertex);
    // Get the search directions
     var neighbor_dirs = Dir.list_dirs(opt_origin, opt_anticlockwise, opt_directions);
@@ -37,17 +36,17 @@ class Dijkstra extends Planner {
     
     // ==== Inits - GUI ====
     this.new_info_text_pane('i', 'Status', '<b>Initialising...</b>');
-    this.new_info_list_pane('c', 'Visited (Current) Vertex', 'Put the starting vertex in the Unvisited List. It is programmatically simpler to implement it this way', [['Position', 'G-Cost', 'Parent']]);
-    this.new_info_list_pane('n', 'Neighbors', '', [['Direction', 'Position', 'G-Cost', 'State']]);
-    this.new_info_list_pane('u', 'Unvisited List', '', [['Neighbor', 'G-Cost', 'Parent']]);
+    this.new_info_list_pane('c', 'Current Vertex', 'Put the starting vertex in the Unvisited List. It is programmatically simpler to implement it this way', [['Position', 'H-Cost', 'Parent']]);
+    this.new_info_list_pane('n', 'Neighbors', '', [['Direction', 'Position', 'H-Cost', 'State']]);
+    this.new_info_list_pane('u', 'Open List', '', [['Neighbor', 'H-Cost', 'Parent']]);
     step = this.add_step(false, false);
     // update the starting vertex cell with cost information
-    step.set_cell_text(this.start_position, 0);
-    // update the unvisited info description with starting vertex
+    step.set_cell_text(this.start_position, expanded_vertex.cost_obj.string(2));
+    // update the open info description with starting vertex
     step.set_list_description('u', 'Added the starting vertex');
-    // add the start vertex into the unvisited info list
+    // add the start vertex into the open info list
     step.insert_list_item('u', 0, [this.start_position.string(), 0, '-']);
-    // color the new entry in the unvisited info list
+    // color the new entry in the open info list
     step.color_list_item('u', 0, true);
     // add a N/A entry to the current vertex
     step.insert_list_item('c', 0, ['-', '-', '-']);
@@ -57,26 +56,26 @@ class Dijkstra extends Planner {
     }
     
     // ======================== Exploring part ================================
-    var expanded_pos, neighbor_vertex, neighbor_pos, neighbor_nodes, neighbor_poses, neighbor_pos_string, 
-      neighbor_cost_string, expanded_pos_string, tentative_cost_obj, neighbor, num_expansions=0;
+    var expanded_pos, neighbor_vertex, neighbor_pos, neighbor_nodes, neighbor_poses, neighbor_pos_string,
+      expanded_pos_string, neighbor_cost_string, neighbor, num_expansions=0;
     var path_found = false;
     step = this.add_step(true);
     while(list.is_populated()) {
-      // ======================== Retrieve Cheapest Vertex ================================
-      // get the lowest cost vertex from the unvisited list
+      // ======================== Retrieve Lowest Cost Vertex ================================
+      // get the lowest cost vertex from the open list
       expanded_vertex = list.get_cheapest_vertex();
       // get its position
       expanded_pos = expanded_vertex.position;
       // get the string
       expanded_pos_string = expanded_pos.string();
       // ==== GUI ====
-      // remove the first item in the unvisited info list
+      // remove the first item in the open info list
       step.remove_list_item('u', 0);
       // set sim status string
-      step.set_info_text('i', '<b>Exploring...</b></br>- Retrieve cheapest vertex from unvisited-list.')
+      step.set_info_text('i', '<b>Exploring...</b></br>- Retrieve cheapest vertex from open-list.')
       // set current vertex status to reflect removal
       step.set_list_description('c', 'Retrieved cheapest vertex.');
-      // set unvisited vertext status to reflect removal
+      // set open vertext status to reflect removal
       step.set_list_description('u', 'Removed first element, because the list was already sorted'); 
       // empty the neighbor status
       step.set_list_description('n', ''); 
@@ -100,15 +99,6 @@ class Dijkstra extends Planner {
       // set current cell as visited
       step.set_cell_class(expanded_pos, 'cell_visited');
       
-      // ======================== Ignore Vertex if Visited ================================
-      if (expanded_vertex.visited === true) {
-        // === GUI ===
-        // Set current vertex status to reflect skipping
-        step.set_list_description('c', 'A cheaper path was already found, since the vertex was marked as "<b>visited</b>". <em>Skip</em>');
-        // Add a new step for the next retrieval
-        step = this.add_step();
-        continue;
-      }
       // increment the number of expansions
       num_expansions++;
       
@@ -117,7 +107,7 @@ class Dijkstra extends Planner {
       // ==== GUI ====
       step = this.add_step();
       // update the sim status to reflect neighbor checking
-      step.set_info_text('i', '<b>Exploring...</b></br>- Retrieve cheapest vertex from unvisited-list.</br>&ensp;- Check its neighbors');
+      step.set_info_text('i', '<b>Exploring...</b></br>- Retrieve cheapest vertex from open-list.</br>&ensp;- Check its neighbors');
       step.set_list_description('c', 'Checking neighbors...');
       // For each neighbor
       for (var n=0; n<neighbor_nodes.length; n++) {
@@ -149,6 +139,8 @@ class Dijkstra extends Planner {
         }
         // set cell focus if in map
         step.set_cell_focus(neighbor_pos, true);
+        // get neighbor cost string
+        neighbor_cost_string = neighbor_vertex.cost_obj.string(2);
         
         // ======================== Is Neighbor an Obstacle? ================================
         if (neighbor.is_obstacle === true) {
@@ -161,7 +153,7 @@ class Dijkstra extends Planner {
           step.edit_list_item('n', n, [
             dir_to_string[n],
             neighbor_pos_string,
-            '&infin;',
+            neighbor_cost_string,
             '<i>Obstacle</i>'
           ]);
           // highlight neighbor info row
@@ -186,7 +178,7 @@ class Dijkstra extends Planner {
             step.edit_list_item('n', n, [
               dir_to_string[n],
               neighbor_pos_string,
-              'skip',
+              neighbor_cost_string,
               '<i>Blocked</i>'
             ]);
             // highlight neighbor info row
@@ -210,8 +202,31 @@ class Dijkstra extends Planner {
           step.edit_list_item('n', n, [
             dir_to_string[n],
             neighbor_pos_string,
-            'skip',
+            neighbor_cost_string,
             '<i>Parent</i>'
+          ]);
+          // highlight neighbor info row
+          step.color_list_item('n', n, true);
+          // add a step for next neighbor
+          step = this.add_step();
+          // unhighlight
+          step.color_list_item('n', n, false);
+          // blur
+          step.set_cell_focus(neighbor_pos, false);
+          continue;
+        }
+        
+        // ======================== Was Neighbor Visited? ================================
+        if (neighbor_vertex.parent !== undefined) {
+          // ==== GUI ====
+          // update current vertex information
+          step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' <b>has a parent</b>. <em>Skip</em>'));
+          // update neighbor information
+          step.edit_list_item('n', n, [
+            dir_to_string[n],
+            neighbor_pos_string,
+            neighbor_cost_string,
+            '<i>Not a child</i>'
           ]);
           // highlight neighbor info row
           step.color_list_item('n', n, true);
@@ -228,8 +243,6 @@ class Dijkstra extends Planner {
         if (neighbor_pos.equals(this.goal_position) === true) {
           // set the goal node's parent as the current vertex
           neighbor_vertex.parent = expanded_vertex;
-          // update the cost of the goal vertex
-          neighbor_vertex.set_cost_obj(neighbor_vertex.find_cost_obj(expanded_vertex));
           
           // ==== GUI ====
           // update the sim state info to reflect path found
@@ -244,7 +257,7 @@ class Dijkstra extends Planner {
           step.edit_list_item('n', n, [
             dir_to_string[n],
             neighbor_pos_string,
-            neighbor_vertex.cost_obj.string(2),
+            neighbor_cost_string,
             '<em>GOAL</em>'
           ]);
           // highlight neighbor info row
@@ -282,83 +295,45 @@ class Dijkstra extends Planner {
           path_found = true;
           break;
         }
+                
         
-        // ======================== Neighbor can be Visited if Cheaper than Before ================================
-        // Calculate the tentative cost
-        tentative_cost_obj = neighbor_vertex.find_cost_obj(expanded_vertex);
-        if (neighbor_vertex.cost > tentative_cost_obj.total) {
-          // there is a cheaper path to neighbor vertex (vertices initialised with Infinity cost)
-          // ==== GUI ====
-          neighbor_cost_string = tentative_cost_obj.string();
-          if (neighbor_vertex.cost === Infinity) { 
-            // ---- new encounter ----
-            // current vertex info to reflect the new vertex encounter
-            step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' is <b>new</b>. Add this to the unvisited_list with the current vertex as parent.'));
-            // update neighbor information
-            step.edit_list_item('n', n, [
-              dir_to_string[n], 
-              neighbor_pos_string, 
-              neighbor_cost_string, 
-              '<i>New encounter</i>'
-            ]);
-          } else { 
-            // ---- vertex was encountered before ----
-            // current vertex info to reflect a cheaper encounter
-            step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' was <b>encountered before, but not yet visited</b>. This means that it is cheaper to get to it from the current vertex. Add this to the unvisited_list with the current vertex as parent.</br>Its previous unvisited-list entry will be ignored.'));
-            // update neighbor information
-            step.edit_list_item('n', n, [
-              dir_to_string[n], 
-              neighbor_pos_string, 
-              neighbor_cost_string, 
-              '<i>Replaced parent</i>'
-            ]);
-          }
-          // update its cost object
-          neighbor_vertex.set_cost_obj(tentative_cost_obj);
-          
-          // ======================== Add Neighbor to Unvisited List ================================
-          // update the neighbor vertex with the new parent
-          neighbor_vertex.parent = expanded_vertex;
-          // Add to unvisited ist
-          idx = list.add(neighbor_vertex);
-          
-          // ==== GUI ====
-          // modify the unvisited info list
-          step.insert_list_item('u', idx, [
-            neighbor_pos_string,
-            neighbor_cost_string,
-            expanded_pos_string,
-          ]);
-          // modify the unvisited info list description
-          step.set_list_description('u', 'Added neighbor vertex '.concat(neighbor_pos_string, ' after cost sorting'));
-          // highlight the current list row
-          step.color_list_item('u', idx, true);
-          // remove the previous paths to the neighbor
-          step.remove_paths(neighbor_pos);
-          // draw a new path to the neighbor
-          step.draw_path(neighbor_pos, expanded_pos, UIPath.TRACE);
-          // update the neighbor cell class as encountered
-          step.set_cell_class(neighbor_pos, 'cell_encountered');
-          // update the neighbor cell cost
-          step.set_cell_text(neighbor_pos, tentative_cost_obj.string(1));
-          // highlight the neighbor info row
-          step.color_list_item('n', n, true);
-          // add a new step for the next neighbor
-          step = this.add_step();
-          // unhighlight the current list row
-          step.color_list_item('u', idx, false);
-        } else { 
-          // ======================== Neighbor is not Cheaper than before ================================
-          // ==== GUI ====
-          // update the current vertex info
-          step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' is <b>cheaper to visit from its parent</b> than from the current vertex. <em>Skip</em>'));
-          // update neighbor info
-          step.edit_list_item('n', n, [dir_to_string[n], neighbor_pos_string, neighbor_cost_string, '<i>Not a child</i>']);
-          // highlight the neighbor info row
-          step.color_list_item('n', n, true);
-          // add a new step for the next neighbor
-          step = this.add_step();
-        }
+        // ======================== Add Neighbor to Open List ================================
+        // update the neighbor vertex with the new parent
+        neighbor_vertex.parent = expanded_vertex;
+        // Add to open ist
+        idx = list.add(neighbor_vertex);
+        
+        // ==== GUI ====
+        step.edit_list_item('n', n, [
+          dir_to_string[n], 
+          neighbor_pos_string, 
+          neighbor_cost_string, 
+          '<i>New encounter</i>'
+        ]);
+        // modify the open info list
+        step.insert_list_item('u', idx, [
+          neighbor_pos_string,
+          neighbor_cost_string,
+          expanded_pos_string,
+        ]);
+        // modify the open info list description
+        step.set_list_description('u', 'Added neighbor vertex '.concat(neighbor_pos_string, ' after cost sorting'));
+        // highlight the current list row
+        step.color_list_item('u', idx, true);
+        // remove the previous paths to the neighbor
+        step.remove_paths(neighbor_pos);
+        // draw a new path to the neighbor
+        step.draw_path(neighbor_pos, expanded_pos, UIPath.TRACE);
+        // update the neighbor cell class as encountered
+        step.set_cell_class(neighbor_pos, 'cell_encountered');
+        // update the neighbor cell cost
+        step.set_cell_text(neighbor_pos, neighbor_vertex.cost_obj.string(1));
+        // highlight the neighbor info row
+        step.color_list_item('n', n, true);
+        // add a new step for the next neighbor
+        step = this.add_step();
+        // unhighlight the current list row
+        step.color_list_item('u', idx, false);
         // unhighlight the neighbor info row
         step.color_list_item('n', n, false);
         // blur the focus from the cell
@@ -377,10 +352,10 @@ class Dijkstra extends Planner {
       step = this.add_step(true);
       step.set_info_text('i', '<center><h1>No Path Found!</h1><em>'.concat(num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p></center>'));
     } else { // path found
-      step.set_info_text('i', '<center><h1>Complete!</h1><p>$<em>'.concat(graph.vertices(this.goal_position).cost_obj.string(2), "</em> is the path's cost</p><p><em>", num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p></center>'));
+      step.set_info_text('i', '<center><h1>Complete!</h1><p><em>'.concat(num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p></center>'));
     }
-    // update the unvisited list info panel
-    step.set_list_description('u', 'Items left in the unvisited list');
+    // update the open list info panel
+    step.set_list_description('u', 'Items left in the open-list');
     
   }
   get_neighbor_nodes(vec) {
@@ -398,14 +373,15 @@ class Dijkstra extends Planner {
     return nodes;
   }
 }
-Dijkstra.Graph = class {
-  constructor(num_i, num_j, metric=Dist.DIAGONAL) {
+GBF.Graph = class {
+  constructor(num_i, num_j, goal_position, metric=Dist.DIAGONAL) {
+    // calculate the goal position
     this._v = Array(num_i);
     var row;
     for (var i=0; i<num_i; i++) {
       row = Array(num_j);
       for (var j=0; j<num_j; j++) {
-        row[j] = new Dijkstra.Vertex(i, j, metric);
+        row[j] = new GBF.Vertex(i, j, goal_position, metric);
       }
       this._v[i] = row;
     }
@@ -423,12 +399,11 @@ Dijkstra.Graph = class {
     }
   }
 }
-Dijkstra.Vertex = class {
-  constructor(i, j, metric=Dist.DIAGONAL) {
+GBF.Vertex = class {
+  constructor(i, j, goal_position, metric=Dist.DIAGONAL) {
     this.position = new Vec(i, j);
     this.parent = undefined;
-    this.cost_obj = new Dist(Infinity, Infinity, metric);
-    this.visited = false; // don't really have to use this logically since we can compare cost, but it is slightly faster.
+    this.cost_obj = Dist.vecs_separation(this.position, goal_position, metric);
   }
   get cost() {
     return this.cost_obj.total;
@@ -439,20 +414,8 @@ Dijkstra.Vertex = class {
   get j() {
     return this.position.j;
   }
-  find_cost_obj(parent_vertex) {
-    var cost_obj = Dist.vecs_separation(parent_vertex.position, this.position, this.cost_obj.metric);
-    cost_obj = parent_vertex.cost_obj.add(cost_obj);
-    return cost_obj;
-  }
-  set_cost_obj(cost_obj) {
-    if (cost_obj === undefined) {
-      this.cost_obj = new Dist(0, 0, this.cost_obj.metric);
-    } else {
-      this.cost_obj = cost_obj;
-    }
-  }
 }
-Dijkstra.UnvisitedList = class {
+GBF.OpenList = class {
   constructor() {
     this._q = [];
   }
@@ -479,4 +442,4 @@ Dijkstra.UnvisitedList = class {
     return this._q.length !== 0;
   }
 }
-new Dijkstra();
+new GBF();

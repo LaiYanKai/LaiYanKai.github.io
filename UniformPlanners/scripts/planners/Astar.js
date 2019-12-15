@@ -7,6 +7,7 @@ class AStar extends Planner {
       'anticlockwise',
       'metric',
       'fh_optimisation'
+//      'gh_weights'
     ]);
   }
   run() {
@@ -40,7 +41,7 @@ class AStar extends Planner {
     
     // ==== Inits - GUI ====
     this.new_info_text_pane('i', 'Status', '<b>Initialising...</b>');
-    this.new_info_list_pane('c', 'Visited (Current) Vertex', 'Put the starting vertex in the Unvisited List. It is programmatically simpler to implement it this way', [['Position', 'F-cost', 'G-cost', 'H-cost', 'Parent']]);
+    this.new_info_list_pane('c', 'Current Vertex', 'Put the starting vertex in the Queue. It is programmatically simpler to implement it this way', [['Position', 'F-cost', 'G-cost', 'H-cost', 'Parent']]);
     this.new_info_list_pane('n', 'Neighbors', '', [['Dir.', 'Position', 'F-cost', 'G-cost', 'H-cost', 'State']]);
     this.new_info_list_pane('u', 'Open List', '', [['Vertex', 'F-cost', 'G-cost', 'H-cost', 'Parent']]);
     step = this.add_step(false, false);
@@ -255,7 +256,6 @@ class AStar extends Planner {
           neighbor_vertex.set_g(neighbor_vertex.find_g(expanded_vertex));
           
           // ==== GUI ====
-          step = this.add_step();
           // update the sim state info to reflect path found
           step.set_info_text('i', '<b>Path found!</b><br/>- Trace back to the starting vertex by iterating over the parent vertices');
           // update the current vertex info to reflect that goal is found in one of its neighbors
@@ -550,11 +550,11 @@ AStar.OpenList = class {
     this._q = [];
     if (fh_optimisation === true) { // f cost sorting is optimised
       this.is_cheaper = function(vertex1, vertex2) {
-        return vertex1.f_cost < vertex2.f_cost || vertex1.f_cost === vertex2.f_cost && vertex1.h_cost < vertex2.h_cost;
+        return vertex1.f_cost <= vertex2.f_cost || vertex1.f_cost === vertex2.f_cost && vertex1.h_cost < vertex2.h_cost;
       }
     } else { // vanilla
       this.is_cheaper = function(vertex1, vertex2) {
-        return vertex1.f_cost < vertex2.f_cost;
+        return vertex1.f_cost <= vertex2.f_cost;
       }
     }
   }
