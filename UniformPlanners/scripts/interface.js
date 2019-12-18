@@ -2713,7 +2713,7 @@ class Planner {
 // Dynamically load all other planners
 file_names = [
   'Dijkstra',
-  'Astar',
+  'AStar',
   'FloodFill',
   'DepthFirst',
   'GreedyBestFirst',
