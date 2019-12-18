@@ -314,20 +314,15 @@ class UIInfo {
     // build the new pane
     this.build_pane(title);
     
-    // build the container's contents
-    var ele_value = document.createElement('DIV');
-    ele_value.innerHTML = value;
-    
     // reconfigure the content
     this.ele_content.classList.add('info_text');
-    this.ele_content.appendChild(ele_value);
-    this.ele_value = ele_value;
+    this.ele_content.innerHTML = value;
   }
   set_text(innerHTML) {
-    this.ele_value.innerHTML = innerHTML;
+    this.ele_content.innerHTML = innerHTML;
   }
   get_text() {
-    return this.ele_value.innerHTML;
+    return this.ele_content.innerHTML;
   }
   new_pair_pane(title, key_subtitle_values) {
     // build the new pane;
@@ -489,6 +484,12 @@ class Vec {
     else
       throw 'Vec.add: vec is not a Vec class';
   }
+  subtract(vec) {
+    if (vec instanceof Vec) 
+      return new Vec(this.i - vec.i, this.j - vec.j);
+    else
+      throw 'Vec.subtract: vec is not a Vec class';
+  }
   equals(vec) {
     return vec instanceof Vec && vec.i === this.i && vec.j === this.j;
   }
@@ -497,11 +498,17 @@ class Vec {
   }
   get x() {return this.i;}
   get y() {return this.j;}
-  string(dp) {
-    if (dp === undefined)
-      return '('.concat(this.i, ', ', this.j, ')');
-    else
-      return '('.concat(this.i.toFixed(dp), ', ', this.j.toFixed(dp), ')');
+  string(dp=0) {
+    return this.toString(dp);
+  }
+  toString(dp=0) {
+    return '('.concat(this.i.toFixed(dp), ', ', this.j.toFixed(dp), ')');
+  }
+  is_ordinal() {
+    return Math.abs(this.i) === Math.abs(this.j);
+  }
+  is_cardinal() {
+    return this.i === 0 || this.j === 0;
   }
 }
 // Distance class (metrics)
@@ -559,13 +566,13 @@ class Dist {
       } else {
         var d = new Dist(arg0, arg1, this.metric);
         d.total += this.total;
-        d.di = 0;
-        d.dj = 0;
+        d.di = NaN;
+        d.dj = NaN;
       }
       return d;
     }
     if (arg0 instanceof Dist) { // assume same metric
-      return new Dist(this.ax0 + arg0.ax0, this.ax1 + arg0.ax1, this.metric)
+      return new Dist(this.ax0 + arg0.ax0, this.ax1 + arg0.ax1, this.metric);
     } else {
       return new Dist(this.ax0 + arg0, this.ax1 + arg1, this.metric);
     }
@@ -766,6 +773,21 @@ class Dir {
       d += 8;
     return d % 8;
   }
+  static nearest(d, steps=1) {
+    if (steps === 0)
+      return [d];
+    var dirs = [];
+    d = Math.round(d);
+    steps = Math.round(steps);
+    var step = -steps;
+    var s = Math.sign(steps);
+    var final_step = steps * s;
+    do {
+      dirs.push(Dir.rotate(d, step));
+      step += s;
+    } while (step * s <= final_step)
+    return dirs;
+  }
 }
 
 /* -------- UI methods -------- */
@@ -776,7 +798,7 @@ class UI {
     this.initialise_data_handlers();
     this.initialise_data();
     // Create map at startup
-    this.graphic_handlers.parse_loaded_map(this.saved_maps.CHEVRONS_12_12);
+    this.graphic_handlers.parse_loaded_map(this.saved_maps.CHEVRONS_12_12.map);
     this.state.saved = true;
   }
   instantiate() {
@@ -898,20 +920,36 @@ class UI {
     this.options = {};
     // saved maps
     this.saved_maps = {
-  HELLOWORLD_20_30 : `20
+  HELLOWORLD_20_30 : {
+    map: `20
 30
 1
 1
 12
 27
 000000000000000000000000000000000010000000000000000000000000001110111101101011111001111100011010000100101010001001010100010010000100011010001011010110000010000101111000001010010010010010000101001010001010000010011010000100001010001010000010001110000111111011111010000010000000000000000000001000000000000000000000000000001000000000011110111111111011111010001111010010000100001000000010001000010010000100001000001010001110010010000100001000001010001000000010000100000000111011011011010010000100001000001010001000010010000100001000001010001000011110000100001011111010001000000000000100000000000000000000`,
-  CHEVRONS_12_12 : `12
+    name: 'HelloWorld (20, 30)'
+  },
+  CHEVRONS_12_12 : {
+    map: `12
 12
 0
 1
 11
 11
-000000000000000000000000000001000000000001010000000001010100001111010100000000010100000111110100000000000100000011111100000000000000000000000000`
+000000000000000000000000000001000000000001010000000001010100001111010100000000010100000111110100000000000100000011111100000000000000000000000000`,
+    name: 'Chevrons (12, 12)'
+  },
+  DENSEA_21_21 : {
+    map: `21
+21
+0
+5
+10
+10
+000000100011001000100011101110000000010111010101000011111011101010100001000001001101011001011111100010100001010010000011001100100110011011101000001001010110010001010101000100101000100100101000010011001010100101001100010101000101100001001010111010101000100011000001000100101010011001100101000001000001100001000101001011000110011000101001010100001100100110000011100111000000100110010011100010000001010000000000110100110001010000000001101100000`,
+    name: 'Dense-A (21, 21)'
+  }
 }
   }
   initialise_data() {
@@ -1044,7 +1082,7 @@ class UI {
       };
       function gen_fh_optimisation() {
         var [ele, ele_title, ele_desc, ele_select] = template('F-H-cost optimisation');
-        ele_desc.innerHTML = 'For algorithms like A* and Jump Point Search, F-cost = G-cost + H-cost. <br/>If <em>Optimise</em> is selected, when retrieving the cheapest vertex from the open list, the vertex with the lowest H-cost among the lowest F-cost vertices will be chosen. This has the effect of doing a Depth-First-Search on equal F-cost paths, which can be faster.<br/>Select <em>Vanilla</em> to use their original, vanilla implementations.'
+        ele_desc.innerHTML = 'For algorithms like A* and Jump Point Search, F-cost = G-cost + H-cost. This has priority over the time-ordering option.<br/>If <em>Optimise</em> is selected, when retrieving the cheapest vertex from the open list, the vertex with the lowest H-cost among the lowest F-cost vertices will be chosen. This has the effect of doing a Depth-First-Search on equal F-cost paths, which can be faster.<br/>Select <em>Vanilla</em> to use their original implementations.'
         ele_select.innerHTML = '<option value ="0" selected>Optimise</option><option value="1">Vanilla</option>';
         ele_select.onchange = function(e) {
           switch(e.target.selectedOptions[0].value) {
@@ -1063,14 +1101,70 @@ class UI {
           ele : ele
         }
       };
+      function gen_time_ordering() {
+        var [ele, ele_title, ele_desc, ele_select] = template('Time Ordering');
+        ele_desc.innerHTML = 'When sorting a vertex into the open-list or unvisited-list and it has identical cost* to earlier entries, select: <br/><em>FIFO</em> to place the new vertex behind the earlier ones, so it comes out <i>after</i> them.<br/><em>LIFO</em> to place the new vertex in front of the earlier ones, so it comes out <i>before</i> them.<br/>* cost refers to F-cost & H-cost, if F-H-Cost Optimisation is set to "Optimise", otherwise it is the F-cost for A*, G-cost for Dijkstra and H-cost for GreedyBestFirst)'
+        ele_select.innerHTML = '<option value="FIFO" selected>FIFO</option><option value="LIFO">LIFO</option>';
+        ele_select.onchange = function(e) {
+         options_obj.time_ordering.choice = e.target.selectedOptions[0].value;
+        }
+        // inits
+        options_obj.time_ordering = {
+          choice: "FIFO",
+          ele_select : ele_select,
+          ele: ele
+        }
+      };
+      function gen_gh_weights() {
+        // generate the layout
+        var ele = document.createElement('TR');
+        var ele_title = document.createElement('TD');
+        ele_title.classList = 'title';
+        ele_title.innerHTML = 'G-H Weights';
+        ele.appendChild(ele_title);
+        var ele_table = document.createElement('DIV');
+        ele_table.innerHTML = '<div><div><em>g</em></div><div><input type="number" step="any" value="1" placeholder="G"></input></div></div><div><div><em>h</em></div><div><input type="number" step="any" value="1" placeholder="H"></input></div></div>';
+        ele_title.appendChild(ele_table);
+        var ele_g_weight = ele_table.firstElementChild.lastElementChild.firstElementChild;
+        var ele_h_weight = ele_table.lastElementChild.lastElementChild.firstElementChild;
+        var ele_desc = document.createElement('TD');
+        ele_desc.classList = 'description';
+        ele.appendChild(ele_desc);
+        
+        // description
+        ele_desc.innerHTML = "Conventionally, F-cost = G-cost + H-cost. Let the G weight be <em>g</em>, and H weight be <em>h</em>. Let's modify the cost calculation so that<br/><center>H-cost &larr; <em>h</em> &times; H-cost</br>G-cost &larr; <em>g</em> &times; G-cost</center>A* approaches Dijkstra if <em>g</em> > <em>h</em>, and GreedyBestFirst if <em>g</em> < <em>h</em>"
+        ele_g_weight.oninput = function(e) {
+          var result = self.graphic_handlers.validate_float(ele_g_weight);
+          if (result === true) // is float
+            options_obj.gh_weights.choice[0] = parseFloat(ele_g_weight.value);
+        } 
+        ele_g_weight.onchange = function(e) {
+          ele_g_weight.value = options_obj.gh_weights.choice[0];
+        }
+        ele_h_weight.oninput = function(e) {
+          var result = self.graphic_handlers.validate_float(ele_h_weight);
+          if (result === true) // is float
+            options_obj.gh_weights.choice[1] = parseFloat(ele_h_weight.value);
+        } 
+        ele_h_weight.onchange = function(e) {
+          ele_h_weight.value = options_obj.gh_weights.choice[1];
+        }
+        // inits
+        options_obj.gh_weights = {
+          choice: [1, 1],
+          ele: ele
+        }
+      }
       html_options_obj.algorithms.onchange = graphic_handlers.change_planner_options;
       // need to sort according to alphabetical order
       gen_anticlockwise();
       gen_blocking();
       gen_directions();
+      gen_gh_weights();
       gen_fh_optimisation();
       gen_metric();
       gen_origin();
+      gen_time_ordering();
     };
     // Dialog
     function init_dialog() {
@@ -1095,7 +1189,7 @@ class UI {
               for (const k of Object.keys(self.saved_maps)) {
                 ele_option = document.createElement('OPTION');
                 ele_option.setAttribute('value', k);
-                ele_option.innerHTML = k;
+                ele_option.innerHTML = self.saved_maps[k].name;
                 ele_select.appendChild(ele_option);
               }
               ele_select.selectedIndex = 0;
@@ -1117,31 +1211,9 @@ class UI {
               var opts = [];
               // iterate over the options
               while (opt !== null) {
-                switch(opt.getAttribute('key')) {
-                  case 'directions':
-                    opts_parent.insertBefore(self.options.directions.ele, opt);
-                    opts.push(opt);
-                    break;
-                  case 'metric':
-                    opts_parent.insertBefore(self.options.metric.ele, opt);
-                    opts.push(opt);
-                    break;
-                  case 'blocking':
-                    opts_parent.insertBefore(self.options.blocking.ele, opt);
-                    opts.push(opt);
-                    break;
-                  case 'origin':
-                    opts_parent.insertBefore(self.options.origin.ele, opt);
-                    opts.push(opt);
-                    break;
-                  case 'anticlockwise':
-                    opts_parent.insertBefore(self.options.anticlockwise.ele, opt);
-                    opts.push(opt);
-                    break;
-                  case 'fh_optimisation':
-                    opts_parent.insertBefore(self.options.fh_optimisation.ele, opt);
-                    opts.push(opt);
-                    break;
+                if (opt.hasAttribute('key')) {
+                  opts_parent.insertBefore(self.options[opt.getAttribute('key')].ele, opt);
+                  opts.push(opt);
                 }
                 opt = opt.nextElementSibling;
               }
@@ -1657,13 +1729,23 @@ class UI {
         ele.classList.add('bad');
       }
     }
+    // Validate a text input to see if it is a number
+    handlers.validate_float = function(ele) {
+      if (data_handlers.is_float(ele.value) === true) {
+        ele.classList.remove('bad');
+        return true;
+      } else {
+        ele.classList.add('bad');
+        return false;
+      }
+    }
     // Create New Map
     handlers.new_map = function(input) {
       if (input == false)
         return true;// cancel map generation
       var k = html_nav_obj.file.saved_maps.selectedOptions[0].value;
       if (k !== 'new') {
-        handlers.parse_loaded_map(self.saved_maps[k]);
+        handlers.parse_loaded_map(self.saved_maps[k].map);
         return true;
       }
       var ele_i = html_nav_obj.file.build_i;
@@ -2175,13 +2257,16 @@ class UI {
               compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
               break;
             case 'cn': // set class
-              if (handlers.contains_cell_class(args[0], args[1]) && args[2] === false)
+              var remove = args[2] === true; // args[2] is an optional parameter
+              if (handlers.contains_cell_class(args[0], args[1]) === true && remove === false)
+                continue; // adding the cell class will have no effect
+              if (handlers.contains_cell_class(args[0], args[1]) === false && remove === true)
                 continue; // adding the cell class will have no effect
               compiled_action = {
                 fwd_handler : handlers.set_cell_class,
-                fwd_args : args,
+                fwd_args : [args[0], args[1], remove],
                 bck_handler : handlers.set_cell_class,
-                bck_args : [args[0], args[1], !args[2]]
+                bck_args : [args[0], args[1], !remove]
               }
               // apply the forward step
               compiled_action.fwd_handler.apply(null, compiled_action.fwd_args)
@@ -2631,7 +2716,8 @@ file_names = [
   'AStar',
   'FloodFill',
   'DepthFirst',
-  'GreedyBestFirst'
+  'GreedyBestFirst',
+  'JumpPoint'
 ];
 for (f of file_names) {
   var script = document.createElement("script");  // create a script DOM node

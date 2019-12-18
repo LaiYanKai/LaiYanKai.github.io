@@ -5,7 +5,8 @@ class Dijkstra extends Planner {
       'directions',
       'origin',
       'anticlockwise',
-      'metric'
+      'metric',
+      'time_ordering'
     ]);
   }
   run() {
@@ -15,7 +16,7 @@ class Dijkstra extends Planner {
     // ==== Inits - Data ====
     var graph = new Dijkstra.Graph(this.map.num_i, this.map.num_j);
     this.graph = graph;
-    var list = new Dijkstra.UnvisitedList();
+    var list = new Dijkstra.UnvisitedList(this.options.time_ordering);
     // Get the options
     var opt_blocking = this.options.blocking;
     var opt_directions = this.options.directions;
@@ -57,8 +58,9 @@ class Dijkstra extends Planner {
     }
     
     // ======================== Exploring part ================================
-    var expanded_pos, neighbor_vertex, neighbor_pos, neighbor_nodes, neighbor_poses, neighbor_pos_string, 
-      neighbor_cost_string, expanded_pos_string, tentative_cost_obj, neighbor, num_expansions=0;
+    var expanded_pos, neighbor_vertex, neighbor_pos, expanded_pos, neighbor_nodes, neighbor_poses, 
+      neighbor_pos_string, neighbor_cost_string, expanded_pos_string, tentative_cost_obj, neighbor, 
+      num_expansions=0;
     var path_found = false;
     step = this.add_step(true);
     while(list.is_populated()) {
@@ -99,6 +101,41 @@ class Dijkstra extends Planner {
       }
       // set current cell as visited
       step.set_cell_class(expanded_pos, 'cell_visited');
+      
+      // ============================ Is this the Goal ? ==================================
+      if (expanded_pos.equals(this.goal_position)) {
+        // ==== GUI ====
+        // update the sim state info to reflect path found
+        step.set_info_text('i', '<b>Path found!</b><br/>- Trace back to the starting vertex by iterating over the parent vertices');
+        
+        // ======================== Trace to start ================================
+        // ==== GUI ====
+        step = this.add_step(true);
+        // update the current vertex description
+        step.set_list_description('c', '<b>The <em>Goal</em> Vertex</b>');
+        
+        // ---- Begin Tracing ----
+        neighbor_vertex = expanded_vertex;
+        var num_ordinals=0, num_cardinals=0;
+        while (true) {
+          expanded_vertex = neighbor_vertex.parent;
+          if (expanded_vertex === undefined)
+            break; // at the start vertex
+          // Draw the optimal path
+          step.draw_path(neighbor_vertex.position, expanded_vertex.position, UIPath.PATH);
+          // Count the number of ordinals and cardinals
+          expanded_pos = expanded_vertex.position;
+          neighbor_pos = neighbor_vertex.position;
+          if (expanded_pos.subtract(neighbor_pos).is_cardinal())
+            num_cardinals++;
+          else
+            num_ordinals++;
+          // Move down the chain
+          neighbor_vertex = expanded_vertex;
+        }
+        path_found = true;
+        break;
+      }
       
       // ======================== Ignore Vertex if Visited ================================
       if (expanded_vertex.visited === true) {
@@ -225,63 +262,7 @@ class Dijkstra extends Planner {
         }
         
         // ======================== Is Neighbor the GOAL? ================================
-        if (neighbor_pos.equals(this.goal_position) === true) {
-          // set the goal node's parent as the current vertex
-          neighbor_vertex.parent = expanded_vertex;
-          // update the cost of the goal vertex
-          neighbor_vertex.set_cost_obj(neighbor_vertex.find_cost_obj(expanded_vertex));
-          
-          // ==== GUI ====
-          // update the sim state info to reflect path found
-          step.set_info_text('i', '<b>Path found!</b><br/>- Trace back to the starting vertex by iterating over the parent vertices');
-          // update the current vertex info to reflect that goal is found in one of its neighbors
-          step.set_list_description('n', 'Neighbor '.concat(neighbor_pos_string, ' is the <b>GOAL</b>!'));
-          // update the front to the goal
-          step.set_cell_class(neighbor_pos, 'cell_front');
-          // remove the current cell as the front
-          step.set_cell_class(expanded_pos, 'cell_front', true);
-          // update the neighbor info panel
-          step.edit_list_item('n', n, [
-            dir_to_string[n],
-            neighbor_pos_string,
-            neighbor_vertex.cost_obj.string(2),
-            '<em>GOAL</em>'
-          ]);
-          // highlight neighbor info row
-          step.color_list_item('n', n, true);
-          
-          // ======================== Trace to start ================================
-          // ==== GUI ====
-          step = this.add_step(true); // major step
-          // clear the description
-          step.set_list_description('n', '');
-          // unhighlight neighbors info row
-          step.color_list_item('n', n, false);
-          // reset the neighbors info panel
-          for (var n=0; n<dir_to_string.length; n++)
-            step.edit_list_item('n', n, [dir_to_string[n], '-', '-', '-']);
-          // set the current vertex info panel as the goal
-          step.edit_list_item('c', 0, [
-            neighbor_pos_string,
-            neighbor_vertex.cost_obj.string(2),
-            expanded_pos_string
-          ]);
-          // update the current vertex description
-          step.set_list_description('c', '<b>The <em>Goal</em> Vertex</b>');
-          
-          // ---- Begin Tracing ----
-          while (true) {
-            expanded_vertex = neighbor_vertex.parent;
-            if (expanded_vertex === undefined)
-              break; // at the start vertex
-            // Draw the optimal path
-            step.draw_path(neighbor_vertex.position, expanded_vertex.position, UIPath.PATH);
-            // Move down the chain
-            neighbor_vertex = expanded_vertex;
-          }
-          path_found = true;
-          break;
-        }
+        /// Shortcutting in goal searching may result in non-optimality,
         
         // ======================== Neighbor can be Visited if Cheaper than Before ================================
         // Calculate the tentative cost
@@ -375,9 +356,27 @@ class Dijkstra extends Planner {
     // check if the while loop found the path
     if (path_found === false) { // no path found
       step = this.add_step(true);
-      step.set_info_text('i', '<center><h1>No Path Found!</h1><em>'.concat(num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p></center>'));
+      step.set_info_text('i', '<h1>No Path Found!</h1>'.concat(
+        '<table class="summary"><tbody><tr><th>Value</th><th>Variable</th><th>Description</th></tr><tr><td>',
+        num_expansions,
+        '</td><th>Expansions</th><td class="description">Number of times a vertex and its neighbors are checked</td></tr></tbody></table>'
+        )
+      );	
     } else { // path found
-      step.set_info_text('i', '<center><h1>Complete!</h1><p>$<em>'.concat(graph.vertices(this.goal_position).cost_obj.string(2), "</em> is the path's cost</p><p><em>", num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p></center>'));
+      step.set_info_text('i', '<h1>Complete!</h1>'.concat(
+        '<table class="summary"><tbody><tr><th>Value</th><th>Variable</th><th>Description</th></tr><tr><td>', 
+        (new Dist(num_ordinals, num_cardinals, Dist.DIAGONAL)).string(2), 
+        '</td><th>G-cost</th><td class="description"><i>Diagonal</i> cost of the path</td></tr><tr><td>',
+        num_ordinals,
+        '</td><th>Ordinals</th><td class="description">Number of ordinal steps in the path</td></tr><tr><td>',
+        num_cardinals,
+        '</td><th>Cardinals</th><td class="description">Number of cardinal steps in the path</td></tr><tr><td>',
+        num_cardinals + num_ordinals,
+        '</td><th>Steps</th><td class="description">Total number of steps in the path</td></tr><tr><td>',
+        num_expansions,
+        '</td><th>Expansions</th><td class="description">Number of times a vertex and its neighbors are checked</td></tr></tbody></table>'
+        )
+      );
     }
     // update the unvisited list info panel
     step.set_list_description('u', 'Items left in the unvisited list');
@@ -453,12 +452,21 @@ Dijkstra.Vertex = class {
   }
 }
 Dijkstra.UnvisitedList = class {
-  constructor() {
+  constructor(time_ordering) {
     this._q = [];
+    if (time_ordering === 'FIFO') {
+      this.is_cheaper = function(vertex1, vertex2) {
+        return vertex1.cost < vertex2.cost;
+      }
+    } else {
+      this.is_cheaper = function(vertex1, vertex2) {
+        return vertex1.cost <= vertex2.cost;
+      }
+    }
   }
   add(vertex) {
     for (var q=0; q<this._q.length; q++) {
-      if (vertex.cost < this._q[q].cost) {
+      if (this.is_cheaper(vertex, this._q[q])) {
         this._q.splice(q, 0, vertex);
         return q;
       }

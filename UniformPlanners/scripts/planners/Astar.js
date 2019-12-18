@@ -6,8 +6,9 @@ class AStar extends Planner {
       'origin',
       'anticlockwise',
       'metric',
-      'fh_optimisation'
-//      'gh_weights'
+      'fh_optimisation',
+      'time_ordering',
+      'gh_weights'
     ]);
   }
   run() {
@@ -19,12 +20,20 @@ class AStar extends Planner {
     var opt_directions = this.options.directions;
     var opt_origin = this.options.origin;
     var opt_anticlockwise = this.options.anticlockwise;
-    var opt_metric = this.options.metric;
     this.opt_directions = opt_directions;
     // Build the graph using the goal_position to do a one-pass calculation of the h-costs
-    var graph = new AStar.Graph(this.map.num_i, this.map.num_j, this.goal_position, opt_metric);
+    var graph = new AStar.Graph(
+      this.map.num_i, 
+      this.map.num_j, 
+      this.goal_position, 
+      this.options.metric,
+      this.options.gh_weights
+    );
     this.graph = graph;
-    var list = new AStar.OpenList(this.options.fh_optimisation);
+    var list = new AStar.OpenList(
+      this.options.fh_optimisation,
+      this.options.time_ordering
+    );
     
     // add start vertex to unvisited list
     var expanded_vertex = graph.vertices(this.start_position);
@@ -300,12 +309,20 @@ class AStar extends Planner {
           step.set_list_description('c', '<b>The <em>Goal</em> Vertex</b>');
           
           // ---- Begin Tracing ----
+          var num_ordinals=0, num_cardinals=0;
           while (true) {
             expanded_vertex = neighbor_vertex.parent;
             if (expanded_vertex === undefined)
               break; // at the start vertex
             // Draw the optimal path
             step.draw_path(neighbor_vertex.position, expanded_vertex.position, UIPath.PATH);
+            // Count the number of ordinals and cardinals
+            expanded_pos = expanded_vertex.position;
+            neighbor_pos = neighbor_vertex.position;
+            if (expanded_pos.subtract(neighbor_pos).is_cardinal())
+              num_cardinals++;
+            else
+              num_ordinals++;
             // Move down the chain
             neighbor_vertex = expanded_vertex;
           }
@@ -379,7 +396,7 @@ class AStar extends Planner {
           // update the neighbor cell class as encountered
           step.set_cell_class(neighbor_pos, 'cell_encountered');
           // update the neighbor cell cost
-          step.set_cell_text(neighbor_pos, this.cost_to_string(tentative_g, 1));
+          step.set_cell_text(neighbor_pos, this.cost_to_string(neighbor_vertex.f, 1));
           // highlight the neighbor info row
           step.color_list_item('n', n, true);
           // add a new step for the next neighbor
@@ -397,7 +414,7 @@ class AStar extends Planner {
             neighbor_pos_string, 
             this.cost_to_string(neighbor_vertex.f, 2),
             this.cost_to_string(neighbor_vertex.f.g, 2), 
-            neighbor_gc_string,
+            neighbor_hc_string,
             '<i>Not a child</i>'
           ]);
           // highlight the neighbor info row
@@ -421,9 +438,27 @@ class AStar extends Planner {
     // check if the while loop found the path
     if (path_found === false) { // no path found
       step = this.add_step(true);
-      step.set_info_text('i', '<center><h1>No Path Found!</h1><em>'.concat(num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p></center>'));
+      step.set_info_text('i', '<h1>No Path Found!</h1>'.concat(
+        '<table class="summary"><tbody><tr><th>Value</th><th>Variable</th><th>Description</th></tr><tr><td>',
+        num_expansions,
+        '</td><th>Expansions</th><td class="description">Number of times a vertex and its neighbors are checked</td></tr></tbody></table>'
+        )
+      );	
     } else { // path found
-      step.set_info_text('i', '<center><h1>Complete!</h1><p>$<em>'.concat(this.cost_to_string(graph.vertices(this.goal_position).f.g, 2), "</em> is the path's G-cost</p><p><em>", num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p></center>'));
+      step.set_info_text('i', '<h1>Complete!</h1>'.concat(
+        '<table class="summary"><tbody><tr><th>Value</th><th>Variable</th><th>Description</th></tr><tr><td>', 
+        (new Dist(num_ordinals, num_cardinals, Dist.DIAGONAL)).string(2), 
+        '</td><th>G-cost</th><td class="description"><i>Diagonal</i> cost of the path</td></tr><tr><td>',
+        num_ordinals,
+        '</td><th>Ordinals</th><td class="description">Number of ordinal steps in the path</td></tr><tr><td>',
+        num_cardinals,
+        '</td><th>Cardinals</th><td class="description">Number of cardinal steps in the path</td></tr><tr><td>',
+        num_cardinals + num_ordinals,
+        '</td><th>Steps</th><td class="description">Total number of steps in the path</td></tr><tr><td>',
+        num_expansions,
+        '</td><th>Expansions</th><td class="description">Number of times a vertex and its neighbors are checked</td></tr></tbody></table>'
+        )
+      );	
     }
     // update the unvisited list info panel
     step.set_list_description('u', 'Items left in the unvisited list');
@@ -448,18 +483,19 @@ class AStar extends Planner {
   }
 }
 AStar.FCost = class {
-  constructor(metric, is_start=false) {
+  constructor(metric, weights) {
     this.g = new Dist(Infinity, Infinity, metric);
     this.h = new Dist(Infinity, Infinity, metric);
     this.total = Infinity;
     this.metric = metric;
+    this.weights = weights;
   }
 };
 AStar.Vertex = class {
-  constructor(i, j, metric) {
+  constructor(i, j, metric, weights) {
     this.position = new Vec(i, j);
     this.parent = undefined;
-    this.f = new AStar.FCost(metric);
+    this.f = new AStar.FCost(metric, weights);
   }
   get f_cost() {
     return this.f.total;
@@ -477,15 +513,23 @@ AStar.Vertex = class {
     return this.position.j;
   }
   set_f() {
-    this.f.total = this.f.g.add(this.f.h).total;
+    var f = this.f;
+    f.total = f.g.total + f.h.total;
   }
   find_g(parent_vertex) {
     var f = this.f;
     var g = Dist.vecs_separation(parent_vertex.position, this.position, f.metric);
-    g = parent_vertex.f.g.add(g);
+    if (f.metric === Dist.EUCLIDEAN) {
+      g.total *= f.weights[0];
+      g = parent_vertex.f.g.add(g); // add operation uses total
+    } else {
+      g = parent_vertex.f.g.add(g); // add operation does not use total
+      g.total *= f.weights[0];
+    }
     return g;
   }
   set_g(g) {
+    // g from find_g, with total adjusted
     var f = this.f;
     if (g === undefined) {
       f.g = new Dist(0, 0, f.metric);
@@ -497,17 +541,18 @@ AStar.Vertex = class {
   set_h(goal_position) {
     var f = this.f;
     f.h = Dist.vecs_separation(this.position, goal_position, f.metric);
+    f.h.total *= f.weights[1];
     this.set_f();
   }
 }
 AStar.Graph = class {
-  constructor(num_i, num_j, goal_position, metric=Dist.DIAGONAL) {
+  constructor(num_i, num_j, goal_position, metric=Dist.DIAGONAL, weights=[1,1]) {
     this._v = Array(num_i);
     var row, cell;
     for (var i=0; i<num_i; i++) {
       row = Array(num_j);
       for (var j=0; j<num_j; j++) {
-        cell = new AStar.Vertex(i, j, metric);
+        cell = new AStar.Vertex(i, j, metric, weights);
         row[j] = cell;
       }
       this._v[i] = row;
@@ -546,15 +591,39 @@ AStar.OpenNode = class {
   }
 }
 AStar.OpenList = class {
-  constructor(fh_optimisation=true) {
+  constructor(fh_optimisation=true, time_ordering) {
     this._q = [];
     if (fh_optimisation === true) { // f cost sorting is optimised
-      this.is_cheaper = function(vertex1, vertex2) {
-        return vertex1.f_cost <= vertex2.f_cost || vertex1.f_cost === vertex2.f_cost && vertex1.h_cost < vertex2.h_cost;
+      if (time_ordering === 'LIFO') { // LIFO
+        this.is_cheaper = function(vertex1, vertex2) {
+          var f1 = Math.round(vertex1.f_cost * 1e7);
+          var f2 = Math.round(vertex2.f_cost * 1e7);
+          var h1 = Math.round(vertex1.h_cost * 1e7);
+          var h2 = Math.round(vertex2.h_cost * 1e7);
+          return f1 < f2 || f1 === f2 && h1 <= h2;
+        }
+      } else { // FIFO
+        this.is_cheaper = function(vertex1, vertex2) {
+          var f1 = Math.round(vertex1.f_cost * 1e7);
+          var f2 = Math.round(vertex2.f_cost * 1e7);
+          var h1 = Math.round(vertex1.h_cost * 1e7);
+          var h2 = Math.round(vertex2.h_cost * 1e7);
+          return f1 < f2 || f1 === f2 && h1 < h2;
+        }
       }
     } else { // vanilla
-      this.is_cheaper = function(vertex1, vertex2) {
-        return vertex1.f_cost <= vertex2.f_cost;
+      if (time_ordering === 'LIFO') { // LIFO
+        this.is_cheaper = function(vertex1, vertex2) {
+          var f1 = Math.round(vertex1.f_cost * 1e7);
+          var f2 = Math.round(vertex2.f_cost * 1e7);
+          return f1 <= f2;
+        }
+      } else { // FIFO
+        this.is_cheaper = function(vertex1, vertex2) {
+          var f1 = Math.round(vertex1.f_cost * 1e7);
+          var f2 = Math.round(vertex2.f_cost * 1e7);
+          return f1 < f2;
+        }
       }
     }
   }

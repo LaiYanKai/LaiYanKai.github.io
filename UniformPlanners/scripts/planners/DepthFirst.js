@@ -38,7 +38,7 @@ class DFS extends Planner {
     this.new_info_text_pane('i', 'Status', '<b>Initialising...</b>');
     this.new_info_list_pane('c', 'Current Vertex', 'Put the starting vertex in the Stack. It is programmatically simpler to implement it this way', [['Position', 'Step', 'Parent']]);
     this.new_info_list_pane('n', 'Neighbors', '', [['Direction', 'Position', 'Step', 'State']]);
-    this.new_info_list_pane('u', 'Unvisited Stack', '', [['Neighbor', 'Step', 'Parent']]);
+    this.new_info_list_pane('u', 'Stack', '', [['Neighbor', 'Step', 'Parent']]);
     step = this.add_step(false, false);
     // update the starting vertex cell with cost information
     step.set_cell_text(this.start_position, 0);
@@ -283,12 +283,20 @@ class DFS extends Planner {
           step.set_list_description('c', '<b>The <em>Goal</em> Vertex</b>');
           
           // ---- Begin Tracing ----
+          var num_ordinals=0, num_cardinals=0;
           while (true) {
             expanded_vertex = neighbor_vertex.parent;
             if (expanded_vertex === undefined)
               break; // at the start vertex
             // Draw the optimal path
             step.draw_path(neighbor_vertex.position, expanded_vertex.position, UIPath.PATH);
+            // Count the number of ordinals and cardinals
+            expanded_pos = expanded_vertex.position;
+            neighbor_pos = neighbor_vertex.position;
+            if (expanded_pos.subtract(neighbor_pos).is_cardinal())
+              num_cardinals++;
+            else
+              num_ordinals++;
             // Move down the chain
             neighbor_vertex = expanded_vertex;
           }
@@ -357,9 +365,27 @@ class DFS extends Planner {
     // check if the while loop found the path
     if (path_found === false) { // no path found
       step = this.add_step(true);
-      step.set_info_text('i', '<center><h1>No Path Found!</h1><em>'.concat(num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p></center>'));
+      step.set_info_text('i', '<h1>No Path Found!</h1>'.concat(
+        '<table class="summary"><tbody><tr><th>Value</th><th>Variable</th><th>Description</th></tr><tr><td>',
+        num_expansions,
+        '</td><th>Expansions</th><td class="description">Number of times a vertex and its neighbors are checked</td></tr></tbody></table>'
+        )
+      );	
     } else { // path found
-      step.set_info_text('i', '<center><h1>Complete!</h1><p>There are <em>'.concat(graph.vertices(this.goal_position).step, "</em> steps in the path</p><p><em>", num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p><p>Note that the steps are not used in the stack-based algorithm. They are just for illustration.</p></center>'));
+      step.set_info_text('i', '<h1>Complete!</h1>'.concat(
+        '<table class="summary"><tbody><tr><th>Value</th><th>Variable</th><th>Description</th></tr><tr><td>', 
+        (new Dist(num_ordinals, num_cardinals, Dist.DIAGONAL)).string(2), 
+        '</td><th>G-cost</th><td class="description"><i>Diagonal</i> cost of the path</td></tr><tr><td>',
+        num_ordinals,
+        '</td><th>Ordinals</th><td class="description">Number of ordinal steps in the path</td></tr><tr><td>',
+        num_cardinals,
+        '</td><th>Cardinals</th><td class="description">Number of cardinal steps in the path</td></tr><tr><td>',
+        num_cardinals + num_ordinals,
+        '</td><th>Steps</th><td class="description">Total number of steps in the path</td></tr><tr><td>',
+        num_expansions,
+        '</td><th>Expansions</th><td class="description">Number of times a vertex and its neighbors are checked</td></tr></tbody></table>'
+        )
+      );	
     }
     // update the unvisited stack info panel
     step.set_list_description('u', 'Items left in the stack');

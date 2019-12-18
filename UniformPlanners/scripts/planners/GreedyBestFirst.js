@@ -5,7 +5,8 @@ class GBF extends Planner {
       'directions',
       'origin',
       'anticlockwise',
-      'metric'
+      'metric',
+      'time_ordering'
     ]);
   }
   run() {
@@ -20,7 +21,7 @@ class GBF extends Planner {
     // ==== Inits - Data ====
     var graph = new GBF.Graph(this.map.num_i, this.map.num_j, this.goal_position, this.options.metric);
     this.graph = graph;
-    var list = new GBF.OpenList();
+    var list = new GBF.OpenList(this.options.time_ordering);
    
     // add start vertex to open list
     var expanded_vertex = graph.vertices(this.start_position);
@@ -283,12 +284,20 @@ class GBF extends Planner {
           step.set_list_description('c', '<b>The <em>Goal</em> Vertex</b>');
           
           // ---- Begin Tracing ----
+          var num_ordinals=0, num_cardinals=0;
           while (true) {
             expanded_vertex = neighbor_vertex.parent;
             if (expanded_vertex === undefined)
               break; // at the start vertex
             // Draw the optimal path
             step.draw_path(neighbor_vertex.position, expanded_vertex.position, UIPath.PATH);
+            // Count the number of ordinals and cardinals
+            expanded_pos = expanded_vertex.position;
+            neighbor_pos = neighbor_vertex.position;
+            if (expanded_pos.subtract(neighbor_pos).is_cardinal())
+              num_cardinals++;
+            else
+              num_ordinals++;
             // Move down the chain
             neighbor_vertex = expanded_vertex;
           }
@@ -350,9 +359,27 @@ class GBF extends Planner {
     // check if the while loop found the path
     if (path_found === false) { // no path found
       step = this.add_step(true);
-      step.set_info_text('i', '<center><h1>No Path Found!</h1><em>'.concat(num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p></center>'));
+      step.set_info_text('i', '<h1>No Path Found!</h1>'.concat(
+        '<table class="summary"><tbody><tr><th>Value</th><th>Variable</th><th>Description</th></tr><tr><td>',
+        num_expansions,
+        '</td><th>Expansions</th><td class="description">Number of times a vertex and its neighbors are checked</td></tr></tbody></table>'
+        )
+      );	
     } else { // path found
-      step.set_info_text('i', '<center><h1>Complete!</h1><p><em>'.concat(num_expansions, '</em> expansions were done. This is the number of vertices / cells where neighbors are checked.</p></center>'));
+      step.set_info_text('i', '<h1>Complete!</h1>'.concat(
+        '<table class="summary"><tbody><tr><th>Value</th><th>Variable</th><th>Description</th></tr><tr><td>', 
+        (new Dist(num_ordinals, num_cardinals, Dist.DIAGONAL)).string(2), 
+        '</td><th>G-cost</th><td class="description"><i>Diagonal</i> cost of the path</td></tr><tr><td>',
+        num_ordinals,
+        '</td><th>Ordinals</th><td class="description">Number of ordinal steps in the path</td></tr><tr><td>',
+        num_cardinals,
+        '</td><th>Cardinals</th><td class="description">Number of cardinal steps in the path</td></tr><tr><td>',
+        num_cardinals + num_ordinals,
+        '</td><th>Steps</th><td class="description">Total number of steps in the path</td></tr><tr><td>',
+        num_expansions,
+        '</td><th>Expansions</th><td class="description">Number of times a vertex and its neighbors are checked</td></tr></tbody></table>'
+        )
+      );
     }
     // update the open list info panel
     step.set_list_description('u', 'Items left in the open-list');
@@ -416,12 +443,21 @@ GBF.Vertex = class {
   }
 }
 GBF.OpenList = class {
-  constructor() {
+  constructor(time_ordering) {
     this._q = [];
+    if (time_ordering === 'FIFO') {
+      this.is_cheaper = function(vertex1, vertex2) {
+        return vertex1.cost < vertex2.cost;
+      }
+    } else {
+      this.is_cheaper = function(vertex1, vertex2) {
+        return vertex1.cost <= vertex2.cost;
+      }
+    }
   }
   add(vertex) {
     for (var q=0; q<this._q.length; q++) {
-      if (vertex.cost < this._q[q].cost) {
+      if (this.is_cheaper(vertex, this._q[q])) {
         this._q.splice(q, 0, vertex);
         return q;
       }

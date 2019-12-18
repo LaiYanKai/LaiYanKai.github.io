@@ -1,0 +1,14 @@
+LOG from 16 Dec 2019
+--- 18 Dec 2019 ---
+1. Completed JPS with relevant options except for connectivity. With basic path illustration and console logging for debugging purposes.
+2. Fixed a shortcut in Dijkstra that may result in non-optimal paths. Specifically, the shortcut to goal if it is a neighbor. Removed this and will find goal only after extracting from unvisited list.
+3. CSS: min-width for small screens changed from 600px to 1200px
+4. Added new map DENSEA_21_21 "Dense-A (21, 21)"
+5. Added name property for maps
+--- 17 Dec 2019 ---
+1. Created JPS
+--- 16 Dec 2019 ---
+1. Summarised complete and incomplete (last step) path information into table, and added styles for table
+2. Added FIFO, LIFO options for A*, Dijkstra, GBF
+3. Added G,H weights option for A*
+4. Added changes.log to track changes

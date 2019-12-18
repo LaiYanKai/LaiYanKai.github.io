@@ -26,7 +26,7 @@ html {
   height: 100%;
   overflow-y: scroll;
 }
-@media (min-width: 600px) {
+@media (min-width: 1200px) {
   body {
     display: flex;
     /* background: hsl(240, 70%, 70%); */
@@ -45,7 +45,7 @@ html {
     font-family: arial, sans-serif;
   }
 }
-@media (max-width: 600px) {
+@media (max-width: 1200px) {
   body {
     display: flex;
     /* background: hsl(240, 70%, 70%); */
@@ -388,6 +388,52 @@ input.nav_num {
   flex-grow: 1;
   text-align: left;
 }
+.info_text table {
+  display: inline-table;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(150, 150, 170, 0.8);
+  box-sizing: border-box;
+  width: 100%;
+  border-spacing: 0;
+  font-size: 10px;
+  text-align: center;
+}
+.info_text table.summary td, 
+.info_text table.summary th {
+  border-radius: 0;
+  vertical-align: middle;
+  padding: 3px;
+}
+.info_text table.summary th {
+  font-family: "Unica One", serif;
+  background-color: rgba(130, 150, 230, 0.8);
+  color: white;
+  font-weight: normal;
+}
+.info_text table.summary td {
+  font-family: 'Courier New', sans-serif;
+  border-color: rgba(150, 150, 170, 0.8);
+  text-align: center;
+}
+.info_text table.summary tr:not(:last-child) th, 
+.info_text table.summary tr:not(:last-child) td{
+  border-bottom: 1px solid rgba(150, 150, 170, 0.8);
+}
+.info_text table.summary td:not(:last-child),
+.info_text table.summary th:not(:last-child) {
+  border-right: 1px solid rgba(150, 150, 170, 0.8);
+}
+.info_text table.summary td.description {
+  font-family: arial, sans-serif;
+  text-align: justify;
+}
+.info_text table.summary tr:hover th {
+  background-color: rgba(110, 130, 210, 0.8);
+}
+.info_text table.summary tr:hover td {
+  background-color: rgba(235, 235, 245, 0.8);
+}
 /* pair */
 .info_pair {
   display: flex;
@@ -424,7 +470,6 @@ input.nav_num {
 }
 .info_list > div.list {
   display: inline-table;
-  flex-flow: column wrap;
   justify-content: center;
   border-radius: 5px;
   overflow: hidden;
@@ -460,7 +505,6 @@ input.nav_num {
 }
 .info_list > div.list > div.title > div {
   font-family: "Unica One", serif;
-  /* border-color: rgb(80, 80, 150); */
 }
 .info_list > div.list > div.title:hover {
   background-color: rgba(110, 130, 210, 0.8);
@@ -479,20 +523,16 @@ input.nav_num {
   font-size: 30px;
   padding: 5px 0 5px 0;
   font-weight: bold;
-  line-height: 35px;
+  line-height: 30px;
   text-align: center;
   width: 100%;
   margin: 5px 0 5px 0;
-}
-.info_container h1:not(:last-child) {
-  border-bottom: 1px solid var(--theme-3);
-  padding: 0px 0 5px 0;
 }
 .info_container p {
   margin: 10px 0 10px 0;
 }
 /**************************** DIALOG **********************************/
-@media (min-height: 600px) {
+@media (min-height: 1200px) {
   .dialog {
     position: fixed;
     display: flex;
@@ -506,7 +546,7 @@ input.nav_num {
     z-index: 200;
   }
 }
-@media (max-height: 600px) {
+@media (max-height: 1200px) {
   .dialog {
     position: absolute;
     display: flex;
@@ -575,12 +615,29 @@ input.nav_num {
   vertical-align: top;
   padding: 5px;
 }
-.dialog_planners tr:nth-child(even) td {
+.dialog_planners > tbody > tr:nth-of-type(even) td {
   background: rgba(120, 120, 150, 0.1);
 }
 .dialog_planners .title {
   font-family: "Unica One", sans-serif;
   font-size: 15px;
+}
+.dialog_planners .title div {
+  display: flex;
+  font-family: courier new, sans-serif;
+  font-size: 10px;
+  flex: 1 1 max-content;
+  align-content: flex-start;
+  justify-content: center;
+}
+.dialog_planners .title > div {
+  flex-flow: column wrap;
+}
+.dialog_planners .title > div > div {
+  flex-flow: row wrap;
+}
+.dialog_planners .title > div > div > div {
+  padding: 2px;
 }
 .dialog_planners .description {
   font-family: courier new, sans-serif;
@@ -588,7 +645,7 @@ input.nav_num {
   text-align: justify;
   max-width: 500px;
 }
-.dialog_planners .description em {
+.dialog_planners em {
   color: var(--theme-2);
   font-weight: bold;
   font-style: italic;
@@ -601,6 +658,16 @@ input.nav_num {
 .dialog_planners input, 
 .dialog_planners select {
   width: 100%;
+  font-size: 11px;
+  padding: 0px;
+  border-radius: 3px;
+  margin: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--theme-3);
+}
+.dialog_planners input:hover, 
+.dialog_planners select:hover {
+  transform: none;
 }
 /**************************** TOOLTIP  *******************************/
 .nav div[alt] {
