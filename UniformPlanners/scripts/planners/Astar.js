@@ -1,4 +1,4 @@
-class AStar extends Planner {
+class AStar extends Planner {//
   constructor() {
     super ('astar', 'A*', [
       'blocking',

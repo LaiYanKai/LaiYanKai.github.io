@@ -5,6 +5,7 @@ LOG from 16 Dec 2019
 3. CSS: min-width for small screens changed from 600px to 1200px
 4. Added new map DENSEA_21_21 "Dense-A (21, 21)"
 5. Added name property for maps
+6. Renamed AStar.js to Astar.js because of renaming issues from Github
 --- 17 Dec 2019 ---
 1. Created JPS
 --- 16 Dec 2019 ---
