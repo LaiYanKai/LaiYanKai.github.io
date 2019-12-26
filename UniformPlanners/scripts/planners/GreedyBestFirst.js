@@ -9,6 +9,11 @@ class GBF extends Planner {
       'time_ordering'
     ]);
   }
+  
+  reset() {
+    this.graph = undefined;
+    this.neighbor_vecs = undefined;
+  }
   run() {
     // ======================== Inits ================================
     var prev_front_pos = undefined, idx=0;

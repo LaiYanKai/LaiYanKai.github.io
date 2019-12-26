@@ -11,6 +11,10 @@ class AStar extends Planner {
       'gh_weights'
     ]);
   }
+  reset() {
+    this.graph = undefined;
+    this.neighbor_vecs = undefined;
+  }
   run() {
     var prev_front_pos = undefined, idx=0;
     var step;

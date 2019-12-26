@@ -7,6 +7,10 @@ class FloodFill extends Planner {
       'anticlockwise'
     ]);
   }
+  reset() {
+    this.graph = undefined;
+    this.neighbor_vecs = undefined;
+  }
   run() {
     // ======================== Inits ================================
     var prev_front_pos = undefined, idx=0;
