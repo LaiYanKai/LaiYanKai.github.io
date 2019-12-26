@@ -790,11 +790,29 @@ input.nav_num {
   flex: 0 0 auto;
   pointer-events: none;
 }
+.marker {
+  z-index: 500;
+  position: absolute;
+  display: block;
+  box-sizing: content-box;
+  transform-origin: center center;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+.path_p path {
+  fill: rgba(255, 40, 36, 0.8);
+}
 .path_p {
-  fill: rgba(255, 40, 36, 0.7);
+  z-index: 600;
+}
+.path_t path {
+  fill: rgba(140, 100, 255, 0.6);
 }
 .path_t {
-  fill: rgba(140, 100, 255, 0.4);
+  z-index: 550;
+}
+.path_t2 path {
+  fill: rgba(140, 100, 255, 0.3);
 }
 /**************************** MAZE CELLS *******************************/
 .cells {
@@ -835,6 +853,102 @@ input.nav_num {
 }
 .cell_visited {
   background: rgb(248, 248, 255);
+}
+.cell_2_0 {
+  background: rgb(255, 220, 210);
+  background: linear-gradient(0deg, rgb(255, 220, 210), rgb(255, 220, 210) 80%, rgb(255, 180, 170) 80%);
+}
+.cell_2_1 {
+  background: rgb(255, 220, 210);
+  background: linear-gradient(-45deg, rgb(255, 220, 210), rgb(255, 220, 210) 80%, rgb(255, 180, 170) 80%);
+}
+.cell_2_2 {
+  background: rgb(255, 220, 210);
+  background: linear-gradient(-90deg, rgb(255, 220, 210), rgb(255, 220, 210) 80%, rgb(255, 180, 170) 80%);
+}
+.cell_2_3 {
+  background: rgb(255, 220, 210);
+  background: linear-gradient(-135deg, rgb(255, 220, 210), rgb(255, 220, 210) 80%, rgb(255, 180, 170) 80%);
+}
+.cell_2_4 {
+  background: rgb(255, 220, 210);
+  background: linear-gradient(180deg, rgb(255, 220, 210), rgb(255, 220, 210) 80%, rgb(255, 180, 170) 80%);
+}
+.cell_2_5 {
+  background: rgb(255, 220, 210);
+  background: linear-gradient(135deg, rgb(255, 220, 210), rgb(255, 220, 210) 80%, rgb(255, 180, 170) 80%);
+}
+.cell_2_6 {
+  background: rgb(255, 220, 210);
+  background: linear-gradient(90deg, rgb(255, 220, 210), rgb(255, 220, 210) 80%, rgb(255, 180, 170) 80%);
+}
+.cell_2_7 {
+  background: rgb(255, 220, 210);
+  background: linear-gradient(45deg, rgb(255, 220, 210), rgb(255, 220, 210) 80%, rgb(255, 180, 170) 80%);
+}
+.cell_1_0 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(0deg, rgb(255, 210, 200), rgb(255, 210, 200) 80%, rgb(255, 130, 120) 80%);
+}
+.cell_1_1 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(-45deg, rgb(255, 210, 200), rgb(255, 210, 200) 80%, rgb(255, 130, 120) 80%);
+}
+.cell_1_2 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(-90deg, rgb(255, 210, 200), rgb(255, 210, 200) 80%, rgb(255, 130, 120) 80%);
+}
+.cell_1_3 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(-135deg, rgb(255, 210, 200), rgb(255, 210, 200) 80%, rgb(255, 130, 120) 80%);
+}
+.cell_1_4 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(180deg, rgb(255, 210, 200), rgb(255, 210, 200) 80%, rgb(255, 130, 120) 80%);
+}
+.cell_1_5 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(135deg, rgb(255, 210, 200), rgb(255, 210, 200) 80%, rgb(255, 130, 120) 80%);
+}
+.cell_1_6 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(90deg, rgb(255, 210, 200), rgb(255, 210, 200) 80%, rgb(255, 130, 120) 80%);
+}
+.cell_1_7 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(45deg, rgb(255, 210, 200), rgb(255, 210, 200) 80%, rgb(255, 130, 120) 80%);
+}
+.cell_0_0 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(0deg, rgb(255, 210, 200), rgb(255, 210, 200) 60%, rgb(255, 130, 120) 60%);
+}
+.cell_0_1 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(-45deg, rgb(255, 210, 200), rgb(255, 210, 200) 60%, rgb(255, 130, 120) 60%);
+}
+.cell_0_2 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(-90deg, rgb(255, 210, 200), rgb(255, 210, 200) 60%, rgb(255, 130, 120) 60%);
+}
+.cell_0_3 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(-135deg, rgb(255, 210, 200), rgb(255, 210, 200) 60%, rgb(255, 130, 120) 60%);
+}
+.cell_0_4 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(180deg, rgb(255, 210, 200), rgb(255, 210, 200) 60%, rgb(255, 130, 120) 60%);
+}
+.cell_0_5 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(135deg, rgb(255, 210, 200), rgb(255, 210, 200) 60%, rgb(255, 130, 120) 60%);
+}
+.cell_0_6 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(90deg, rgb(255, 210, 200), rgb(255, 210, 200) 60%, rgb(255, 130, 120) 60%);
+}
+.cell_0_7 {
+  background: rgb(255, 210, 200);
+  background: linear-gradient(45deg, rgb(255, 210, 200), rgb(255, 210, 200) 60%, rgb(255, 130, 120) 60%);
 }
 .cell_front {
   background: rgb(255, 180, 170);

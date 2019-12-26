@@ -1,4 +1,11 @@
 LOG from 16 Dec 2019
+--- 25 Dec 2019 ---
+1. Fixed Dir.list_strings() and Dir.list_vecs() argument problems
+2. Completed JPS, renamed to handcrafted for high levels of optimisation. There are more ways to optimise. Reserve for future work. To add cost comparisons also, in the next update.
+3. Completed JPS with GUI
+4. Fixed problem with paths not displaying in the correct order
+5. Changed Vec toString() method to not include a space between i and j.
+
 --- 18 Dec 2019 ---
 1. Completed JPS with relevant options except for connectivity. With basic path illustration and console logging for debugging purposes.
 2. Fixed a shortcut in Dijkstra that may result in non-optimal paths. Specifically, the shortcut to goal if it is a neighbor. Removed this and will find goal only after extracting from unvisited list.

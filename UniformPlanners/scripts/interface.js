@@ -85,8 +85,41 @@ class UICell {
     return this.weight === Infinity;
   }
 }
+class UIMarkerArrow {
+  static build() {
+    
+  }
+  constructor(window_pos, pos, angle) {
+    var ele = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    ele.classList = 'marker';
+    this.ele = ele;
+    
+    this.position = pos;
+    this.edit(window_pos, pos, angle);
+  }
+  edit(window_pos, pos, angle=0) {
+    var ele = this.ele;
+    var y = window_pos.y, x = window_pos.x;
+    // line_radius is the cap radius. used when box-sizing css is content-box, height is zero, and border is line_radius px
+    UIMarkerArrow.build(ele, angle);
+    ele.style.transform = 'rotate('.concat(angle, 'deg)');
+    ele.style.top = ''.concat(yi+length*Math.sin(angle)/2 - 3.5, 'px');
+    ele.style.left = ''.concat(xi-length*(1-Math.cos(angle))/2 - 1.5, 'px');
+  
+    this.display = true;
+  }
+  set display(show) {
+    if (show === true) {
+      this.ele.style.display = 'block';
+    } else {
+      this.ele.style.display = 'none';
+    }
+    this.show = show;
+  }
+}
 class UIPath {
   static get TRACE() {return 0};
+  static get TRACE2() {return 2};
   static get PATH() {return 1};
   static resize(ele, length) {
     ele.innerHTML = "<path fill='black' d='M 1.5 3 a 1.5 1.5, 0, 0, 0, 0 3 h ".concat(
@@ -95,19 +128,22 @@ class UIPath {
   }
   color(type) {
     this.type = type;
-    var class_list;
+    var class_name;
     switch (type) {
       case 0: // trace
       case undefined:
-        class_list = 'path_t';
+        class_name = 'path_t';
         break;
       case 1: // path
-        class_list = 'path_p';
+        class_name = 'path_p';
+        break;
+      case 2: // trace2
+        class_name = 'path_t2';
         break;
       default:
         break;
     }
-    this.ele.firstChild.classList = class_list;
+    this.ele.classList = 'path '.concat(class_name);
   }
   constructor(window_start, window_end, start_vec, end_vec, type) {
     var ele = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -502,7 +538,7 @@ class Vec {
     return this.toString(dp);
   }
   toString(dp=0) {
-    return '('.concat(this.i.toFixed(dp), ', ', this.j.toFixed(dp), ')');
+    return '('.concat(this.i.toFixed(dp), ',', this.j.toFixed(dp), ')');
   }
   is_ordinal() {
     return Math.abs(this.i) === Math.abs(this.j);
@@ -643,13 +679,13 @@ class Dir {
     return arr;
   }
   static list_vecs(origin_dir=Dir.N, anticlockwise=true, which_dirs=Dir.DIAGONAL) {
-    var arr = Dir.list_dirs.call(null, arguments);
+    var arr = Dir.list_dirs.apply(null, [origin_dir, anticlockwise, which_dirs]);
     for (var i=0; i<arr.length; i++)
       arr[i] = Dir.dir_to_vec(arr[i]);
     return arr;
   }
   static list_strings(origin_dir=Dir.N, anticlockwise=true, which_dirs=Dir.DIAGONAL) {
-    var arr = Dir.list_dirs.call(null, arguments);
+    var arr = Dir.list_dirs.apply(null, [origin_dir, anticlockwise, which_dirs]);
     for (var i=0; i<arr.length; i++)
       arr[i] = Dir.dir_to_string(arr[i]);
     return arr;
@@ -1695,6 +1731,8 @@ class UI {
       self.steps.steps = [];
       self.steps.steps_compiled = [];
       self.info = {};
+      for (const k of Object.keys(self.planners))
+        self.planners[k].planner.reset();
       // remove info objects
       html_info_obj.panes.innerHTML = '';
     }
@@ -2311,7 +2349,7 @@ class UI {
             case 'ilc':
               var prev_highlight = handlers.get_list_item_color(args[0], args[1]);
               if (args[2] === prev_highlight)
-                return // skip this step since this won't change the color
+                continue // skip this step since this won't change the color
               compiled_action = {
                 fwd_handler : handlers.color_list_item,
                 fwd_args : args,
@@ -2680,14 +2718,11 @@ class Planner {
     this.ui = window.ui;
     var ui = this.ui;
     this.ui.graphic_handlers.add_planner(this, key, display_name, options);
-    this.add_step = this.ui.steps.add_step;
+    // this.add_step = this.ui.steps.add_step;
     this.new_info_pair_pane = this.ui.graphic_handlers.new_info_pair_pane;
     this.new_info_text_pane = this.ui.graphic_handlers.new_info_text_pane;
     this.new_info_list_pane = this.ui.graphic_handlers.new_info_list_pane;
     this.reset_positions();
-  }
-  get big_steps() {
-    return this.ui.state.big_steps;
   }
   get map() {
     return this.ui.ui_map;
@@ -2708,6 +2743,10 @@ class Planner {
     this.run();
     this.ui.graphic_handlers.compile_steps();
   }
+  add_step(major=false, merge=false) {
+    this.step = this.ui.steps.add_step(major, merge);
+    return this.step;
+  }
 }
 
 // Dynamically load all other planners
@@ -2717,7 +2756,7 @@ file_names = [
   'FloodFill',
   'DepthFirst',
   'GreedyBestFirst',
-  'JumpPoint'
+  'JumpPointHC'
 ];
 for (f of file_names) {
   var script = document.createElement("script");  // create a script DOM node
