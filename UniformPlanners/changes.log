@@ -1,4 +1,7 @@
 LOG from 16 Dec 2019
+--- 27 Dec 2019 ---
+1. Fixed JPSHC Open List not removing first list item when retrieving.
+
 --- 25 Dec 2019 ---
 1. Fixed Dir.list_strings() and Dir.list_vecs() argument problems
 2. Completed JPS, renamed to handcrafted for high levels of optimisation. There are more ways to optimise. Reserve for future work. To add cost comparisons also, in the next update.

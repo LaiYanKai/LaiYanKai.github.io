@@ -191,6 +191,7 @@ class JPSHC extends Planner {
   }
   gui_list_retrieve(ret_node) {
     this.step.set_list_description('u', 'Retrieved '.concat(ret_node.first_vertex.position.toString()));
+    this.step.remove_list_item('u', 0);
   }
   start() {
     // -------------------------------- Initialise the Start Vertex ----------------------------------
