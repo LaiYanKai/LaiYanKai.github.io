@@ -1,4 +1,7 @@
 LOG from 16 Dec 2019
+--- 10 Jan 2020 ---
+1. Fixed bug with DFS and FloodFill menu options showing time-ordering, or any other algos with options that do not terminate at the last alphabetically sorted option.
+
 --- 27 Dec 2019 ---
 1. Fixed JPSHC Open List not removing first list item when retrieving.
 

@@ -2536,6 +2536,11 @@ class UI {
           o++;
         }
       }
+      while (o < opts.length) {
+        opt = opts[o];
+        self.options[opt].ele.style.display = 'none';
+        o++;
+      }
     }
     handlers.update_planner = function(input) {
       if (input === false) {
