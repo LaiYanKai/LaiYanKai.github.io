@@ -1,4 +1,7 @@
 LOG from 16 Dec 2019
+--- 14 Jan 2020 ---
+1. Fixed bug where fh optimisation option is absent for astar and jps
+
 --- 10 Jan 2020 ---
 1. Fixed bug with DFS and FloodFill menu options showing time-ordering, or any other algos with options that do not terminate at the last alphabetically sorted option.
 

@@ -1196,8 +1196,8 @@ class UI {
       gen_anticlockwise();
       gen_blocking();
       gen_directions();
-      gen_gh_weights();
       gen_fh_optimisation();
+      gen_gh_weights();
       gen_metric();
       gen_origin();
       gen_time_ordering();
