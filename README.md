@@ -20,7 +20,7 @@ The trajectory is also simulated.
 Plots a histogram of sensor readings and finds a best fit Gaussian curve over the histogram. 
 The peaks correspond to black or white values, depending on the most commonly used context.
 
-$ FindColor
+# FindColor
 
 An interface to plot colour samples (RGB) with respect to time or degree from EV3 .RTF files with Javascript.
 Can also be used to calculate and plot the corresponding RGB ratios.
