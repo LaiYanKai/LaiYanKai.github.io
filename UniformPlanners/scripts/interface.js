@@ -2779,15 +2779,15 @@ document.body.style.background = 'hsl('.concat(h,',', s, '%,', l, '%)');
 document.getElementById('ui_load_overlay').parentNode.removeChild(document.getElementById('ui_load_overlay'));
 
 // select A*
-var tmp = ui.html.nav.options.algorithms;
-while (tmp.options.length != file_names.length)
-{} // wait until load finished
-
-for(var i = 0; i < tmp.options.length;i++) {
-  if(tmp.options[i].value == "astar" ) {
-    tmp.options[i].selected = true;
+window.addEventListener("load", function() { 
+  var tmp = window.ui.html.nav.options.algorithms;
+  
+  for(var i = 0; i < tmp.options.length;i++) {
+    if(tmp.options[i].value == "astar" ) {
+      tmp.options[i].selected = true;
+    }
   }
-}
-
-ui.graphic_handlers.change_planner_options(); // just in case
-ui.graphic_handlers.update_planner(true);
+  
+  window.ui.graphic_handlers.change_planner_options(); // just in case
+  window.ui.graphic_handlers.update_planner(true);
+});
