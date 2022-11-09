@@ -1,4 +1,7 @@
 LOG from 16 Dec 2019
+--- 09 Nov 2022 ---
+1. Removed JPS HC from dynamic loads, defaulting to A*.
+
 --- 14 Jan 2020 ---
 1. Fixed bug where fh optimisation option is absent for astar and jps
 
