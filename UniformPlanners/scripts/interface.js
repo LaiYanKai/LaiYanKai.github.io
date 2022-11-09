@@ -2779,8 +2779,10 @@ document.body.style.background = 'hsl('.concat(h,',', s, '%,', l, '%)');
 document.getElementById('ui_load_overlay').parentNode.removeChild(document.getElementById('ui_load_overlay'));
 
 // select A*
-
 var tmp = ui.html.nav.options.algorithms;
+while (tmp.options.length != file_names.length)
+{} // wait until load finished
+
 for(var i = 0; i < tmp.options.length;i++) {
   if(tmp.options[i].value == "astar" ) {
     tmp.options[i].selected = true;
