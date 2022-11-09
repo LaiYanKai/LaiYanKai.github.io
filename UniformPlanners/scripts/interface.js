@@ -2756,12 +2756,12 @@ class Planner {
 
 // Dynamically load all other planners
 file_names = [
-  'Dijkstra',
-  'AStar',
   'FloodFill',
   'DepthFirst',
   'GreedyBestFirst',
-  'JumpPointHC'
+  'Dijkstra',
+  'AStar',
+//   'JumpPointHC'
 ];
 for (f of file_names) {
   var script = document.createElement("script");  // create a script DOM node
