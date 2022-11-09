@@ -2776,3 +2776,8 @@ document.body.style.background = 'hsl('.concat(h,',', s, '%,', l, '%)');
 */
 document.getElementById('ui_load_overlay').parentNode.removeChild(document.getElementById('ui_load_overlay'));
 
+// select A*
+this.html.nav.options.algorithms.options.forEach(opt=>{
+    if(opt.value == 'A*')
+        opt.selected = true;
+    });
