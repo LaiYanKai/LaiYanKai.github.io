@@ -2767,6 +2767,7 @@ for (f of file_names) {
   var script = document.createElement("script");  // create a script DOM node
   script.src = 'scripts/planners/'.concat(f, '.js');  // set its src to the provided URL
   document.body.appendChild(script); 
+  console.log("Loaded", f);
 }
 
 /*var h = Math.round(Math.random()*360);
@@ -2777,7 +2778,8 @@ document.body.style.background = 'hsl('.concat(h,',', s, '%,', l, '%)');
 document.getElementById('ui_load_overlay').parentNode.removeChild(document.getElementById('ui_load_overlay'));
 
 // select A*
-this.html.nav.options.algorithms.options.forEach(opt=>{
+this.ui.html.nav.options.algorithms.options.forEach(opt=>{
     if(opt.value == 'A*')
         opt.selected = true;
     });
+this.ui.graphic_handlers.change_planner_options();// just in case it is the first.
