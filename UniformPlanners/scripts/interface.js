@@ -2519,6 +2519,7 @@ class UI {
     }
     handlers.change_planner_options = function() {
       var key = html_options_obj.algorithms.selectedOptions[0].value;
+      console.log(html_options_obj.algorithms);
       var p_opts = self.planners[key].options;
       var opts = Object.keys(self.options);
       var p_opt, opt;
@@ -2778,13 +2779,13 @@ document.body.style.background = 'hsl('.concat(h,',', s, '%,', l, '%)');
 document.getElementById('ui_load_overlay').parentNode.removeChild(document.getElementById('ui_load_overlay'));
 
 // select A*
-{
-  var tmp = this.ui.html.nav.options.algorithms;
-  for(var i = 0; i < tmp.options.length;i++) {
-    if(tmp.options[i].value == "astar" ) {
-      tmp.options[i].selected = true;
-    }
+
+var tmp = ui.html.nav.options.algorithms;
+for(var i = 0; i < tmp.options.length;i++) {
+  if(tmp.options[i].value == "astar" ) {
+    tmp.options[i].selected = true;
   }
 }
-// this.ui.graphic_handlers.change_planner_options(); // just in case
-this.ui.graphic_handlers.update_planner(true);
+
+ui.graphic_handlers.change_planner_options(); // just in case
+ui.graphic_handlers.update_planner(true);
