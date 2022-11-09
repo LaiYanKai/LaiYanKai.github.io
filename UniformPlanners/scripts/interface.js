@@ -2786,5 +2786,5 @@ document.getElementById('ui_load_overlay').parentNode.removeChild(document.getEl
     }
   }
 }
-this.ui.graphic_handlers.change_planner_options(); // just in case
+// this.ui.graphic_handlers.change_planner_options(); // just in case
 this.ui.graphic_handlers.update_planner(true);
