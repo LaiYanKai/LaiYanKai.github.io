@@ -1,16 +1,18 @@
 # Overview
 
-A repository of offline javascript-powered tools for path planning and LEGO-EV3 related activities.
+A repository of offline javascript-powered tools for visualising 2D path planning on binary occupancy grids and LEGO-EV3 related activities.
 
-# UniformPlanners
+# UniformPlanners (2D Path Planning on Binary Occupancy Grids)
 
-A learning tool to examine individual steps of A*, Dijkstra, Greedy Best First Search, Breadth First Search and Depth First Search. Also includes a customised variant of Jump Point Search. 
+A learning tool to examine individual steps of A*, Dijkstra, Greedy Best First Search, Breadth First Search and Depth First Search.
 
-Algorithms are also customisable. For example, it can be used to show the difference between an open-list sorted by f-costs and another by f-costs and then h-costs. Different distance metrics can also be used (Manhattan, Octile, Euclidean)
+Algorithms have customisable parameters that will affect their search pattern. For example, the open-list can be sorted by just the f-cost or by f and h-costs; cost metrics can be set to Manhattan, Octile or Euclidean; and stack-like or queue-like sorting. 
 
-Currently a work in progress, created for the module EE4308 Autonomous Robot Systems in National University of singapore.
+Algorithms run on Javascript for ease of display using web browsers. Since the focus is on visualisation and Javscript is not a compiled language, the time taken to solve path finding problems should not be used for benchmarking.
 
-# QuinticTurn
+Created for the module EE4308 Autonomous Robot Systems in National University of singapore.
+
+# QuinticTurn (EV3G)
 
 Generates LEGO power profiles (speed percentages) for the two locomotive (medium or large) motors driving a two-wheel differential EV3 robot by fitting a quintic hermite spline on each wheel's power profile.
 
@@ -20,13 +22,13 @@ The speed profiles are exported as an EV3 readable .RTF format.
 
 The trajectory is also simulated.
 
-# Calibrator
+# Calibrator (EV3G)
 
 Plots a histogram of sensor readings and finds a best fit Gaussian curve over the histogram. 
 
 The peaks correspond to black or white values, depending on the most commonly used context.
 
-# FindColor
+# FindColor (EV3G)
 
 An interface to plot colour samples (RGB) with respect to time or degree from EV3 .RTF files with Javascript.
 
