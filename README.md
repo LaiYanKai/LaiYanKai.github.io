@@ -1,8 +1,9 @@
 # Overview
 
-A repository of offline javascript-powered tools for visualising 2D path planning on binary occupancy grids and LEGO-EV3 related activities. Hosted at [laiyankai.github.io](https://laiyankai.github.io/)
+A repository of offline javascript-powered tools for visualising 2D path planning on binary occupancy grids and LEGO-EV3 related activities. Hosted at [laiyankai.github.io](https://laiyankai.github.io/).
 
 # UniformPlanners (2D Path Planning on Binary Occupancy Grids)
+Link here: [laiyankai.github.io/UniformPlanners](https://laiyankai.github.io/UniformPlanners/index.html).
 
 A learning tool to examine individual steps of A*, Dijkstra, Greedy Best First Search, Breadth First Search and Depth First Search.
 
