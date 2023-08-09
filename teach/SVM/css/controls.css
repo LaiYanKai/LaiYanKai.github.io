@@ -1,0 +1,40 @@
+/* .control {
+    margin: var(--padding);
+    display: inline-flex;
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    transition: all ease 0.2s;
+}
+
+.control>span:first-child {
+    display: inline-flex;
+    justify-content: flex-end;
+    flex: 0 1 auto;
+    padding: 1rem;
+    font-size: 1rem;
+}
+
+.control>input {
+    display: inline-flex;
+    flex: 0 1 auto;
+    font-size: 1rem;
+    min-inline-size: 0;
+    min-block-size: 0;
+    margin-inline-end: 1rem; 
+}
+
+.control>input[type=number]
+{
+    inline-size: 5rem;
+}
+
+.control:hover
+{
+} */
+
+input[type=number].control {
+    inline-size: 5rem;
+    border-radius: var(--padding);
+}

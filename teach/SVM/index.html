@@ -1,0 +1,2068 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+	<title>SVM</title>
+	<link rel="stylesheet" href="css/layout.css">
+	<link rel="stylesheet" href="css/controls.css">
+	<link rel="stylesheet" href="dist/reset.css">
+	<link rel="stylesheet" href="dist/reveal.css">
+	<link rel="stylesheet" href="dist/theme/white.css">
+
+	<!-- Theme used for syntax highlighted code -->
+	<link rel="stylesheet" href="plugin/highlight/monokai.css">
+
+	<!-- SVG containing Devs -->
+	<svg style="position:absolute; visibility: none; inline-size: 0; block-size: 0; margin: 0; padding: 0">
+		<defs>
+			<marker id='arrow1-head' orient="auto" markerWidth='2' markerHeight='2.5' refX='0' refY='1.25'>
+				<path d='M0,0 V2.5 L2,1.25 Z' />
+			</marker>
+			<marker id='arrow2-head' orient="auto" markerWidth='2' markerHeight='2.5' refX='0' refY='1.25'>
+				<path d='M0,0 V2.5 L2,1.25 Z' />
+			</marker>
+			<marker id='normal-head' orient="auto" markerWidth='5' markerHeight='4' refX='0' refY='2'>
+				<path d='M0,0 V4 L5,2 Z' />
+			</marker>
+		</defs>
+	</svg>
+
+	<script src="https://cdn.plot.ly/plotly-2.25.0.min.js" charset="utf-8"></script>
+</head>
+
+<body>
+	<div class="reveal">
+		<div class="slides">
+			<!-- ==================== #TITLE =========================== -->
+			<section>
+				<div class="slide chapter">
+					<div class="heading" data-id="heading"><span>Support Vector Machines</span></div>
+					<div class="subtitle" data-id="heading"><span>An Introduction</span></div>
+					<div class="body" style="flex: 1 0 auto;">
+						<div class="row">
+							<div class="panel">
+								<div class="body" style="inline-size: 15rem;">
+									<div class="cell title row">Introduction</div>
+									<div class="cell row">Maximal Margin Hyperplane</div>
+									<div class="cell row">Hard / Soft Margin</div>
+									<div class="cell row">Non-linear Kernels</div>
+									<div class="cell row">Overview</div>
+								</div>
+							</div>
+						</div>
+					<div class="absolute font-footnote" style="inset-block-end: 0; color: var(--swatch-gray)"><span>'G' to jump to slide. 'Ctrl+Shift+F' to search. 'Esc' to go to overview. 'S' for speaker view. 'Alt/Ctrl+Click' to zoom.</span></div>
+					</div>
+				</div>
+			</section>
+			<!-- ==================== #INTRO =========================== -->
+			<section data-auto-animate>
+				<div class="slide section">
+					<div class="heading" data-id="heading"><span>Introduction</span></div>
+					<div class="subtitle"><span>Features and Key Concepts</span></div>
+
+					<div class="canvas" data-id="canvas1">
+						<svg version="2" viewBox="0 0 400 400" style="inline-size: 18rem; block-size: 18rem; border:none" xmlns="http://www.w3.org/2000/svg">
+							<g x="0" y="0">
+								<path class="margin" style="fill: var(--swatch-lightgray)"
+									d="M -10 187 l 420 -115 l 0 100 l -420 115 z">
+								</path>
+								<path class="hyp" d="M -10 237 l 420 -115" />
+							</g>
+							<g>
+								<circle class="ppoint" cx="200" cy="75" r="10" />
+								<circle class="ppoint" cx="90" cy="50" r="10" />
+								<circle class="ppoint" cx="50" cy="138" r="10" />
+								<circle class="ppoint" cx="123" cy="140" r="10" />
+								<circle class="ppoint" cx="105" cy="120" r="10" />
+								<circle class="ppoint" cx="301" cy="31" r="10" />
+								<circle class="ppoint" cx="128" cy="37" r="10" />
+								<circle class="ppoint" cx="150" cy="78" r="10" />
+								<circle class="ppoint sv" cx="192" cy="132" r="10" />
+								<circle class="ppoint" cx="250" cy="37" r="10" />
+								<circle class="ppoint" cx="39" cy="64" r="10" />
+
+								<circle class="npoint sv" cx="205" cy="229" r="10" />
+								<circle class="npoint sv" cx="350" cy="189" r="10" />
+								<circle class="npoint" cx="202" cy="293" r="10" />
+								<circle class="npoint" cx="243" cy="320" r="10" />
+								<circle class="npoint" cx="315" cy="220" r="10" />
+								<circle class="npoint" cx="301" cy="239" r="10" />
+								<circle class="npoint" cx="120" cy="260" r="10" />
+								<circle class="npoint" cx="350" cy="328" r="10" />
+								<circle class="npoint" cx="128" cy="309" r="10" />
+								<circle class="npoint" cx="186" cy="376" r="10" />
+								<circle class="npoint" cx="39" cy="354" r="10" />
+							</g>
+							<!-- <text transform="rotate(-15)" x="40" y="215">Maximum margin hyperplane</text> -->
+						</svg>
+					</div>
+				</div>
+			</section>
+
+			<!-- ==================== ##INTRO: Widest MARGIN =========================== -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Introduction</span></div>
+					<div class="subtitle" data-id="subtitle1"><span>SVM is a <strong>supervised learning</strong> method primarily used for classifying <strong>two</strong> classes of data.</span></div>
+					<div class="body hcenter" style="flex: 10 0 auto;">
+						<div class="row svg">
+							<div class="canvas">
+								<svg version="2" viewBox="0 0 400 400" style="inline-size: 18rem; block-size: 18rem; margin-inline-start: 5rem;" xmlns="http://www.w3.org/2000/svg" data-auto-animate="none">
+									<circle class="ppoint" cx="200" cy="75" r="10" />
+									<circle class="ppoint" cx="90" cy="50" r="10" />
+									<circle class="ppoint" cx="50" cy="138" r="10" />
+									<circle class="ppoint" cx="123" cy="140" r="10" />
+									<circle class="ppoint" cx="105" cy="120" r="10" />
+									<circle class="ppoint" cx="301" cy="31" r="10" />
+									<circle class="ppoint" cx="128" cy="37" r="10" />
+									<circle class="ppoint" cx="150" cy="78" r="10" />
+									<circle class="ppoint" cx="192" cy="132" r="10" />
+									<circle class="ppoint" cx="250" cy="37" r="10" />
+									<circle class="ppoint" cx="39" cy="64" r="10" />
+
+									<circle class="npoint" cx="205" cy="229" r="10" />
+									<circle class="npoint" cx="350" cy="189" r="10" />
+									<circle class="npoint" cx="202" cy="293" r="10" />
+									<circle class="npoint" cx="243" cy="320" r="10" />
+									<circle class="npoint" cx="315" cy="220" r="10" />
+									<circle class="npoint" cx="301" cy="239" r="10" />
+									<circle class="npoint" cx="120" cy="260" r="10" />
+									<circle class="npoint" cx="350" cy="328" r="10" />
+									<circle class="npoint" cx="128" cy="309" r="10" />
+									<circle class="npoint" cx="186" cy="376" r="10" />
+									<circle class="npoint" cx="39" cy="354" r="10" />
+
+								</svg>
+								<div class="label" style="inset: 2.5rem 0;"><span>$y = 1$</span></div>
+								<div class="label" style="inset: 12rem 0"><span>$y = -1$</span></div>
+								<div class="label" style="inset: 18rem 0"><span>$S = \{(\mathbf{x}_1, y_1), (\mathbf{x}_2, y_2), \cdots, (\mathbf{x}_n, y_n)\}$</span></div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: 3rem;">
+								<svg version="2" viewBox="0 0 50 40" style="inline-size: 5rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v -10 l 20 20 l -20 20 v -10 z">
+									</path>
+								</svg>
+								<div class="label transparent">Learn</div>
+							</div>
+							<div class="canvas">
+								<svg version="2" viewBox="0 0 400 400" style="inline-size: 18rem; block-size: 18rem;" xmlns="http://www.w3.org/2000/svg" data-auto-animate="none">
+									<g x="0" y="0">
+										<path class="hyp" d="M -10 237 l 420 -115"></path>
+									</g>
+									<g>
+										<circle class="ppoint" cx="200" cy="75" r="10" />
+										<circle class="ppoint" cx="90" cy="50" r="10" />
+										<circle class="ppoint" cx="50" cy="138" r="10" />
+										<circle class="ppoint" cx="123" cy="140" r="10" />
+										<circle class="ppoint" cx="105" cy="120" r="10" />
+										<circle class="ppoint" cx="301" cy="31" r="10" />
+										<circle class="ppoint" cx="128" cy="37" r="10" />
+										<circle class="ppoint" cx="150" cy="78" r="10" />
+										<circle class="ppoint" cx="192" cy="132" r="10" />
+										<circle class="ppoint" cx="250" cy="37" r="10" />
+										<circle class="ppoint" cx="39" cy="64" r="10" />
+
+										<circle class="npoint" cx="205" cy="229" r="10" />
+										<circle class="npoint" cx="350" cy="189" r="10" />
+										<circle class="npoint" cx="202" cy="293" r="10" />
+										<circle class="npoint" cx="243" cy="320" r="10" />
+										<circle class="npoint" cx="315" cy="220" r="10" />
+										<circle class="npoint" cx="301" cy="239" r="10" />
+										<circle class="npoint" cx="120" cy="260" r="10" />
+										<circle class="npoint" cx="350" cy="328" r="10" />
+										<circle class="npoint" cx="128" cy="309" r="10" />
+										<circle class="npoint" cx="186" cy="376" r="10" />
+										<circle class="npoint" cx="39" cy="354" r="10" />
+									</g>
+								</svg>
+							</div>
+						</div>
+					</div>
+					<div class="subtitle" data-id="subtitle1" style="margin-block-start: 1rem"><span>Supervised learning means that the class $y_i \in \{-1, 1\}$ for an $i$-th training sample $\mathbf{x}_i$ is known.</span></div>
+					<div class="subtitle"><span>The <strong>decision boundary</strong> is learnt from training samples $S = \{(\mathbf{x}_i, y_i) \mid 1 \le i \le n \}$ to classify new data.</span></div>
+					<div class="footer"></div>
+				</div>
+			</section>
+
+			<!-- ==================== ##INTRO: Widest MARGIN =========================== -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Optimal Margin</span></div>
+					<div class="subtitle" data-id="1"><span> The <strong>decision boundary</strong> is a <strong>hyperplane</strong> that separates the two classes with the <strong>largest margin</strong>.</span></div>
+
+					<div class="body">
+						<div class="row">
+							<div class="panel" data-id="panel1">
+								<div class="body">
+									<div class="cell row title">Wrong Hyperplane</div>
+									<div class="cell row svg">
+										<div class="canvas">
+											<svg version="2" viewBox="0 0 400 400" style="inline-size: 18rem; block-size: 18rem;" xmlns="http://www.w3.org/2000/svg" data-auto-animate="none">
+												<g x="0" y="0">
+													<path class="hyp" d="M 380 410 l -450 -410" />
+												</g>
+												<g>
+													<circle class="ppoint" cx="200" cy="75" r="10" />
+													<circle class="ppoint" cx="90" cy="50" r="10" />
+													<circle class="ppoint" cx="50" cy="138" r="10" />
+													<circle class="ppoint" cx="123" cy="140" r="10" />
+													<circle class="ppoint" cx="105" cy="120" r="10" />
+													<circle class="ppoint sv" cx="301" cy="31" r="10" />
+													<circle class="ppoint" cx="128" cy="37" r="10" />
+													<circle class="ppoint" cx="150" cy="78" r="10" />
+													<circle class="ppoint sv" cx="192" cy="132" r="10" />
+													<circle class="ppoint" cx="250" cy="37" r="10" />
+													<circle class="ppoint" cx="39" cy="64" r="10" />
+
+													<circle class="npoint" cx="205" cy="229" r="10" />
+													<circle class="npoint" cx="350" cy="189" r="10" />
+													<circle class="npoint" cx="202" cy="293" r="10" />
+													<circle class="npoint" cx="243" cy="320" r="10" />
+													<circle class="npoint" cx="315" cy="220" r="10" />
+													<circle class="npoint" cx="301" cy="239" r="10" />
+													<circle class="npoint sv" cx="120" cy="260" r="10" />
+													<circle class="npoint" cx="350" cy="328" r="10" />
+													<circle class="npoint" cx="128" cy="309" r="10" />
+													<circle class="npoint" cx="186" cy="376" r="10" />
+													<circle class="npoint" cx="39" cy="354" r="10" />
+												</g>
+											</svg>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="panel" data-id="panel2">
+								<div class="body">
+									<div class="cell row title">Short Margin</div>
+									<div class="cell row svg">
+										<div class="canvas">
+											<svg version="2" viewBox="0 0 400 400" style="inline-size: 18rem; block-size: 18rem;" xmlns="http://www.w3.org/2000/svg" data-auto-animate="none">
+												<g x="0" y="0">
+													<path class="margin" style="fill: var(--swatch-lightgray)"
+														d="M -10 315 l 420 -383 l 0 63 l -420 383 z">
+													</path>
+													<path class="hyp" d="M -10 346.5 l 420 -383" />
+												</g>
+												<g>
+													<circle class="ppoint" cx="200" cy="75" r="10" />
+													<circle class="ppoint" cx="90" cy="50" r="10" />
+													<circle class="ppoint" cx="50" cy="138" r="10" />
+													<circle class="ppoint" cx="123" cy="140" r="10" />
+													<circle class="ppoint" cx="105" cy="120" r="10" />
+													<circle class="ppoint sv" cx="301" cy="31" r="10" />
+													<circle class="ppoint" cx="128" cy="37" r="10" />
+													<circle class="ppoint" cx="150" cy="78" r="10" />
+													<circle class="ppoint sv" cx="192" cy="132" r="10" />
+													<circle class="ppoint" cx="250" cy="37" r="10" />
+													<circle class="ppoint" cx="39" cy="64" r="10" />
+
+													<circle class="npoint" cx="205" cy="229" r="10" />
+													<circle class="npoint" cx="350" cy="189" r="10" />
+													<circle class="npoint" cx="202" cy="293" r="10" />
+													<circle class="npoint" cx="243" cy="320" r="10" />
+													<circle class="npoint" cx="315" cy="220" r="10" />
+													<circle class="npoint" cx="301" cy="239" r="10" />
+													<circle class="npoint sv" cx="120" cy="260" r="10" />
+													<circle class="npoint" cx="350" cy="328" r="10" />
+													<circle class="npoint" cx="128" cy="309" r="10" />
+													<circle class="npoint" cx="186" cy="376" r="10" />
+													<circle class="npoint" cx="39" cy="354" r="10" />
+												</g>
+											</svg>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="panel" data-id="panel3">
+								<div class="body">
+									<div class="cell row title">Largest Margin</div>
+									<div class="cell row svg">
+										<div class="canvas">
+											<svg version="2" viewBox="0 0 400 400" style="inline-size: 18rem; block-size: 18rem;" xmlns="http://www.w3.org/2000/svg">
+												<g x="0" y="0">
+													<path class="margin" style="fill: var(--swatch-lightgray)"
+														d="M -10 187 l 420 -115 l 0 100 l -420 115 z">
+													</path>
+													<path class="hyp"
+														d="M -10 237 l 420 -115">
+													</path>
+												</g>
+												<g>
+													<circle class="ppoint" cx="200" cy="75" r="10" />
+													<circle class="ppoint" cx="90" cy="50" r="10" />
+													<circle class="ppoint" cx="50" cy="138" r="10" />
+													<circle class="ppoint" cx="123" cy="140" r="10" />
+													<circle class="ppoint" cx="105" cy="120" r="10" />
+													<circle class="ppoint" cx="301" cy="31" r="10" />
+													<circle class="ppoint" cx="128" cy="37" r="10" />
+													<circle class="ppoint" cx="150" cy="78" r="10" />
+													<circle class="ppoint sv" cx="192" cy="132" r="10" />
+													<circle class="ppoint" cx="250" cy="37" r="10" />
+													<circle class="ppoint" cx="39" cy="64" r="10" />
+
+													<circle class="npoint sv" cx="205" cy="229" r="10" />
+													<circle class="npoint sv" cx="350" cy="189" r="10" />
+													<circle class="npoint" cx="202" cy="293" r="10" />
+													<circle class="npoint" cx="243" cy="320" r="10" />
+													<circle class="npoint" cx="315" cy="220" r="10" />
+													<circle class="npoint" cx="301" cy="239" r="10" />
+													<circle class="npoint" cx="120" cy="260" r="10" />
+													<circle class="npoint" cx="350" cy="328" r="10" />
+													<circle class="npoint" cx="128" cy="309" r="10" />
+													<circle class="npoint" cx="186" cy="376" r="10" />
+													<circle class="npoint" cx="39" cy="354" r="10" />
+												</g>
+												<text transform="rotate(-15)" x="40" y="215">Maximum margin hyperplane</text>
+											</svg>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="subtitle"><span>If the data is not <strong>linearly separable</strong>, the data needs to be transformed...</span></div>
+					<div class="footer"></div>
+				</div>
+			</section>
+			<!-- ==================== ##INTRO: LINEARLY VS NON-LINEARLY SEPARABLE =========================== -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Kernels</span></div>
+					<div class="subtitle" data-id="subtitle1"><span>A <strong>non-linear kernel</strong> transforms the data to higher dimensions where a hyperplane can be drawn.</span></div>
+					<div class="body">
+						<div class="row">
+							<div class="panel" data-id="panel1">
+								<div class="body" style="inline-size: 25rem;">
+									<div class="cell row title">Linear Kernel</div>
+									<div class="cell row svg">
+										<div class="canvas">
+											<svg version="2" viewBox="0 0 400 400" style="inline-size: 18rem; block-size: 18rem;" xmlns="http://www.w3.org/2000/svg">
+												<g x="0" y="0">
+													<path class="hyp"
+														d="M -10 237 l 420 -115"></path>
+												</g>
+												<g>
+													<circle class="ppoint" cx="200" cy="75" r="10" />
+													<circle class="ppoint" cx="90" cy="50" r="10" />
+													<circle class="ppoint" cx="50" cy="138" r="10" />
+													<circle class="ppoint" cx="123" cy="140" r="10" />
+													<circle class="ppoint" cx="105" cy="120" r="10" />
+													<circle class="ppoint" cx="301" cy="31" r="10" />
+													<circle class="ppoint" cx="128" cy="37" r="10" />
+													<circle class="ppoint" cx="150" cy="78" r="10" />
+													<circle class="ppoint" cx="192" cy="132" r="10" />
+													<circle class="ppoint" cx="250" cy="37" r="10" />
+													<circle class="ppoint" cx="39" cy="64" r="10" />
+
+													<circle class="npoint" cx="205" cy="229" r="10" />
+													<circle class="npoint" cx="350" cy="189" r="10" />
+													<circle class="npoint" cx="202" cy="293" r="10" />
+													<circle class="npoint" cx="243" cy="320" r="10" />
+													<circle class="npoint" cx="315" cy="220" r="10" />
+													<circle class="npoint" cx="301" cy="239" r="10" />
+													<circle class="npoint" cx="120" cy="260" r="10" />
+													<circle class="npoint" cx="350" cy="328" r="10" />
+													<circle class="npoint" cx="128" cy="309" r="10" />
+													<circle class="npoint" cx="186" cy="376" r="10" />
+													<circle class="npoint" cx="39" cy="354" r="10" />
+												</g>
+											</svg>
+											<!-- <span style="position: absolute; inset: 110px 0 0 90px; transform: rotate(-15deg);" data-id="canvas-text-1">Maximum margin hyperplane</span> -->
+										</div>
+									</div>
+									<div class="cell row hcenter"><span>A normal hyperplane in the data's feature space.</span></div>
+									<div class="cell row hcenter"><span>May underfit.</span></div>
+								</div>
+							</div>
+							<div class="panel" data-id="panel2" style="margin-inline-end: 5rem;">
+								<div class="body" style="inline-size: 25rem;">
+									<div class="cell title row">Non-linear Kernel (RBF)</div>
+									<div class="cell svg row">
+										<div class="canvas" style="margin-inline:1rem; flex: 1 0 auto">
+											<svg version="2" viewBox="0 0 400 400" style="inline-size: 18rem; block-size: 18rem;" xmlns="http://www.w3.org/2000/svg">
+												<g x="0" y="0">
+													<path class="hyp"
+														d="M 0 330 c 40 0 60 5 85 -40 s 40 -30 80 -65 s 60 -20 110 -25 s 55 -30 70 -45 s 30 -20 60 -30">
+													</path>
+													<path class="hyp"
+														d="M 50 230 c 15 0 20 -10 40 -40 s 20 -35 15 -40 s -40 3 -50 10 s -13 10 -13 20 s 0 50 8 50 z"></path>
+													<path class="hyp"
+														d="m 275,145 c 40.03116,-38.26876 39.97387,-63.879885 16.74209,-73.16742 -18.8382,-7.531079 -17.75632,5.198454 -43.09956,5.904977 C 230.14638,78.253195 205.92923,83.182978 200,100 c -6.19599,17.57361 10.9453,37.76531 25,50 12.40675,10.80013 37.89259,6.57437 50,-5 z">
+													</path>
+												</g>
+												<g>
+													<circle class="ppoint" cx="200" cy="178" r="10" />
+													<circle class="ppoint" cx="90" cy="50" r="10" />
+													<circle class="ppoint" cx="50" cy="138" r="10" />
+													<circle class="ppoint" cx="123" cy="200" r="10" />
+													<circle class="ppoint" cx="40" cy="300" r="10" />
+													<circle class="ppoint" cx="301" cy="31" r="10" />
+													<circle class="ppoint" cx="20" cy="189" r="10" />
+													<circle class="ppoint" cx="150" cy="78" r="10" />
+													<circle class="ppoint" cx="300" cy="170" r="10" />
+													<circle class="ppoint" cx="250" cy="37" r="10" />
+													<circle class="ppoint" cx="39" cy="64" r="10" />
+												</g>
+												<g>
+													<circle class="npoint" cx="205" cy="229" r="10" />
+													<circle class="npoint" cx="350" cy="189" r="10" />
+													<circle class="npoint" cx="202" cy="293" r="10" />
+													<circle class="npoint" cx="243" cy="320" r="10" />
+													<circle class="npoint" cx="315" cy="220" r="10" />
+													<circle class="npoint" cx="250" cy="120" r="10" />
+													<circle class="npoint" cx="67" cy="175" r="10" />
+													<circle class="npoint" cx="350" cy="328" r="10" />
+													<circle class="npoint" cx="128" cy="309" r="10" />
+													<circle class="npoint" cx="186" cy="376" r="10" />
+													<circle class="npoint" cx="39" cy="354" r="10" />
+												</g>
+											</svg>
+										</div>
+									</div>
+									<div class="cell row hcenter"><span>Hyperplane in the kernel-mapped feature space.</span></div>
+									<div class="cell row hcenter"><span>May overfit.</span></div>
+								</div>
+							</div>
+							<div class="annotate">
+								<div class="anno jstart" style="inset: 10rem 48rem; inline-size: 10rem; transform:rotate(-2deg);"><span>The <em>projection</em> of the higher-dimensional hyperplane is a <em>curved hypersurface</em> in the original feature space.</span></div>
+							</div>
+						</div>
+					</div>
+					<div class="subtitle" data-id="subtitle2"><span>With the right kernel, <em>any</em> data can be separated, but this causes overfitting when the true classifier is simple.</span></div>
+					<div class="footer"></div>
+				</div>
+			</section>
+			<!-- ==================== ##INTRO: SOFT VS HARD =========================== -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Hard vs. Soft Margins</span></div>
+					<div class="subtitle" data-id="subtitle1"><span><strong>Soft margins</strong> tolerate noise, allowing some training points to be <em>misclassified</em>.</span></div>
+					<div class="body">
+						<div class="row">
+							<div class="panel" data-id="panel1">
+								<div class="body" style="inline-size: 25rem">
+									<div class="cell title row">Hard Margin</div>
+									<div class="cell svg row">
+										<div class="canvas">
+											<svg version="2" viewBox="0 0 400 400" style="inline-size: 18rem; block-size: 18rem;" xmlns="http://www.w3.org/2000/svg">
+												<g x="0" y="0">
+													<path class="hyp"
+														d="M 0 330 c 40 0 60 5 85 -40 s 40 -30 80 -65 s 60 -20 110 -25 s 55 -30 70 -45 s 30 -20 60 -30" />
+													<path class="hyp"
+														d="M 50 230 c 15 0 20 -10 40 -40 s 20 -35 15 -40 s -40 3 -50 10 s -13 10 -13 20 s 0 50 8 50 z" />
+													<path class="hyp"
+														d="m 275,145 c 40.03116,-38.26876 39.97387,-63.879885 16.74209,-73.16742 -18.8382,-7.531079 -17.75632,5.198454 -43.09956,5.904977 C 230.14638,78.253195 205.92923,83.182978 200,100 c -6.19599,17.57361 10.9453,37.76531 25,50 12.40675,10.80013 37.89259,6.57437 50,-5 z" />
+												</g>
+												<g>
+													<circle class="ppoint" cx="200" cy="178" r="10" />
+													<circle class="ppoint" cx="90" cy="50" r="10" />
+													<circle class="ppoint" cx="50" cy="138" r="10" />
+													<circle class="ppoint" cx="123" cy="200" r="10" />
+													<circle class="ppoint" cx="40" cy="300" r="10" />
+													<circle class="ppoint" cx="301" cy="31" r="10" />
+													<circle class="ppoint" cx="20" cy="189" r="10" />
+													<circle class="ppoint" cx="150" cy="78" r="10" />
+													<circle class="ppoint" cx="300" cy="170" r="10" />
+													<circle class="ppoint" cx="250" cy="37" r="10" />
+													<circle class="ppoint" cx="39" cy="64" r="10" />
+												</g>
+												<g>
+													<circle class="npoint" cx="205" cy="229" r="10" />
+													<circle class="npoint" cx="350" cy="189" r="10" />
+													<circle class="npoint" cx="202" cy="293" r="10" />
+													<circle class="npoint" cx="243" cy="320" r="10" />
+													<circle class="npoint" cx="315" cy="220" r="10" />
+													<circle class="npoint" cx="250" cy="120" r="10" />
+													<circle class="npoint" cx="67" cy="175" r="10" />
+													<circle class="npoint" cx="350" cy="328" r="10" />
+													<circle class="npoint" cx="128" cy="309" r="10" />
+													<circle class="npoint" cx="186" cy="376" r="10" />
+													<circle class="npoint" cx="39" cy="354" r="10" />
+												</g>
+											</svg>
+											<!-- <span style="position: absolute; inset: 110px 0 0 90px; transform: rotate(-15deg);" data-id="canvas-text-1">Maximum margin hyperplane</span> -->
+										</div>
+									</div>
+									<div class="cell row"><span>A <strong>hard margin</strong> fails if data cannot be separated.</span></div>
+									<div class="cell row"><span>Hence, kernel <em>must</em> overfit noisy data.</span></div>
+								</div>
+							</div>
+							<div class="panel" data-id="panel2">
+								<div class="body" style="inline-size: 25rem;">
+									<div class="cell title row"><span>Soft Margin</span></div>
+									<div class="cell svg row">
+										<div class="canvas" style="margin-inline:1rem; flex: 1 0 auto">
+											<svg version="2" viewBox="0 0 400 400" style="inline-size: 18rem; block-size: 18rem;" xmlns="http://www.w3.org/2000/svg">
+												<g x="0" y="0">
+													<path class="hyp"
+														d="m 0,359.7285 c 0,0 104.94851,-87.98751 169.68326,-132.12669 98.19554,-66.95432 231.2217,-141.176473 231.2217,-141.176473" />
+												</g>
+												<g>
+													<circle class="ppoint" cx="200" cy="178" r="10" />
+													<circle class="ppoint" cx="90" cy="50" r="10" />
+													<circle class="ppoint" cx="50" cy="138" r="10" />
+													<circle class="ppoint" cx="123" cy="200" r="10" />
+													<circle class="ppoint" cx="40" cy="300" r="10" />
+													<circle class="ppoint" cx="301" cy="31" r="10" />
+													<circle class="ppoint" cx="20" cy="189" r="10" />
+													<circle class="ppoint" cx="150" cy="78" r="10" />
+													<circle class="ppoint misclass" cx="300" cy="170" r="10" />
+													<circle class="ppoint" cx="250" cy="37" r="10" />
+													<circle class="ppoint" cx="39" cy="64" r="10" />
+												</g>
+												<g>
+													<circle class="npoint" cx="205" cy="229" r="10" />
+													<circle class="npoint" cx="350" cy="189" r="10" />
+													<circle class="npoint" cx="202" cy="293" r="10" />
+													<circle class="npoint" cx="243" cy="320" r="10" />
+													<circle class="npoint" cx="315" cy="220" r="10" />
+													<circle class="npoint misclass" cx="250" cy="120" r="10" />
+													<circle class="npoint misclass" cx="67" cy="175" r="10" />
+													<circle class="npoint" cx="350" cy="328" r="10" />
+													<circle class="npoint" cx="128" cy="309" r="10" />
+													<circle class="npoint" cx="186" cy="376" r="10" />
+													<circle class="npoint" cx="39" cy="354" r="10" />
+												</g>
+											</svg>
+										</div>
+									</div>
+									<div class="cell row"><span>A <strong>soft margin</strong> tolerates misclassifications.</span></div>
+									<div class="cell row"><span>An appropriate kernel can be used despite noisy data</span></div>
+								</div>
+							</div>
+
+						</div>
+					</div>
+					<div class="subtitle" data-id="subtitle2"><span>As soft margins tolerate noise, a simple kernel can be used on noisy data, ensuring good generalisation.</span></div>
+					<div class="footer"></div>
+				</div>
+			</section>
+			<!-- ==================== ##INTRO: OVERVIEW =========================== -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Overview</span></div>
+					<div class="subtitle" data-id="subtitle1"><span>In this course, we learn how to formulate a <strong>constrained optimization problem</strong> to find the hyperplane...</span></div>
+					<div class="body">
+						<div class="row" style="justify-content: space-evenly; margin-block: 3rem;">
+							<div class="panel">
+								<div class="body" style="inline-size: 7rem;" id="overview-margin">
+									<div class="cell row title">Margin</div>
+									<div class="cell row hcenter">Maximum margin hyperplane</div>
+								</div>
+							</div>
+							<div class="panel">
+								<div class="body" style="inline-size: 20rem;" id="overview-problem">
+									<div class="cell row title">Constrained Optimization Problem</div>
+									<div class="cell row hcenter">
+										<div class="column">
+											<span><strong>Lagrange</strong> formulation for finding hyperplane with the largest soft/hard margin</span>
+											<div class="row justify" style="padding-block-start: var(--padding);">
+												<div class="column">
+													<div class="panel">
+														<div class="body" style="inline-size: 6rem" id="overview-primal">
+															<div class="cell row title">Primal</div>
+														</div>
+													</div>
+													<div class="panel">
+														<div class="body" style="inline-size: 6rem" id="overview-dual">
+															<div class="cell row title">Dual</div>
+														</div>
+													</div>
+												</div>
+												<div class="panel">
+													<div class="body" style="inline-size: 6rem" id="overview-kkt">
+														<div class="cell row title">KKT</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="column">
+								<div class="panel">
+									<div class="body" style="inline-size: 20rem;" id="overview-sv">
+										<div class="cell row title">Support Vectors</div>
+										<div class="cell row hcenter"><span>Classification and hyperplane depend only on points which are support vectors</span></div>
+									</div>
+								</div>
+								<div class="panel">
+									<div class="body" style="inline-size: 20rem;" id="overview-trick">
+										<div class="cell row title">Kernel Trick</div>
+										<div class="cell row hcenter">
+											<div class="column">
+												<span>Reduces computation with non-linear kernels when classifying new points</span>
+												<div class="row justify" style="padding-block-start: var(--padding);">
+													<div class="column">
+														<div class="panel">
+															<div class="body" style="inline-size: 9rem" id="overview-mercer">
+																<div class="cell row title">Mercer's Condition</div>
+															</div>
+														</div>
+														<div class="panel">
+															<div class="body" style="inline-size: 9rem" id="overview-gram">
+																<div class="cell row title">Gram Matrix</div>
+															</div>
+														</div>
+													</div>
+													<div class="panel">
+														<div class="body" style="inline-size: 6rem" id="overview-kernel">
+															<div class="cell row title" id="arrow-kernel">Kernel</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<svg connector-class="arrow1" from-id="overview-margin" from-pos="right" to-id="overview-problem" to-pos="left" to-off-x="-12" to-off-y="0" path="" from-off-x="0" from-off-y="0"></svg>
+							<svg connector-class="arrow1" from-id="overview-primal" from-pos="right" to-id="overview-kkt" to-pos="left" to-off-x="-12" to-off-y="0" path="h 50 v100" from-off-x="0" from-off-y="0"></svg>
+							<svg connector-class="arrow1" from-id="overview-dual" from-pos="right" to-id="overview-kkt" to-pos="left" to-off-x="-12" to-off-y="0" path="h 50 v100" from-off-x="0" from-off-y="0"></svg>
+							<svg connector-class="arrow1" from-id="overview-problem" from-pos="right" to-id="overview-sv" to-pos="left" to-off-x="-12" to-off-y="0" path="h 70 v100" from-off-x="0" from-off-y="0"></svg>
+							<svg connector-class="arrow1" from-id="overview-problem" from-pos="right" to-id="overview-trick" to-pos="left" to-off-x="-12" to-off-y="20" path="h 70 v100" from-off-x="0" from-off-y="0"></svg>
+							<svg connector-class="arrow1" from-id="overview-mercer" from-pos="right" to-id="overview-kernel" to-pos="left" to-off-x="-12" to-off-y="0" path="h 50 v100" from-off-x="0" from-off-y="0"></svg>
+							<svg connector-class="arrow1" from-id="overview-gram" from-pos="right" to-id="overview-kernel" to-pos="left" to-off-x="-12" to-off-y="0" path="h 50 v100" from-off-x="0" from-off-y="0"></svg>
+							<!-- <svg connector-class="arrow1" from-id="overview-kernel" from-pos="right" to-id="overview-margin" to-pos="bottom" from-off-x="0" from-off-y="0" to-off-x="0" to-off-y="12" path="h-5 v-330 h105"></svg> -->
+						</div>
+					</div>
+					<div class="subtitle" data-id="subtitle2"><span>... and understand how features like <strong>support vectors</strong> and the <strong>Kernel trick</strong> arises from the formulation.</span></div>
+					<div class="footer"></div>
+				</div>
+			</section>
+
+
+			<!-- ==================== #HYPERPLANES =========================== -->
+			<section data-auto-animate>
+				<div class="slide section">
+					<div class="heading" data-id="heading"><span>Hyperplanes</span></div>
+					<div class="subtitle"><span>Features and Key Concepts</span></div>
+
+					<div class="canvas" data-id="canvas1">
+						<svg version="2" viewBox="0 0 400 400" width="400px" height="400px" xmlns="http://www.w3.org/2000/svg">
+							<g x="0" y="0">
+								<path class="margin" style="fill: var(--swatch-lightgray)"
+									d="M -10 187 l 420 -115 l 0 100 l -420 115 z">
+								</path>
+								<path class="hyp" d="M -10 237 l 420 -115" />
+							</g>
+							<g>
+								<circle class="ppoint" cx="200" cy="75" r="10" />
+								<circle class="ppoint" cx="90" cy="50" r="10" />
+								<circle class="ppoint" cx="50" cy="138" r="10" />
+								<circle class="ppoint" cx="123" cy="140" r="10" />
+								<circle class="ppoint" cx="105" cy="120" r="10" />
+								<circle class="ppoint" cx="301" cy="31" r="10" />
+								<circle class="ppoint" cx="128" cy="37" r="10" />
+								<circle class="ppoint" cx="150" cy="78" r="10" />
+								<circle class="ppoint sv" cx="192" cy="132" r="10" />
+								<circle class="ppoint" cx="250" cy="37" r="10" />
+								<circle class="ppoint" cx="39" cy="64" r="10" />
+
+								<circle class="npoint sv" cx="205" cy="229" r="10" />
+								<circle class="npoint sv" cx="350" cy="189" r="10" />
+								<circle class="npoint" cx="202" cy="293" r="10" />
+								<circle class="npoint" cx="243" cy="320" r="10" />
+								<circle class="npoint" cx="315" cy="220" r="10" />
+								<circle class="npoint" cx="301" cy="239" r="10" />
+								<circle class="npoint" cx="120" cy="260" r="10" />
+								<circle class="npoint" cx="350" cy="328" r="10" />
+								<circle class="npoint" cx="128" cy="309" r="10" />
+								<circle class="npoint" cx="186" cy="376" r="10" />
+								<circle class="npoint" cx="39" cy="354" r="10" />
+							</g>
+							<!-- <text transform="rotate(-15)" x="40" y="215">Maximum margin hyperplane</text> -->
+						</svg>
+					</div>
+				</div>
+			</section>
+			<!-- ================================== Hyperplane Eqn and Normal ========================================= -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="canvas absolute" style="inset-block-end: 0; inset-inline-end: 0;">
+						<svg version="2" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="border: none; inline-size: 60rem; ">
+							<path class="hyp" d="M 100 420 l 520 -220" />
+							<path class="normal" d="M 100 420 m 208 -88 l -44 -104" />
+						</svg>
+						<span class="font-large" style="inset: 29.5rem 23.5rem; transform: rotate(-23deg); "><strong>Hyperplane</strong> (line in 2D-space): $\quad w_1x_1 + w_2x_2 + w_0 = 0$</span>
+						<span class="font-large justify" style="inset: 24rem 29rem;"><strong>Normal</strong> (always a line):<br> $\mathbf{w} = \begin{bmatrix} w_1 \\ w_2 \end{bmatrix}$</span>
+					</div>
+					<div class="heading" data-id="heading"><span>Properties of Hyperplanes</span></div>
+					<div class="subtitle" data-id="subtitle1"><span>Key to understanding SVM is the <strong>hyperplane equation</strong>, its <strong>normal</strong>...</span></div>
+					<div class="body">
+						<div class="row">
+							<div class="panel" data-id="def-hyp">
+								<div class="body">
+									<div class="cell row title heavy"><span>Hyperplane Equation</span></div>
+									<div class="cell row hcenter vcenter" style="block-size: 8rem; ">
+										<span>
+											$$
+											\mathbf{w}\cdot\mathbf{x} + w_0
+											\; = \; \mathbf{w}^\top \mathbf{x} + w_0
+											\; = \; \begin{bmatrix} w_1 \\ w_2 \\ \vdots \\ w_D \end{bmatrix}^\top \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_D \end{bmatrix} + w_0
+											\; = \; w_1 x_1 + w_2 x_2 + \cdots + w_0
+											\; = \; w_0 + \sum_{d = 1}^{D} w_d x_d
+											\; = 0
+											$$
+										</span>
+									</div>
+									<div class="cell row hcenter "><span>
+											Any point $\mathbf{x} \in \mathbb{R}^D$ that lies on a ($D-1$) dimensional hyperplane characterised by the normal ($\mathbf{w}$) satisfies $\mathbf{w}^\top \mathbf{x} + w_0 = 0$.
+										</span></div>
+									<div class="cell row hcenter "><span>
+											Divides the $D$-dimensional feature space into two regions (<strong>half-spaces</strong>).
+										</span></div>
+								</div>
+							</div>
+						</div>
+						<div class="row" style="justify-content: flex-start">
+							<div class="panel" data-id="def-normal">
+								<div class="num">1</div>
+								<div class="body" style="inline-size: 17rem;">
+									<div class="cell  row title"><span>Normal</span></div>
+									<div class="row" style="block-size: 4rem">
+										<div class="cell eq"><span>$\mathbf{w}$</span></div>
+										<div class="cell"><span>Points in the direction $\mathbf{w}$ that is perpendicular to the hyperplane.</span></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="annotate">
+						<svg version="2" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" style="inset: 27.8rem 27.8rem; inline-size: 4rem;">
+							<ellipse cx="23" cy="12" rx="15" ry="13" class="anno" transform="rotate(15)" />
+						</svg>
+						<div class="anno" style="inset: 30rem 25.5rem; transform: rotate(10deg)"><span>Vector</span></div>
+						<svg version="2" viewBox="0 0 200 30" xmlns="http://www.w3.org/2000/svg" style="inset: 27.3rem 39.3rem; inline-size: 20rem; transform: rotate(-25deg) scale(0.8);">
+							<rect x="1" y="1" width="198" height="28" rx="7" class="anno" />
+						</svg>
+						<div class="anno" style="inset: 30rem 50.5rem; transform: rotate(-6deg)"><span>Scalar</span></div>
+						<div class="anno" style="inset: 36.5rem 30.5rem; transform: rotate(-10deg)"><span>2D plane in 3D space <br /> 3D hyperplane in 4D space</span></div>
+					</div>
+					<div class="footer"></div>
+				</div>
+			</section>
+			<!-- =============================================  Hyperplane: PerpDist ==================================================== -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="canvas absolute" style="inset-block-end: 0; inset-inline-end: 0;">
+						<svg version="2" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="border: none; inline-size: 60rem; ">
+							<linearGradient id="gradient-p" gradientTransform="rotate(0)" x1="0.55" y1="0.55" x2="0.75" y2="0.755">
+								<stop offset="0%" stop-color="var(--swatch-lightlightgreen)" stop-opacity="0" />
+								<stop offset="100%" stop-color="var(--swatch-lightlightgreen)" />
+							</linearGradient>
+							<linearGradient id="gradient-n" gradientTransform="rotate(0)" x1="0.5" y1="0.5" x2="0.7" y2="0.705">
+								<stop offset="0%" stop-color="var(--swatch-lightlightgray)" />
+								<stop offset="100%" stop-color="var(--swatch-lightlightgray)" stop-opacity="0" />
+							</linearGradient>
+							<path style="fill: url(#gradient-p); opacity: 0.5" d="M -300 420 h 400 l 520 -220 v -200 z"
+								onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'" />
+							<path style="fill:url(#gradient-n); opacity: 0.5; " d="M 100 420 l 520 -220 v 200 z"
+								onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'" />
+							<path class="hyp" d="M 100 420 l 520 -220" />
+							<path class="normal" d="M 100 420 m 234 -99 l -44 -104" />
+							<circle class="ppoint" r="5" cx="470" cy="180" />
+							<circle class="ppoint" r="5" cx="420" cy="250" />
+							<circle class="ppoint" r="5" cx="380" cy="180" />
+							<circle class="ppoint" r="5" cx="320" cy="150" />
+							<circle class="ppoint" r="5" cx="420" cy="120" />
+							<circle class="ppoint" r="5" cx="500" cy="130" />
+							<circle class="npoint" r="5" cx="500" cy="340" />
+							<circle class="npoint" r="5" cx="420" cy="350" />
+							<circle class="npoint" r="5" cx="550" cy="340" />
+							<circle class="npoint" r="5" cx="310" cy="360" />
+							<circle class="npoint" r="5" cx="400" cy="320" />
+						</svg>
+						<span class="label" style="inset: 20rem 46rem; transform: rotate(-23deg); ">$\mathbf{w}^\top \mathbf{x} + w_0 \gt 0$</span>
+						<span class="label" style="inset: 23rem 47.15rem; transform: rotate(-23deg); ">$\mathbf{w}^\top \mathbf{x} + w_0 = 0$</span>
+						<span class="label" style="inset: 26rem 48.3rem; transform: rotate(-23deg); ">$\mathbf{w}^\top \mathbf{x} + w_0 \lt 0$</span>
+						<span class="label" style="border-radius: 50%; inline-size: 2.5rem; block-size: 2.5rem; inset: 25rem 29.7rem;">$\mathbf{w}$</span>
+					</div>
+					<div class="heading" data-id="heading">Properties of Hyperplanes</div>
+					<div class="body">
+						<div class="row">
+							<div class="panel" data-id="def-hyp">
+								<div class="body">
+									<div class="row" style="block-size: 3rem">
+										<div class="cell title"><span>Hyperplane Equation</span></div>
+										<div class="cell eq"><span>$\mathbf{w}^\top \mathbf{x} + w_0 = 0$</span></div>
+									</div>
+								</div>
+							</div>
+							<div class="panel" data-id="def-normal">
+								<div class="body">
+									<div class="row" style="block-size: 3rem">
+										<div class="cell title"><span>Normal</span></div>
+										<div class="cell eq"><span>$\mathbf{w}$</span></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="subtitle" data-id="subtitle1"><span>... and the relation of the normal to the <strong>perpendicular distance</strong> of any point</span></div>
+					<div class="body">
+						<div class="row" style="justify-content: flex-start">
+							<div class="column" style="align-items: flex-end">
+								<div class="panel" data-id="def-perpdist" style="margin-block-start: 1rem;">
+									<div class="num">2</div>
+									<div class="body" style="inline-size: 20rem;">
+										<div class="cell row title"><span>Perpendicular Distance </span></div>
+										<div class="row" style="block-size: 4rem">
+											<div class="cell eq"><span>$$\frac{\left\lvert \mathbf{w}^\top \mathbf{x} + w_0 \right\rvert}{\lVert \mathbf{w} \rVert}$$</span></div>
+											<div class="cell vcenter"><span>The shortest distance from $\mathbf{x}$ to the hyperplane.</span></div>
+										</div>
+										<div class="cell row"><span>
+												$\mathbf{w}^\top \mathbf{x} + w_0 \gt 0$ if the point lies on the half-space pointed to by $\mathbf{w}$ from the hyperplane.
+											</span></div>
+										<div class="cell row"><span>
+												$\mathbf{w}^\top \mathbf{x} + w_0 \lt 0$ if the point lies on the half-space pointed to by $-\mathbf{w}$ from the hyperplane.
+											</span></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="footer"></div>
+				</div>
+			</section>
+
+			<!-- =============================================  Hyperplane: Scaling ==================================================== -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Properties of Hyperplanes</span></div>
+					<div class="subtitle" data-id="subtitle1"><span>Scaling the hyperplane by multiplying $\mathbf{w}$ and $w_0$ by $c \in \mathbb{R}, c \ne 0$...</span></div>
+					<div class="body" style="flex-grow: 1;">
+						<div class="panel">
+							<div class="num">3</div>
+							<div class="body">
+								<div class="cell row title">Scaling Invariance</div>
+								<div class="cell row" style="flex-flow: column nowrap">
+									<div class="panel">
+										<div class="body">
+											<div class="row">
+												<div class="cell title  font-normal" style="margin-inline-start: 11rem; inline-size: 9rem; border-end-start-radius:  0; "><span>Initial</span></div>
+												<div class="cell title  font-normal" style="inline-size: 30rem; border-end-end-radius:  0;"><span>Scaled</span></div>
+											</div>
+											<div class="row" style="block-size: 3rem">
+												<div class="cell title vcenter border-top-left-radius  font-normal" style="inline-size: 11rem"><span>Hyperplane</span></div>
+												<div class="cell eq" style="inline-size: 9rem"><span>$\mathbf{w}^\top \mathbf{x} + w_0 = 0$</span></div>
+												<div class="cell eq" style="inline-size: 30rem"><span>
+														$$
+														c\mathbf{w}^\top\mathbf{x} + c w_0 = 0 \implies \mathbf{w}^\top\mathbf{x} + w_0 = 0
+														$$
+													</span></div>
+											</div>
+										</div>
+									</div>
+									<div class="row" style="margin: var(--padding); margin-block-end: calc(2*var(--padding));"><span class="font-family-body font-normal">
+											Points that are on the initial hyperplane remain on the scaled hyperplane.
+											The two half-spaces are the same.
+										</span></div>
+									<div class="panel">
+										<div class="body">
+											<div class="row" style="block-size: 3rem">
+												<div class="cell title  font-normal" style="inline-size: 11rem"><span>Normal</span></div>
+												<div class="cell eq" style="inline-size: 9rem"><span>$\mathbf{w}$</span></div>
+												<div class="cell eq" style="inline-size: 30rem"><span>$c \mathbf{w}$</span></div>
+											</div>
+										</div>
+									</div>
+									<div class="row" style="margin: var(--padding); margin-block-end: calc(2*var(--padding));"><span class=" font-family-body font-normal">
+											The scaled normal is parallel to the original direction.
+										</span></div>
+									<div class="panel">
+										<div class="body">
+											<div class="row" style="block-size: 4rem">
+												<div class="cell title vcenter font-normal" style="inline-size: 11rem"><span>Perp. Distance</span></div>
+												<div class="cell eq" style="inline-size: 9rem"><span>
+														$$
+														\frac{\left\lvert \mathbf{w}^\top \mathbf{x} + w_0 \right\rvert}{\lVert \mathbf{w} \rVert}
+														$$
+													</span></div>
+												<div class="cell eq" style="inline-size: 30rem"><span style="font-size: calc(0.8 * var(--font-normal))">
+														$$
+														\frac{\lvert c \mathbf{w}^\top\mathbf{x} + c w_0 \rvert}{\lVert c \mathbf{w} \rVert}
+														= \frac{\lvert c \rvert \lvert \mathbf{w}^\top \mathbf{x} + w_0 \rvert}{\sqrt{(c \mathbf{w})^\top(c \mathbf{w})}}
+														= \frac{\lvert c \rvert \lvert \mathbf{w}^\top \mathbf{x} + w_0 \rvert }{\lvert c \rvert \sqrt{\mathbf{w}^\top\mathbf{w}}}
+														= \frac{\lvert \mathbf{w}^\top \mathbf{x} + w_0 \rvert}{\lVert \mathbf{w} \rVert}
+														$$
+													</span></div>
+											</div>
+										</div>
+									</div>
+									<div class="row" style="margin: var(--padding); margin-block-end: calc(2*var(--padding));"><span class=" font-family-body font-normal">
+											The perpendicular distance of any point to the hyperplane remains the same.
+										</span></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="subtitle" data-id="subtitle2"><span>...does not change the hyperplane meaningfully.</span></div>
+					<div class="footer" style="flex-grow: 0"></div>
+				</div>
+			</section>
+
+			<!-- ======================== Hyperplane: Demo ===================== -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Interactive Demo</span></div>
+					<div class="subtitle" data-id="subtitle1"><span>Here's a demo to show that the perpendicular distance and hyperplane orientation is not affected by scaling.</span></div>
+					<div class="body" style="contain: strict; block-size: 34rem">
+						<div class="row hcenter">
+							<div id="gd" style="display: inline-flex; flex: 0 0 auto; inline-size: 35rem; block-size: 31rem; z-index:0; margin: -5rem 0 -1rem -2rem; "></div>
+							<div class="column" style="align-items: flex-start">
+								<div class="row" style="align-items: flex-start">
+									<div class="panel">
+										<div class="body" style="inline-size: 11.5rem">
+											<div class="cell title row"><span>Parameters</span></div>
+											<div class="cell eq row" style="block-size: 2.5rem; justify-content: flex-start;"><span>\(w_1 =c w_1' = \;\)</span><span id="a"></span></div>
+											<div class="cell eq row" style="block-size: 2.5rem; justify-content: flex-start;"><span>\(w_2 =c w_2' = \;\)</span><span id="b"></span></div>
+											<div class="cell eq row" style="block-size: 2.5rem; justify-content: flex-start;"><span>\(w_0 =c w_0' = \;\)</span><span id="c"></span></div>
+										</div>
+									</div>
+									<div class="panel">
+										<div class="body" style="inline-size: 12.5rem;">
+											<div class="cell title row"><span>Perp. Dist.</span></div>
+											<div class="cell eq row" style="block-size: 2.5rem; justify-content: flex-start;"><span>
+													$$\mathbf{w}^\top \mathbf{x}_i + w_0= \;$$
+												</span><span id="pd1"></span></div>
+											<div class="cell eq row" style="block-size: 4rem; justify-content: flex-start;">
+												<span>$$\frac{\lvert \mathbf{w}^\top \mathbf{x}_i + w_0 \rvert}{\lVert\mathbf{w}\rVert} = \; $$
+												</span><span id="pd2"></span>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="panel">
+									<div class="body" style="inline-size: 25rem">
+										<div class="cell title row"><span>Hyperplane Equation</span></div>
+										<div class="cell eq row" style="block-size: 6.5rem;">
+											<div class="column" style="inline-size: 100%; align-items: flex-start;">
+												<span>\( f(\mathbf{x}) = \mathbf{w}^\top \mathbf{x} + w_0\)</span>
+												<span style="margin-inline-start: 2.25rem;" id="eq"></span>
+												<span style="margin-inline-start: 2.25rem">\( = 0\)</span>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="panel">
+								<div class="body">
+									<div class="row" style="block-size: 3rem;">
+										<div class="cell title">HyperPlane</div>
+										<div class="cell eq"><span>\(w_1' \;\)</span>
+											<input class="control" id="ap" type="number" min="-1000" max="1000" step="0.1"></input>
+										</div>
+										<div class="cell eq"><span>\(w_2' \;\)</span>
+											<input class="control" id="bp" type="number" min="-1000" max="1000" step="0.1"></input>
+										</div>
+										<div class="cell eq"><span>\(w_0' \;\)</span>
+											<input class="control" id="cp" type="number" min="-1000" max="1000" step="0.1"></input>
+										</div>
+										<div class="cell eq"><span>\(c\;\)</span>
+											<input class="control" id="sc" type="number" min="-1000" max="1000" step="0.1"></input>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="panel">
+								<div class="body">
+									<div class="row" style="block-size: 3rem;">
+										<div class="cell title">Point</div>
+										<div class="cell eq"><span>\(x_{1,i}' \;\)</span>
+											<input class="control" id="px" type="number" min="-1000" max="1000" step="0.1"></input>
+										</div>
+										<div class="cell eq"><span>$x_{2,i}' \;$</span>
+											<input class="control" id="py" type="number" min="-1000" max="1000" step="0.1"></input>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="footer"></div>
+				</div>
+				<script type="text/javascript" defer>
+					const xaxis_range = [-10, 10];
+					const yaxis_range = [-10, 10];
+
+					const ap = document.getElementById("ap");
+					const bp = document.getElementById("bp");
+					const cp = document.getElementById("cp");
+					const sc = document.getElementById("sc");
+					const px = document.getElementById("px");
+					const py = document.getElementById("py");
+					const A = document.getElementById("a");
+					const B = document.getElementById("b");
+					const C = document.getElementById("c");
+					const eq = document.getElementById("eq");
+					const pd1 = document.getElementById("pd1");
+					const pd2 = document.getElementById("pd2");
+
+
+					ap.value = 0.5;
+					bp.value = -0.5;
+					cp.value = 0;
+					sc.value = 1;
+					px.value = 1.5;
+					py.value = -8;
+					let controls = [ap, bp, cp, sc, px, py];
+					let vals = [ap.value, bp.value, cp.value, sc.value, px.value, py.value];
+
+					const graph = document.getElementById("gd");
+					let layout_update = {
+						// "title": {
+						//     "text": "",
+						//     "x": 0.5,
+						//     "xref": "paper",
+						//     "yanchor": "top",
+						//     "xanchor": "center",
+						//     "y": 0.85,
+						// },
+						'xaxis.fixedrange': true,
+						'xaxis.title': 'x1',
+						'xaxis.range': xaxis_range,
+						'xaxis.dtick': 2,
+						'yaxis.fixedrange': true,
+						'yaxis.title': 'x2',
+						'yaxis.range': yaxis_range,
+						'yaxis.dtick': 2
+					};
+					const data_init = [
+						{ 'x': [[0]], 'y': [[0]], 'name': 'f(<b>x</b>) = -1', marker: { color: "red" }, line: { dash: 'dot', width: 2 } },
+						{ 'x': [[0]], 'y': [[0]], 'name': 'f(<b>x</b>) = 0', marker: { color: "gray" }, line: { width: 3 } },
+						{ 'x': [[0]], 'y': [[0]], 'name': 'f(<b>x</b>) = 1', marker: { color: "blue" }, line: { dash: 'dot', width: 2 } },
+						{ 'x': [[0]], 'y': [[0]], 'name': 'Normal: <b>w</b>', line: { color: "gray", dash: 'dash', width: 3 }, mode: 'lines' },
+						{ 'x': [[0]], 'y': [[0]], 'name': 'Perp. Dist. ', line: { color: "rgb(130, 200, 150)", width: 3, dash: 'dashdot' }, 'type': 'scatter', mode: 'lines' },
+						{ 'x': [[0]], 'y': [[0]], 'name': 'Point <i>i</i>', marker: { color: "black", symbol: 'cross', size: 10 }, 'type': 'scatter', mode: 'markers' },
+					];
+					Plotly.newPlot(graph, data_init, { legend: { "y": 0.5 } }, { displayModeBar: false });
+
+					function outBound(x, y) {
+						return (x < xaxis_range[0] || x > xaxis_range[1] || y < yaxis_range[0] || y > yaxis_range[1]);
+					}
+					function validate(idx, num_string) {
+						val = parseFloat(num_string);
+						if (isNaN(val))
+							controls[idx].value = vals[idx];
+						else {
+							vals[idx] = val;
+							controls[idx].value = val;
+						}
+					}
+					function calculate() {
+						let a = Number(ap.value) * Number(sc.value);
+						let b = Number(bp.value) * Number(sc.value);
+						let c = Number(cp.value) * Number(sc.value);
+
+						let dir_mag = b * b + a * a;
+						let dir_x = -b;
+						let dir_y = a;
+						let from_x = 0;
+						let from_y = 0;
+
+						let a_text = `${a.toFixed(3)}`;
+						let b_text = `${(b >= 0 ? "+" : "")}${b.toFixed(3)}`;
+						let c_text = `${(c >= 0 ? "+" : "")}${c.toFixed(3)}`;
+
+
+						A.innerHTML = a.toFixed(3);
+						B.innerHTML = b.toFixed(3);
+						C.innerHTML = c.toFixed(3);
+						katex.render(`= ${a_text} x_1 ${b_text} x_2 ${c_text}`, eq, {
+							throwOnError: false
+						});
+
+						if (dir_x == 0 && dir_y == 0) {
+							// Plotly.update(graph, null, layout_update);
+						}
+						else {
+							from_x = c * -dir_y / dir_mag;
+							from_y = c * dir_x / dir_mag;
+
+
+							let tracesX = [];
+							let tracesY = [];
+
+							// calculate all lines
+							for (let d = -1; d <= 1; ++d) {
+								let X = [];
+								let Y = [];
+								let x0 = from_x + a * d / dir_mag;
+								let y0 = from_y + b * d / dir_mag;
+								for (let k = -1; ; k *= 2) {
+									let x = x0 + k * dir_x;
+									let y = y0 + k * dir_y;
+									if (outBound(x, y)) {
+										X.push(x);
+										Y.push(y);
+										break;
+									}
+								}
+								if (d == 0) {
+									X.push(x0 - dir_x);
+									Y.push(y0 - dir_y);
+									X.push(x0);
+									Y.push(y0);
+									X.push(x0 + dir_x);
+									Y.push(y0 + dir_y);
+								}
+								else {
+									X.push(x0);
+									Y.push(y0);
+								}
+								for (let k = 1; ; k *= 2) {
+									let x = x0 + k * dir_x;
+									let y = y0 + k * dir_y;
+									if (outBound(x, y)) {
+										X.push(x);
+										Y.push(y);
+										break;
+									}
+								}
+								tracesX.push(X);
+								tracesY.push(Y);
+							}
+
+							// calculate Normal
+							let Xn = [];
+							let Yn = [];
+							for (k = -1; ; k *= 2) {
+								let x = from_x + a * k;
+								let y = from_y + b * k;
+								if (outBound(x, y)) {
+									Xn.push(x);
+									Yn.push(y);
+									break;
+								}
+							}
+							// Xn.push(from_x, from_x + a);
+							// Yn.push(from_y, from_y + b);
+							for (k = 1; ; k *= 2) {
+								let x = from_x + a * k;
+								let y = from_y + b * k;
+								if (outBound(x, y)) {
+									Xn.push(x);
+									Yn.push(y);
+									break;
+								}
+							}
+							tracesX.push(Xn);
+							tracesY.push(Yn);
+
+							// update Point
+							let point_x = Number(px.value);
+							let point_y = Number(py.value);
+
+							// update perp dist
+							// px.value + k*a == from_x + i*-b;
+							// py.value + k*b == from_y + i*a;
+							// a * k  +b * i = from_x - px.value;
+							// b * k  -a * i = from_y - py.value; 
+							// [a b]  [k] = [from_x - px.value]
+							// [b -a] [i]   [from_y - py.value]
+							// [k;i] = [a, b; b, -a] / (a^2 + b^2) [from_x-px.value; from_y-py.value];
+							k = (a * (from_x - point_x) + b * (from_y - point_y)) / dir_mag;
+							tracesX.push([point_x, point_x + k * a]);
+							tracesY.push([point_y, point_y + k * b]);
+
+							const geom = Math.abs(k) * Math.sqrt(dir_mag);
+							const func = a * point_x + b * point_y + c;
+							pd1.innerHTML = func.toFixed(3);
+							pd2.innerHTML = geom.toFixed(3);
+
+							tracesX.push([point_x]);
+							tracesY.push([point_y]);
+
+							// layout_update.title.text = `f(X) = ${Number(a).toPrecision(3)}x + ${Number(b).toPrecision(3)}y + ${Number(c).toPrecision(3)}`;
+
+							let data_update = { 'x': tracesX, 'y': tracesY };
+							Plotly.update(graph, data_update, layout_update);
+						}
+					}
+
+					ap.addEventListener("change", () => {
+						validate(0, ap.value);
+						calculate();
+					}, false);
+					bp.addEventListener("change", () => {
+						validate(1, bp.value);
+						calculate();
+					}, false);
+					cp.addEventListener("change", () => {
+						validate(2, cp.value);
+						calculate();
+					}, false);
+					sc.addEventListener("change", () => {
+						validate(3, sc.value);
+						calculate();
+					}, false);
+					px.addEventListener("change", () => {
+						validate(4, px.value);
+						calculate();
+					}, false);
+					py.addEventListener("change", () => {
+						validate(5, py.value);
+						calculate();
+					}, false);
+
+				</script>
+			</section>
+
+			<!-- ======================== Hyperplane: Summary ===================== -->
+			<section data-auto-animate>
+				<div class="slide summary">
+					<div class="canvas absolute" style="inset-block-end: 0; inset-inline-end: 0;">
+						<svg version="2" viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="border: none; inline-size: 60rem; ">
+							<linearGradient id="gradient-p2" gradientTransform="rotate(0)" x1="0.62" y1="0.62" x2="0.708" y2="0.68">
+								<stop offset="0%" stop-color="var(--swatch-lightlightblue)" stop-opacity="0" />
+								<stop offset="100%" stop-color="var(--swatch-lightlightblue)" />
+							</linearGradient>
+							<linearGradient id="gradient-n2" gradientTransform="rotate(0)" x1="0.62" y1="0.62" x2="0.708" y2="0.68">
+								<stop offset="0%" stop-color="var(--swatch-lightlightgray)" />
+								<stop offset="100%" stop-color="var(--swatch-lightlightgray)" stop-opacity="0" />
+							</linearGradient>
+							<path style="fill: url(#gradient-p2); opacity: 1" d="M 0 420 h 300 l 300 -440 v -200 z"
+								onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" />
+							<path style="fill:url(#gradient-n2); opacity: 1; " d="M 300 420 l 300 -440 v 440 z"
+								onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" />
+							<path class="hyp" d="M 300 420 l 300 -440" />
+							<path class="normal" d="M 300 420 m 90 -132 l -88 -60" />
+							<circle class="ppoint2" r="5" cx="400" cy="110" />
+							<circle class="ppoint2" r="5" cx="420" cy="150" />
+							<circle class="ppoint2" r="5" cx="380" cy="180" />
+							<circle class="npoint" r="5" cx="480" cy="260" />
+							<circle class="npoint" r="5" cx="420" cy="350" />
+							<circle class="npoint" r="5" cx="520" cy="280" />
+						</svg>
+						<div class="label" style="inset: 5rem 40rem;">
+							<span class="font-large">$\mathbf{w}^\top \mathbf{x} + w_0 \gt 0$</span>
+						</div>
+						<div class="label" style="inset: 17rem 48rem;">
+							<span class="font-large">$\mathbf{w}^\top \mathbf{x} + w_0 \lt 0$</span>
+						</div>
+						<div class="label" style="border-radius: 50%; inline-size:3rem; block-size: 3rem; inset: 23.5rem 32rem; transform: rotate(34.3deg)">
+							<span class="font-large">$\mathbf{w}$</span>
+						</div>
+						<div class="label" style="inset: 8.5rem 46.5rem;  transform: rotate(-55.7deg);">
+							<span class="font-large">
+								$\mathbf{w}^\top \mathbf{x} + w_0 = 0$</span>
+						</div>
+					</div>
+					<div class="heading" data-id="heading">Hyperplane Summary</div>
+					<div class="body astart">
+						<div class="column" style="inline-size: 32rem;">
+							<div class="panel" style="margin-block-start: 3rem; margin-block-end: 6rem">
+								<div class="body" id="smry-hyp-hyp">
+									<div class="cell row title">Hyperplane Equation</div>
+									<div class="cell row eq" style="block-size: 3rem"> $$\mathbf{w}^\top \mathbf{x} + w_0 = w_1x_1 + w_2x_2 + \cdots + w_Dx_D + w_0 = 0$$</div>
+								</div>
+							</div>
+							<div class="row" style="justify-content: space-around;">
+								<div class="panel">
+									<div class="body" id="smry-hyp-normal" style="inline-size: 7rem">
+										<div class="cell row title2">Normal</div>
+										<div class="cell row eq" style="block-size: 3rem"> $$\mathbf{w}$$</div>
+									</div>
+								</div>
+								<div class="panel">
+									<div class="body" id="smry-hyp-perpdist" style="inline-size: 7rem">
+										<div class="cell row title2">Perp Dist</div>
+										<div class="cell row eq" style="block-size: 4.5rem"> $$\frac{\left\lvert \mathbf{w}^\top \mathbf{x} + w_0 \right\rvert}{\lVert \mathbf{w} \rVert}$$</div>
+									</div>
+								</div>
+							</div>
+							<div class="panel">
+								<div class="body" id="smry-hyp-scale" style="inline-size: 22rem">
+									<div class="cell row title2">Scale Invariance</div>
+									<div class="cell row hcenter"><span>Multiplying $\mathbf{w}$ and $w_0$ by $c$ does not change the <em>hyperplane's orientation</em> or any point's <em>perpendicular distance</em> to it.</span></div>
+								</div>
+							</div>
+						</div>
+
+						<svg connector-class="arrow2" from-id="smry-hyp-hyp" from-pos="bottom" to-id="smry-hyp-normal" to-pos="right" to-off-x="12" to-off-y="0" path="v 100" from-off-x="0" from-off-y="0"></svg>
+						<svg connector-class="arrow2" from-id="smry-hyp-hyp" from-pos="bottom" to-id="smry-hyp-perpdist" to-pos="left" to-off-x="-12" to-off-y="0" path="v 100" from-off-x="0" from-off-y="0"></svg>
+						<svg connector-class="arrow2" from-id="smry-hyp-hyp" from-pos="bottom" to-id="smry-hyp-scale" to-pos="top" to-off-x="0" to-off-y="-12" path="v 50 h 100" from-off-x="0" from-off-y="0"></svg>
+					</div>
+					<div class="footer"></div>
+					<div class="annotate">
+						<svg version="2" viewBox="0 0 40 25" xmlns="http://www.w3.org/2000/svg" style="inset: 10.2rem 20.9rem; inline-size: 4rem; transform: rotate(2deg) scale(0.9);">
+							<rect x="1" y="1" width="38" height="23" rx="7" class="anno" />
+						</svg>
+						<div class="anno" style="inset: 13.5rem 19rem; transform: rotate(-4deg)"><span>1D line in $D=2$ space <br /> 2D plane in $D=3$ space <br /> 3D hyperplane in $D=4$ space</span></div>
+					</div>
+				</div>
+			</section>
+
+			<!-- ======================== Margins ===================== -->
+			<section data-auto-animate>
+				<div class="slide section">
+					<div class="heading" data-id="heading"><span>Margins</span></div>
+					<div class="subtitle" data-id="subtitle1"><span>The Optimal Margin Classifier and the Geometric and Functional Margins</span></div>
+				</div>
+			</section>
+
+			<!-- ======================== Margins: Optimal Margin Classifier. ===================== -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Optimal Margin Classifier</span></div>
+					<div class="subtitle"><span>An unknown sample $\mathbf{x}_j$ can be <em>very simply classified</em> by comparing against $\mathbf{w}$...</span></div>
+					<div class="body">
+						<div class="panel" style="margin-inline-end: 5rem;">
+							<div class="body" style="inline-size: 25rem">
+								<div class="cell title heavy row"><span> Optimal / Maximal Margin Classfier</span></div>
+								<div class="cell row"><span>$\hat{y}_j = \mathrm{sgn} (\mathbf{w}^\top \mathbf{x}_j + w_0)$</span></div>
+								<!-- <div class="cell row"><span>Assuming that $\mathbf{w}$ and $w_0$ results in the widest margin between $y=1$ and $y=-1$ training samples.</span></div> -->
+							</div>
+						</div>
+						<!-- <div class="row">
+							<div class="panel">
+								<div class="num">1</div>
+								<div class="body">
+									<div class=""><span>$\hat{\gamma}_i \gt 0 \implies \mathrm{sgn}(y_i) = \mathrm{sgn}(\mathbf{w}^\top \mathbf{x}_i + w_0)$</span></div>
+								</div>
+							</div>
+							<div class="panel">
+								<div class="num">2</div>
+								<div class="body">
+									<div class=""><span>$\hat{\gamma}_i \le 0 \implies \mathrm{sgn}(y_i) \ne \mathrm{sgn}(\mathbf{w}^\top \mathbf{x}_i + w_0)$</span></div>
+								</div>
+							</div>
+						</div> -->
+					</div>
+					<div class="subtitle"><span>...provided that $\mathbf{w}$ points in the direction of $y=1$ training samples.</span></div>
+					<div class="body">
+					</div>
+					<div class="subtitle"><span>For the learning process to know how to point to $y=1$ samples, we use <em>margins</em>.</span></div>
+
+					<div class="footer"></div>
+					<div class="annotate">
+						<!-- <svg version="2" viewBox="0 0 30 25" xmlns="http://www.w3.org/2000/svg" style="inset: 0rem 17rem; inline-size: 3rem; transform: rotate(3deg);">
+							<ellipse cx="15" cy="12.5" rx="14" ry="11.5" class="anno" />
+						</svg>
+						<div class="anno" style="inset: 2.5rem 16rem;"><span>$y_i \in \{-1, 1\}$</span></div> -->
+						<div class="anno jstart" style="inset: 8rem 42rem; inline-size: 12rem; transform: rotate(-2deg);"><span>The inferred class $\hat{y}_j$ of a sample $\mathbf{x}_j$ is the sign of $\mathbf{w}^\top \mathbf{x}_j + w_0$</span></div>
+					</div>
+					<!-- <svg connector-class="arrow1" from-id="margin-perpdist" from-pos="right" to-id="margin-func" to-pos="left" to-off-x="-12" to-off-y="0" path="h 50 v 100" from-off-x="0" from-off-y="0"></svg>
+					<svg connector-class="arrow1" from-id="margin-perpdist" from-pos="right" to-id="margin-geom" to-pos="left" to-off-x="-12" to-off-y="0" path="h 50 v 100" from-off-x="0" from-off-y="0"></svg> -->
+				</div>
+			</section>
+
+			<!-- ======================== Margins ===================== -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Margins</span></div>
+					<div class="subtitle"><span>Let the <strong>margins</strong> of a sample $\mathbf{x}_i$ be related to its label $y_i$ and its distance to the decision boundary: </span></div>
+					<div class="body">
+						<div class="row">
+							<div class="panel">
+								<div class="body" id="margin-perpdist">
+									<div class="cell title row"><span>Perp. Dist.</span></div>
+									<div class="cell  row eq" style="block-size: 4.5rem">
+										$$ \frac{\lvert \mathbf{w}^\top \mathbf{x}_i + w_0 \rvert }{\lVert \mathbf{w} \rVert} $$
+									</div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(var(--padding) * -1);">
+								<svg version="2" viewBox="0 0 70 40" style="inline-size: 7rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 50 v -10 l 20 20 l -20 20 v -10 z">
+									</path>
+								</svg>
+							</div>
+							<div class="panel">
+								<div class="body" id="margin-func">
+									<div class="cell title row"><span>Functional Margin $\hat{\gamma}_i$ of $\mathbf{x}_i$ </span></div>
+									<div class="cell eq row" style="block-size: 3rem">
+										$$ \hat{\gamma}_i = y_i (\mathbf{w}^\top \mathbf{x}_i + w_0) $$
+									</div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(var(--padding) * -1);">
+								<svg version="2" viewBox="0 0 50 40" style="inline-size: 5rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v -10 l 20 20 l -20 20 v -10 z">
+									</path>
+								</svg>
+							</div>
+							<div class="panel">
+								<div class="body" id="margin-geom">
+									<div class="cell title row"><span>Geometric Margin $\gamma_i$ of $\mathbf{x}_i$</span></div>
+									<div class="cell eq row" style="block-size: 4.5rem">
+										$$ \gamma_i = \frac{y_i (\mathbf{w}^\top \mathbf{x}_i + w_0)}{\lVert \mathbf{w} \rVert} = \frac{\hat{\gamma}_i}{\lVert \mathbf{w} \rVert} $$
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="subtitle"><span>The margins of the set $S$ (all samples) are those of the samples with the smallest margins:</span></div>
+					<div class="body">
+						<div class="row">
+							<div class="panel">
+								<div class="body" id="margin-func">
+									<div class="row" style="block-size: 3rem;">
+										<div class="cell title heavy "><span>Functional Margin $\hat{\gamma}$ </span></div>
+										<div class="cell eq " style="block-size: 3rem">
+											$$ \hat{\gamma} = \min_{i=1,\cdots,n} \hat{\gamma}_i $$
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="panel">
+								<div class="body" id="margin-geom">
+									<div class="row" style="block-size: 3.5rem;">
+										<div class="cell title heavy "><span>Geometric Margin $\gamma$</span></div>
+										<div class="cell eq ">
+											$$ \gamma = \frac{\hat{\gamma}}{\lVert \mathbf{w} \rVert}$$
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="footer"></div>
+				</div>
+			</section>
+
+			<!-- ===================================== Lagrange 1======================================== -->
+
+			<section data-auto-animate>
+				<div class="slide section">
+					<div class="heading" data-id="heading"><span>Constrained Optimization #1</span></div>
+					<div class="subtitle" data-id="subtitle1"><span>Formulating a constrained problem with Lagrange Multipliers</span></div>
+				</div>
+			</section>
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span></span></div>
+					<div class="subtitle"> <span>Convexity and Concavity: definition, examples, hessian</span></div>
+					<div class="subtitle"> <span>Gradient vector , tangent plane, level set.</span></div>
+					<div class="subtitle"> <span>Lagrange with one Constraint: Intuition.</span></div>
+					<div class="subtitle"> <span>Lagrange with multiple constraints: brief. (span of normals?)</span></div>
+					<div class="footer"></div>
+				</div>
+			</section>
+
+			<!-- ===================================== COP ======================================== -->
+
+			<section data-auto-animate>
+				<div class="slide section">
+					<div class="heading" data-id="heading"><span>SVM Optimization Problem</span></div>
+					<div class="subtitle" data-id="subtitle1"><span>Formulating the constrained optimization problem w.r.t. margins and Lagrange Multipliers.</span></div>
+				</div>
+			</section>
+
+			<!-- ===================================== COP: Optimization Objective #1 ======================================== -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Na&iuml;ve Optimisation Objective</span></div>
+					<div class="subtitle"><span>To find the hyperplane with the largest margin, we can try to maximise the geometric margin $\gamma$...</span></div>
+					<div class="body">
+						<div class="row">
+							<div class="panel">
+								<div class="body" data-id="obj-naive">
+									<div class="row" style="block-size: 7rem;" data-id="obj-naive">
+										<div class="cell title eq" style="inline-size: 11rem;"><span>$$\begin{align*}
+												\max_{\mathbf{w}, w_0} & \quad \gamma \\
+												\mathrm{s.t.} & \quad \gamma > 0
+												\end{align*}$$</span></div>
+										<div class="cell eq"><span>$$\gamma = \frac{\hat{\gamma}}{\lVert \mathbf{w} \rVert} = \frac{1}{\lVert \mathbf{w} \rVert} \min_{i=1,\cdots,n} y_i(\mathbf{w}^\top \mathbf{x}_i + w_0) $$</span></div>
+									</div>
+								</div>
+							</div>
+							<!-- <div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding))">
+								<svg version="2" viewBox="0 0 50 40" style="inline-size: 5rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v -10 l 20 20 l -20 20 v -10 z">
+									</path>
+								</svg>
+							</div> -->
+						</div>
+						<div class="row">
+							<div class="panel">
+								<div class="num">1</div>
+								<div class="body">
+									<div class="cell title row transparent jstart"><span>Potentially learns a $\mathbf{w}$ that points only to $y=1$ samples</span></div>
+									<div class="cell row transparent jstart"><span>$\gamma \gt 0 \implies \mathbf{w}$ points only to $y=1$ samples.
+											<br /> $\gamma \le 0 \implies \mathbf{w}$ can point to or away from any sample. </span></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="footer"></div>
+					<div class="annotate">
+						<div class="anno" style="inset: 10rem 1rem; inline-size: 13rem;"><span>Maximise $\gamma$ by adjusting $w_0, w_1, \cdots, w_D$. </span></div>
+					</div>
+				</div>
+			</section>
+
+
+			<!-- ===================================== COP: Optimization Objective #1 ======================================== -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Na&iuml;ve Optimisation Objective</span></div>
+					<div class="subtitle"><span>...but this optimization problem does not have a solution.</span></div>
+					<div class="body">
+						<div class="row">
+							<div class="panel">
+								<div class="body">
+									<div class="row" style="block-size: 7rem;" data-id="obj-naive">
+										<div class="cell title eq" style="inline-size: 11rem;"><span>$$\begin{align*}
+												\max_{\mathbf{w}, w_0} & \quad \gamma \\
+												\mathrm{s.t.} & \quad \gamma > 0
+												\end{align*}$$</span></div>
+										<div class="cell eq"><span>$$\gamma = \frac{\hat{\gamma}}{\lVert \mathbf{w} \rVert} = \frac{1}{\lVert \mathbf{w} \rVert} \min_{i=1,\cdots,n} y_i(\mathbf{w}^\top \mathbf{x}_i + w_0) $$</span></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row jstart separator-bottom">
+							<div class="panel">
+								<div class="num" style="margin-block-start: 0rem;">2</div>
+								<div class="body" style="inline-size: 22rem;">
+									<div class="cell row title transparent jstart"><span>No unique $\mathbf{w}$</span></div>
+									<div class="cell row transparent justify"><span>$\mathbf{w}$ and $w_0$ can be scaled to any value without changing the hyperplane's orientation or position.</span></div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding));">
+								<svg version="2" viewBox="0 0 50 40" style="inline-size: 5rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v -10 l 20 20 l -20 20 v -10 z">
+									</path>
+								</svg>
+							</div>
+							<div class="panel">
+								<div class="body" style="inline-size: 15rem;">
+									<div class="cell row transparent jstart"><span>Solved by constraining $w_0$ and $w$ to a fixed scale.</span></div>
+								</div>
+							</div>
+						</div>
+						<div class="row jstart">
+							<div class="panel">
+								<div class="num" style="margin-block-start: 0rem;">3</div>
+								<div class="body" style="inline-size: 17rem">
+									<div class="cell row title transparent jstart"><span>Objective is not concave</span></div>
+									<div class="cell row transparent justify"><span>There is no global maximum, as the solution can reach $+\mathbf{\infty}$. </span></div>
+
+								</div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="row"><img src="img/nonconvex.png" style="inline-size: 17rem;"></img></div>
+									<!--  % MATLAB SCRIPT
+									[X,Y] = meshgrid([-1, -0.5, -0.2, -0.1, -0.07, -0.05, -0.04, -0.03, -0.02, -0.01, 0, 0.01, 0.02, 0.03, 0.04, 0.05,  0.07, 0.1, 0.2, 0.5, 1], -10:1:10);
+									Z = (X + Y) ./ sqrt(X.*X);
+									s = surf(X,Y,Z);
+									% Z(Z > 100) = 100;
+									% Z(Z < -100) = -100;
+									s.CData = Z;
+									colormap("jet")
+									% set(s,'edgecolor',[0.3,0.3,0.3], 'EdgeAlpha', 0)
+									hz = zlabel("$\gamma = \frac{w_1 + w_0} {\sqrt{w_1^2}}$" ,'Interpreter','latex', 'rotation',0,  'FontSize', 30)
+									hz.Position(1) = -0.8;
+									hz.Position(3) = 1300
+									xlabel("$w_1$",'Interpreter','latex',  'FontSize', 30)
+									ylabel("$w_0$",'Interpreter','latex',  'FontSize', 30)
+									xticks([-1, 0, 1])
+									yticks([-10, 0, 10])
+									zticks([-1000, 0, 1000])
+									zticks([0])
+									exportgraphics(gcf, "nonconvex.png") -->
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding));">
+								<svg version="2" viewBox="0 0 50 40" style="inline-size: 5rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v -10 l 20 20 l -20 20 v -10 z">
+									</path>
+								</svg>
+							</div>
+							<div class="panel">
+								<div class="body" style="inline-size: 12rem;">
+									<div class="cell row transparent justify"><span>Have to refind a concave / convex objective.</span></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="footer"></div>
+					<div class="annotate">
+						<!-- <div class="anno" style="inset: 10rem 2rem;"><span></span></div> -->
+					</div>
+				</div>
+			</section>
+
+			<!-- ====================================== Global ==========================================  -->
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Optimization Objective</span></div>
+					<div class="body">
+						<div class="panel">
+							<div class="body">
+								<div class="row" style="block-size: 7rem;" data-id="obj-naive">
+									<div class="cell title eq" style="inline-size: 11rem;"><span>$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \gamma \\
+											\mathrm{s.t.} & \quad \gamma > 0
+											\end{align*}$$</span></div>
+									<div class="cell eq"><span>$$\gamma = \frac{\hat{\gamma}}{\lVert \mathbf{w} \rVert} = \frac{1}{\lVert \mathbf{w} \rVert} \min_{i=1,\cdots,n} y_i(\mathbf{w}^\top \mathbf{x}_i + w_0) $$</span></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="subtitle"><span>We first observe that <em>scaling</em> does not change our objective of maximising the geometric margin:</span></div>
+					<div class="body">
+						<div class="row">
+							<div class="panel">
+								<div class="num" data-id="scaled-num">1</div>
+								<div class="body">
+									<div class="cell row title" data-id="scaled-title"><span>Scaled Geometric Margin $\gamma_c$</span></div>
+									<div class="cell row eq" style="block-size: 5rem; inline-size:31rem;" data-id="scaled-body"><span>$$\gamma_c
+											= \frac{\min_{i} y_i(c\mathbf{w}^\top \mathbf{x}_i + cw_0) }{\lVert c\mathbf{w} \rVert}
+											= \frac{c\hat{\gamma}}{\lvert c \rvert \; \lVert \mathbf{w} \rVert}
+											= \frac{c}{\lvert c \rvert}\gamma
+											= \gamma\,\mathrm{sgn}(c)
+											$$</span></div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding));">
+								<svg version="2" viewBox="0 0 50 40" style="inline-size: 5rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v -10 l 20 20 l -20 20 v -10 z">
+									</path>
+								</svg>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 7rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \gamma_c \\
+											\mathrm{s.t.} & \quad \gamma_c > 0
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding));">
+								<svg version="2" viewBox="0 0 30 40" style="inline-size: 3rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v 20 z">
+									</path>
+								</svg>
+								<div class="label transparent"><span>$\equiv$</span></div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell eq row" style="block-size: 7rem;"><span>$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \gamma \\
+											\mathrm{s.t.} & \quad \gamma > 0
+											\end{align*}$$</span></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="footer"></div>
+					<div class="annotate">
+						<!-- <div class="anno" style="inset: 10rem 2rem;"><span></span></div> -->
+					</div>
+				</div>
+			</section>
+
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Optimization Objective</span></div>
+					<div class="body">
+						<div class="panel">
+							<div class="num" data-id="scaled-num">1</div>
+							<div class="body">
+								<div class="row" style="block-size: 5rem;">
+									<div class="cell title" style="inline-size: 13rem;" data-id="scaled-title">
+										<span>Scaled Geometric Margin $\gamma_c$</span>
+									</div>
+									<div class="cell eq" data-id="scaled-body"><span>$$\gamma_c
+											= \frac{\min_{i} y_i(c\mathbf{w}^\top \mathbf{x}_i + cw_0) }{\lVert c\mathbf{w} \rVert}
+											= \frac{c\hat{\gamma}}{\lvert c \rvert \; \lVert \mathbf{w} \rVert}
+											= \frac{c}{\lvert c \rvert}\gamma
+											= \gamma\,\mathrm{sgn}(c)
+											$$</span></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="subtitle"><span>Thus, the numer. or denom. can be constrained to an arbitrary $k\ne 0$, and we can max. what's left:</span></div>
+					<div class="body">
+						<!------------------ Fix Denominator --------------------------->
+						<div class="row separator-bottom">
+							<div class="panel">
+								<div class="num">2d</div>
+								<div class="body">
+									<div class="cell row title transparent"><span> Constrain Denominator </span></div>
+								</div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 9rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \gamma_c \\
+											\mathrm{s.t.} & \quad \gamma_c \gt 0, \\
+											& \quad \lvert c \rvert \; \lVert \mathbf{w} \rVert = k
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding));">
+								<svg version="2" viewBox="0 0 30 40" style="inline-size: 3rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v 20 z">
+									</path>
+								</svg>
+								<div class="label transparent"><span>$\equiv$</span></div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 9rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \frac{c \hat{\gamma}}{k} \\
+											\mathrm{s.t.} & \quad \frac{c \hat{\gamma}}{k} \gt 0, \\
+											& \quad \lvert c \rvert \; \lVert \mathbf{w} \rVert = k
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding));">
+								<svg version="2" viewBox="0 0 30 40" style="inline-size: 3rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v 20 z">
+									</path>
+								</svg>
+								<div class="label transparent"><span>$\equiv$</span></div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 9rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \hat{\gamma} \\
+											\mathrm{s.t.} & \quad \hat{\gamma}\gt 0, \\
+											& \quad \lVert \mathbf{w} \rVert = k'
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+						</div>
+						<!------------------ Fix Numerator --------------------------->
+						<div class="row">
+							<div class="panel">
+								<div class="num">2n</div>
+								<div class="body">
+									<div class="cell row title transparent"><span> Constrain Numerator </span></div>
+								</div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 9rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \gamma_c \\
+											\mathrm{s.t.} & \quad \gamma_c \gt 0, \\
+											& \quad c \hat{\gamma} = k
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding));">
+								<svg version="2" viewBox="0 0 30 40" style="inline-size: 3rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v 20 z">
+									</path>
+								</svg>
+								<div class="label transparent"><span>$\equiv$</span></div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 9rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \frac{k}{\lvert c \rvert \; \lVert \mathbf{w} \rVert} \\
+											\mathrm{s.t.} & \quad \frac{k}{\lvert c \rvert \; \lVert \mathbf{w} \rVert} \gt 0, \\
+											& \quad c \hat{\gamma} = k
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding));">
+								<svg version="2" viewBox="0 0 30 40" style="inline-size: 3rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v 20 z">
+									</path>
+								</svg>
+								<div class="label transparent"><span>$\equiv$</span></div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 9rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \frac{1}{\lVert \mathbf{w} \rVert} \\
+											\mathrm{s.t.} & \quad \frac{1}{\lVert \mathbf{w} \rVert} \gt 0, \\
+											& \quad \hat{\gamma} = k'
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="subtitle"><span>This helps us to simplify the problem, so we may find a concave / convex objective.</span></div>
+
+					<div class="footer"></div>
+					<div class="annotate">
+						<!-- <div class="anno" style="inset: 10rem 2rem;"><span></span></div> -->
+					</div>
+				</div>
+			</section>
+
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span>Optimization Objective</span></div>
+					<div class="subtitle"><span>Thus, the numer. or denom. can be constrained to an arbitrary $k\ne 0$, and we can max. what's left:</span></div>
+					<div class="body">
+						<!------------------ Fix Denominator --------------------------->
+						<div class="row separator-bottom">
+							<div class="panel">
+								<div class="num">2d</div>
+								<div class="body">
+									<div class="cell row title transparent"><span> Constrain Denominator </span></div>
+								</div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 9rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \gamma_c \\
+											\mathrm{s.t.} & \quad \gamma_c \gt 0, \\
+											& \quad \lvert c \rvert \; \lVert \mathbf{w} \rVert = k
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding));">
+								<svg version="2" viewBox="0 0 30 40" style="inline-size: 3rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v 20 z">
+									</path>
+								</svg>
+								<div class="label transparent"><span>$\equiv$</span></div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 9rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \frac{c \hat{\gamma}}{k} \\
+											\mathrm{s.t.} & \quad \frac{c \hat{\gamma}}{k} \gt 0, \\
+											& \quad \lvert c \rvert \; \lVert \mathbf{w} \rVert = k
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding));">
+								<svg version="2" viewBox="0 0 30 40" style="inline-size: 3rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v 20 z">
+									</path>
+								</svg>
+								<div class="label transparent"><span>$\equiv$</span></div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 9rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \hat{\gamma} \\
+											\mathrm{s.t.} & \quad \hat{\gamma}\gt 0, \\
+											& \quad \lVert \mathbf{w} \rVert = k'
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+						</div>
+						<!------------------ Fix Numerator --------------------------->
+						<div class="row">
+							<div class="panel">
+								<div class="num">2n</div>
+								<div class="body">
+									<div class="cell row title transparent"><span> Constrain Numerator </span></div>
+								</div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 9rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \gamma_c \\
+											\mathrm{s.t.} & \quad \gamma_c \gt 0, \\
+											& \quad c \hat{\gamma} = k
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding));">
+								<svg version="2" viewBox="0 0 30 40" style="inline-size: 3rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v 20 z">
+									</path>
+								</svg>
+								<div class="label transparent"><span>$\equiv$</span></div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 9rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \frac{k}{\lvert c \rvert \; \lVert \mathbf{w} \rVert} \\
+											\mathrm{s.t.} & \quad \frac{k}{\lvert c \rvert \; \lVert \mathbf{w} \rVert} \gt 0, \\
+											& \quad c \hat{\gamma} = k
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+							<div class="canvas vcenter hcenter" style="margin-inline: calc(-1 * var(--padding));">
+								<svg version="2" viewBox="0 0 30 40" style="inline-size: 3rem;" xmlns="http://www.w3.org/2000/svg">
+									<path style="fill: var(--swatch-lightgray); stroke:none;"
+										d="M 0 30 v -20 h 30 v 20 z">
+									</path>
+								</svg>
+								<div class="label transparent"><span>$\equiv$</span></div>
+							</div>
+							<div class="panel">
+								<div class="body">
+									<div class="cell row eq" style="block-size: 9rem;"><span>
+											$$\begin{align*}
+											\max_{\mathbf{w}, w_0} & \quad \frac{1}{\lVert \mathbf{w} \rVert} \\
+											\mathrm{s.t.} & \quad \frac{1}{\lVert \mathbf{w} \rVert} \gt 0, \\
+											& \quad \hat{\gamma} = k'
+											\end{align*}$$
+										</span></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="subtitle"><span>This helps us to simplify the problem, so we may find a concave / convex objective.</span></div>
+
+					<div class="footer"></div>
+					<div class="annotate">
+						<!-- <div class="anno" style="inset: 10rem 2rem;"><span></span></div> -->
+					</div>
+				</div>
+			</section>
+
+
+			<!-- ===================================== Lagrange 2======================================== -->
+
+			<section data-auto-animate>
+				<div class="slide section">
+					<div class="heading" data-id="heading"><span>Constrained Optimization #2</span></div>
+					<div class="subtitle" data-id="subtitle1"><span>Primal and Dual Lagrange Formulations</span></div>
+				</div>
+			</section>
+			<section data-auto-animate>
+				<div class="slide normal">
+					<div class="heading" data-id="heading"><span></span></div>
+					<div class="subtitle"><span> Primal: maximise multiplier than minimise w.</span></div>
+					<div class="subtitle"><span> Primal: multipliers act like barrier functions that tends to inf when constraints violated. left with w if constraints satisfied.</span></div>
+					<div class="subtitle"><span> Dual: minimise w than maximise w.</span></div>
+					<div class="subtitle"><span> Dual: show that dual is le primal due to constraints.</span></div>
+					<div class="subtitle"><span> Dual: gain insights to problem. not faster when a lot of samples.</span></div>
+					<div class="footer"></div>
+				</div>
+			</section>
+		</div>
+	</div>
+	<script src="js/script.js"></script>
+
+	<script src="dist/reveal.js"></script>
+	<script src="plugin/notes/notes.js"></script>
+	<script src="plugin/highlight/highlight.js"></script>
+	<script src="plugin/search/search.js"></script>
+	<script src="plugin/zoom/zoom.js"></script>
+	<script src="plugin/math/math.js"></script>
+	<script>
+		Reveal.initialize({
+			viewDistance: 1,
+			parallaxBackgroundImage: 'img/circuit-board.svg',
+			parallaxBackgroundSize: '152px 152px',
+			parallaxBackgroundHorizontal: 20,
+			parallaxBackgroundVertical: 10,
+
+			// slideNumber: true,
+			autoAnimateDuration: 0.5,
+			loop: false,
+			controlsLayout: 'edges',
+			hash: true,
+			margin: 0.03,
+			autoAnimateEasing: 'ease',
+			autoAnimateDuration: 0.5,
+			autoAnimateUnmatched: true,
+
+			// mathjax3: {
+			// 	mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
+			// 	loader: {
+			// 		load: ['output/svg']
+			// 	},
+			// 	tex: {
+			// 		inlineMath: [['$', '$'], ['\\(', '\\)']],
+			// 		tags: 'ams'
+			// 	},
+			// 	options: {
+			// 		skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+			// 	},
+			// 	svg: {
+			// 		scale: 1,                      // global scaling factor for all expressions
+			// 		minScale: .5,                  // smallest scaling factor to use
+			// 		mtextInheritFont: false,       // true to make mtext elements use surrounding font
+			// 		merrorInheritFont: true,       // true to make merror text use surrounding font
+			// 		mathmlSpacing: false,          // true for MathML spacing rules, false for TeX rules
+			// 		skipAttributes: {},            // RFDa and other attributes NOT to copy to the output
+			// 		exFactor: .5,                  // default size of ex in em units
+			// 		displayAlign: 'center',        // default for indentalign when set to 'auto'
+			// 		displayIndent: '0',            // default for indentshift when set to 'auto'
+			// 		fontCache: 'local',            // or 'global' or 'none'
+			// 		internalSpeechTitles: true,    // insert <title> tags with speech content
+			// 	},
+			// 	// chtml: {
+			// 	// 	scale: 1,                      // global scaling factor for all expressions
+			// 	// 	minScale: 1,                  // smallest scaling factor to use
+			// 	// 	mtextInheritFont: false,       // true to make mtext elements use surrounding font
+			// 	// 	merrorInheritFont: false,      // true to make merror text use surrounding font
+			// 	// 	mtextFont: '',                 // font to use for mtext, if not inheriting (empty means use MathJax fonts)
+			// 	// 	merrorFont: 'serif',           // font to use for merror, if not inheriting (empty means use MathJax fonts)
+			// 	// 	unknownFamily: 'serif',        // font to use for character that aren't in MathJax's fonts
+			// 	// 	mathmlSpacing: false,          // true for MathML spacing rules, false for TeX rules
+			// 	// 	skipAttributes: {},            // RFDa and other attributes NOT to copy to the output
+			// 	// 	exFactor: .5,                  // default size of ex in em units
+			// 	// 	displayAlign: 'center',        // default for indentalign when set to 'auto'
+			// 	// 	displayIndent: '0'             // default for indentshift when set to 'auto'
+			// 	// },
+			// },
+
+			katex: {
+				version: 'latest',
+				delimiters: [
+					{ left: '$$', right: '$$', display: true },
+					{ left: '$', right: '$', display: false },
+					{ left: '\\(', right: '\\)', display: false },
+					{ left: '\\[', right: '\\]', display: true }
+				],
+				ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+			},
+
+			plugins: [RevealMath.KaTeX, RevealZoom, RevealSearch, RevealHighlight, RevealNotes]
+		});
+		Reveal.on('slidechanged', event => {
+			drawConnectors(event.currentSlide);
+		});
+		Reveal.on('ready', event => {
+			calculate();
+			drawConnectors(event.currentSlide);
+		})
+	</script>
+</body>
+
+</html>

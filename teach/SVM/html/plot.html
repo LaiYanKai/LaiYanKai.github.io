@@ -1,0 +1,334 @@
+<html>
+
+<head>
+    
+	<link rel="stylesheet" href="../css/layout.css">
+	<link rel="stylesheet" href="../dist/reset.css">
+	<link rel="stylesheet" href="../dist/reveal.css">
+	<link rel="stylesheet" href="../dist/theme/white.css">
+    <link rel="stylesheet" href="../css/layout.css" />
+    <link rel="stylesheet" href="../css/controls.css" />
+</head>
+
+<body style="padding: 0">
+    <script src="https://cdn.plot.ly/plotly-2.25.0.min.js" charset="utf-8"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script type="text/javascript" defer>
+        // ========================== init MathJax ===============================
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            },
+            svg: {
+                fontCache: 'global'
+            },
+            startup: {
+                ready: () => {
+                    MathJax.startup.defaultReady();
+                    MathJax.startup.promise.then(() => {
+                        calculate();
+                    });
+                }
+            }
+
+        };
+    </script>
+
+    <div style="display:flex; flex-flow: column nowrap; align-items: center; block-size: 100%; inline-size: 100%">
+        <div class="row hcenter">
+            <div id="gd" style="display: inline-flex; flex: 0 0 auto; inline-size: 35rem; block-size: 32rem; z-index:0; margin: -3rem 0 0 0; "></div>
+            <div class="column">
+                <div class="row">
+                    <div class="panel">
+                        <div class="body" style="inline-size: 10rem">
+                            <div class="cell title row"><span>Parameters</span></div>
+                            <div class="cell eq row" style="block-size: 2.5rem; justify-content: flex-start;"><span>\(w_1 =\alpha w_1' = \;\)</span><span id="a"></span></div>
+                            <div class="cell eq row" style="block-size: 2.5rem; justify-content: flex-start;"><span>\(w_2 =\alpha w_2' = \;\)</span><span id="b"></span></div>
+                            <div class="cell eq row" style="block-size: 2.5rem; justify-content: flex-start;"><span>\(w_0 =\alpha w_0' = \;\)</span><span id="c"></span></div>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="body" style="inline-size: 10rem">
+                            <div class="cell title row"><span>Perp. Dist.</span></div>
+                            <div class="cell eq row" style="block-size: 2.5rem; justify-content: flex-start;"><span>
+                                    \begin{equation*}\mathbf{w}^\top \mathbf{x}_i + w_0= \;\end{equation*}
+                                </span><span id="pd1"></span></div>
+                            <div class="cell eq row" style="block-size: 4rem; justify-content: flex-start;">
+                                <span>\begin{equation*}\frac{\mathbf{w}^\top \mathbf{x}_i + w_0}{\lVert\mathbf{w}\rVert} = \; \end{equation*}
+                                </span><span id="pd2"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="body" style="inline-size: 20rem">
+                        <div class="cell title row"><span>Hyperplane Equation</span></div>
+                        <div class="cell eq row" style="block-size: 6.5rem;">
+                            <div class="column" style="inline-size: 100%; align-items: flex-start;">
+                                <span>\( f(\mathbf{x}) = \mathbf{w}^\top \mathbf{x} + w_0\)</span>
+                                <span style="margin-inline-start: 2.25rem;" id="eq"></span>
+                                <span style="margin-inline-start: 2.25rem">\( = 0\)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div
+            style="display:inline-flex; flex-flow: row wrap; justify-content: center; flex: 0 0 auto; z-index:1; inline-size: 45rem;">
+            <div class="control">
+                <span>\(w_1'\)</span>
+                <input id="ap" type="number" min="-1000" max="1000" step="0.1"></input>
+            </div>
+            <div class="control">
+                <span>\(w_2'\)</span>
+                <input id="bp" type="number" min="-1000" max="1000" step="0.1"></input>
+            </div>
+            <div class="control">
+                <span>\(w_0'\)</span>
+                <input id="cp" type="number" min="-1000" max="1000" step="0.1"></input>
+            </div>
+            <div class="control">
+                <span>\(\alpha\)</span>
+                <input id="sc" type="number" min="-1000" max="1000" step="0.1"></input>
+            </div>
+            <div class="control">
+                <span>\(x_{1,i}\)</span>
+                <input id="px" type="number" min="-1000" max="1000" step="0.1"></input>
+            </div>
+            <div class="control">
+                <span>\(x_{2,i}\)</span>
+                <input id="py" type="number" min="-1000" max="1000" step="0.1"></input>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" defer>
+        const xaxis_range = [-10, 10];
+        const yaxis_range = [-10, 10];
+
+        const ap = document.getElementById("ap");
+        const bp = document.getElementById("bp");
+        const cp = document.getElementById("cp");
+        const sc = document.getElementById("sc");
+        const px = document.getElementById("px");
+        const py = document.getElementById("py");
+        const A = document.getElementById("a");
+        const B = document.getElementById("b");
+        const C = document.getElementById("c");
+        const eq = document.getElementById("eq");
+        const pd1 = document.getElementById("pd1");
+        const pd2 = document.getElementById("pd2");
+
+
+        ap.value = 0.5;
+        bp.value = -0.5;
+        cp.value = 0;
+        sc.value = 1;
+        px.value = 1.5;
+        py.value = -8;
+        let controls = [ap, bp, cp, sc, px, py];
+        let vals = [ap.value, bp.value, cp.value, sc.value, px.value, py.value];
+
+        const graph = document.getElementById("gd");
+        let layout_update = {
+            // "title": {
+            //     "text": "",
+            //     "x": 0.5,
+            //     "xref": "paper",
+            //     "yanchor": "top",
+            //     "xanchor": "center",
+            //     "y": 0.85,
+            // },
+            'xaxis.fixedrange': true,
+            'xaxis.title': '$$x_1$$',
+            'xaxis.range': xaxis_range,
+            'xaxis.dtick': 2,
+            'yaxis.fixedrange': true,
+            'yaxis.title': '$$x_2$$',
+            'yaxis.range': yaxis_range,
+            'yaxis.dtick': 2
+        };
+        const data_init = [
+            { 'x': [[0]], 'y': [[0]], 'name': 'f(<b>x</b>) = -1', marker: { color: "red" }, line: { dash: 'dot', width: 2 } },
+            { 'x': [[0]], 'y': [[0]], 'name': 'f(<b>x</b>) = 0', marker: { color: "gray" }, line: { width: 3 } },
+            { 'x': [[0]], 'y': [[0]], 'name': 'f(<b>x</b>) = 1', marker: { color: "blue" }, line: { dash: 'dot', width: 2 } },
+            { 'x': [[0]], 'y': [[0]], 'name': 'Normal: <b>w</b>', line: { color: "gray", dash: 'dash', width: 3 }, mode: 'lines' },
+            { 'x': [[0]], 'y': [[0]], 'name': 'Perp. Dist. of point <i>i</i>', line: { color: "rgb(130, 200, 150)", width: 3, dash: 'dashdot' }, 'type': 'scatter', mode: 'lines' },
+            { 'x': [[0]], 'y': [[0]], 'name': 'Point <i>i</i>', marker: { color: "black", symbol: 'cross', size: 10 }, 'type': 'scatter', mode: 'markers' },
+        ];
+        Plotly.newPlot(graph, data_init, { legend: { "y": 0.5 } }, { displayModeBar: false });
+
+        function outBound(x, y) {
+            return (x < xaxis_range[0] || x > xaxis_range[1] || y < yaxis_range[0] || y > yaxis_range[1]);
+        }
+        function validate(idx, num_string) {
+            val = parseFloat(num_string);
+            if (isNaN(val))
+                controls[idx].value = vals[idx];
+            else {
+                vals[idx] = val;
+                controls[idx].value = val;
+            }
+        }
+        function calculate() {
+            let a = Number(ap.value) * Number(sc.value);
+            let b = Number(bp.value) * Number(sc.value);
+            let c = Number(cp.value) * Number(sc.value);
+
+            let dir_mag = b * b + a * a;
+            let dir_x = -b;
+            let dir_y = a;
+            let from_x = 0;
+            let from_y = 0;
+
+            let a_text = `${a.toFixed(3)}`;
+            let b_text = `${(b >= 0 ? "+" : "")}${b.toFixed(3)}`;
+            let c_text = `${(c >= 0 ? "+" : "")}${c.toFixed(3)}`;
+
+
+            MathJax.typesetClear([eq]);
+            A.innerHTML = a.toFixed(3);
+            B.innerHTML = b.toFixed(3);
+            C.innerHTML = c.toFixed(3);
+            eq.innerHTML = `= ${a_text} x_1 ${b_text} x_2 ${c_text}`;
+            MathJax.typesetPromise([eq]).then(() => { });
+
+            if (dir_x == 0 && dir_y == 0) {
+                // Plotly.update(graph, null, layout_update);
+            }
+            else {
+                from_x = c * -dir_y / dir_mag;
+                from_y = c * dir_x / dir_mag;
+
+
+                let tracesX = [];
+                let tracesY = [];
+
+                // calculate all lines
+                for (let d = -1; d <= 1; ++d) {
+                    let X = [];
+                    let Y = [];
+                    let x0 = from_x + a * d / dir_mag;
+                    let y0 = from_y + b * d / dir_mag;
+                    for (let k = -1; ; k *= 2) {
+                        let x = x0 + k * dir_x;
+                        let y = y0 + k * dir_y;
+                        if (outBound(x, y)) {
+                            X.push(x);
+                            Y.push(y);
+                            break;
+                        }
+                    }
+                    if (d == 0) {
+                        X.push(x0 - dir_x);
+                        Y.push(y0 - dir_y);
+                        X.push(x0);
+                        Y.push(y0);
+                        X.push(x0 + dir_x);
+                        Y.push(y0 + dir_y);
+                    }
+                    else {
+                        X.push(x0);
+                        Y.push(y0);
+                    }
+                    for (let k = 1; ; k *= 2) {
+                        let x = x0 + k * dir_x;
+                        let y = y0 + k * dir_y;
+                        if (outBound(x, y)) {
+                            X.push(x);
+                            Y.push(y);
+                            break;
+                        }
+                    }
+                    tracesX.push(X);
+                    tracesY.push(Y);
+                }
+
+                // calculate Normal
+                let Xn = [];
+                let Yn = [];
+                for (k = -1; ; k *= 2) {
+                    let x = from_x + a * k;
+                    let y = from_y + b * k;
+                    if (outBound(x, y)) {
+                        Xn.push(x);
+                        Yn.push(y);
+                        break;
+                    }
+                }
+                // Xn.push(from_x, from_x + a);
+                // Yn.push(from_y, from_y + b);
+                for (k = 1; ; k *= 2) {
+                    let x = from_x + a * k;
+                    let y = from_y + b * k;
+                    if (outBound(x, y)) {
+                        Xn.push(x);
+                        Yn.push(y);
+                        break;
+                    }
+                }
+                tracesX.push(Xn);
+                tracesY.push(Yn);
+
+                // update Point
+                let point_x = Number(px.value);
+                let point_y = Number(py.value);
+
+                // update perp dist
+                // px.value + k*a == from_x + i*-b;
+                // py.value + k*b == from_y + i*a;
+                // a * k  +b * i = from_x - px.value;
+                // b * k  -a * i = from_y - py.value; 
+                // [a b]  [k] = [from_x - px.value]
+                // [b -a] [i]   [from_y - py.value]
+                // [k;i] = [a, b; b, -a] / (a^2 + b^2) [from_x-px.value; from_y-py.value];
+                k = (a * (from_x - point_x) + b * (from_y - point_y)) / dir_mag;
+                tracesX.push([point_x, point_x + k * a]);
+                tracesY.push([point_y, point_y + k * b]);
+
+                const geom = Math.abs(k) * Math.sqrt(dir_mag);
+                const func = a * point_x + b * point_y + c;
+                pd1.innerHTML = func.toFixed(3);
+                pd2.innerHTML = geom.toFixed(3);
+
+                tracesX.push([point_x]);
+                tracesY.push([point_y]);
+
+                // layout_update.title.text = `f(X) = ${Number(a).toPrecision(3)}x + ${Number(b).toPrecision(3)}y + ${Number(c).toPrecision(3)}`;
+
+                let data_update = { 'x': tracesX, 'y': tracesY };
+                Plotly.update(graph, data_update, layout_update);
+            }
+        }
+
+        ap.addEventListener("change", () => {
+            validate(0, ap.value);
+            calculate();
+        }, false);
+        bp.addEventListener("change", () => {
+            validate(1, bp.value);
+            calculate();
+        }, false);
+        cp.addEventListener("change", () => {
+            validate(2, cp.value);
+            calculate();
+        }, false);
+        sc.addEventListener("change", () => {
+            validate(3, sc.value);
+            calculate();
+        }, false);
+        px.addEventListener("change", () => {
+            validate(4, px.value);
+            calculate();
+        }, false);
+        py.addEventListener("change", () => {
+            validate(5, py.value);
+            calculate();
+        }, false);
+
+    </script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+</body>
+
+
+</html>
