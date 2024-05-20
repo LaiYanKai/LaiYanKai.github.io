@@ -1,0 +1,13 @@
+.body>.graph {
+    display: grid;
+    position: relative;
+    inline-size: fit-content;
+    block-size: fit-content;
+    grid-template-areas:
+        ". ruler-top ."
+        "ruler-left layers ruler-right"
+        ". ruler-bottom .";
+    background: white;
+    border-radius: 5px;
+    box-shadow: 0 0 5px 0 black;
+}

@@ -1,0 +1,131 @@
+.tooltip {
+    display: flex;
+    position: absolute;
+    inset: 0 0 0 0;
+    inline-size: 100%;
+    block-size: 100%;
+    pointer-events: none;        
+    transition: none;
+    z-index: 98;
+
+    & * {
+        transition: none;
+    }
+
+    &>.box {
+        display: flex;
+        position: absolute;
+        padding: 5px;
+        border-radius: 5px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        font-family: var(--font-family-body);
+        opacity: 1;
+        white-space: pre;
+
+        &.hide {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        &.tl {
+            border-start-start-radius: 0;
+
+            &::before {
+                display: block;
+                position: absolute;
+                content: "";
+                top: calc(-1*var(--tooltip-tail));
+                left: 0;
+                border-bottom: var(--tooltip-tail) solid rgba(0, 0, 0, 0.7);
+                border-right: var(--tooltip-tail) solid rgba(0, 0, 0, 0);
+            }
+        }
+
+        &.tr {
+            border-start-end-radius: 0;
+
+            &::before {
+                display: block;
+                position: absolute;
+                content: "";
+                top: calc(-1*var(--tooltip-tail));
+                right: 0;
+                border-bottom: var(--tooltip-tail) solid rgba(0, 0, 0, 0.7);
+                border-left: var(--tooltip-tail) solid rgba(0, 0, 0, 0);
+            }
+        }
+
+        &.bl {
+            border-end-start-radius: 0;
+
+            &::before {
+                display: block;
+                position: absolute;
+                content: "";
+                bottom: calc(-1*var(--tooltip-tail));
+                left: 0;
+                border-top: var(--tooltip-tail) solid rgba(0, 0, 0, 0.7);
+                border-right: var(--tooltip-tail) solid rgba(0, 0, 0, 0);
+            }
+        }
+
+        &.br {
+            border-end-end-radius: 0;
+
+            &::before {
+                display: block;
+                position: absolute;
+                content: "";
+                bottom: calc(-1*var(--tooltip-tail));
+                right: 0;
+                border-top: var(--tooltip-tail) solid rgba(0, 0, 0, 0.7);
+                border-left: var(--tooltip-tail) solid rgba(0, 0, 0, 0);
+            }
+        }
+
+        &.t::before {
+            display: block;
+            position: absolute;
+            content: "";
+            top: calc(-1*var(--tooltip-tail));
+            left: calc(50% - var(--tooltip-tail));
+            border-bottom: var(--tooltip-tail) solid rgba(0, 0, 0, 0.7);
+            border-right: var(--tooltip-tail) solid rgba(0, 0, 0, 0);
+            border-left: var(--tooltip-tail) solid rgba(0, 0, 0, 0)
+        }
+
+        &.l::before {
+            display: block;
+            position: absolute;
+            content: "";
+            top: calc(50% - var(--tooltip-tail));
+            left: calc(-1*var(--tooltip-tail));
+            border-right: var(--tooltip-tail) solid rgba(0, 0, 0, 0.7);
+            border-top: var(--tooltip-tail) solid rgba(0, 0, 0, 0);
+            border-bottom: var(--tooltip-tail) solid rgba(0, 0, 0, 0)
+        }
+        
+        &.b::before {
+            display: block;
+            position: absolute;
+            content: "";
+            bottom: calc(-1*var(--tooltip-tail));
+            left: calc(50% - var(--tooltip-tail));
+            border-top: var(--tooltip-tail) solid rgba(0, 0, 0, 0.7);
+            border-left: var(--tooltip-tail) solid rgba(0, 0, 0, 0);
+            border-right: var(--tooltip-tail) solid rgba(0, 0, 0, 0)
+        }
+
+        &.r::before {
+            display: block;
+            position: absolute;
+            content: "";
+            top: calc(50% - var(--tooltip-tail));
+            right: calc(-1*var(--tooltip-tail));
+            border-left: var(--tooltip-tail) solid rgba(0, 0, 0, 0.7);
+            border-top: var(--tooltip-tail) solid rgba(0, 0, 0, 0);
+            border-bottom: var(--tooltip-tail) solid rgba(0, 0, 0, 0)
+        }
+    }
+}

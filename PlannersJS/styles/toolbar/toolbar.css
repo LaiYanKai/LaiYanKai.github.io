@@ -1,0 +1,210 @@
+.toolbar {
+    display: flex;
+    position: relative;
+    flex: 1 0 auto;
+    flex-flow: column wrap;
+    justify-content: center;
+    align-items: end;
+
+    &>div {
+        display: flex;
+        position: relative;
+        box-sizing: border-box;
+        inline-size: 60px;
+        block-size: 60px;
+        margin: 0px 10px 10px 10px;
+        box-shadow: 0 0 5px 0 black;
+        border-radius: 5px;
+        border: 3px solid var(--color-blu5);
+        background-color: var(--color-blu9);
+        overflow: hidden;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 70%;
+
+        &:has(>#tool_alg) {
+            background-image: url("alg.svg");
+        }
+
+        &:has(>#tool_new_map) {
+            background-image: url("new.svg");
+        }
+
+        &:has(>#tool_load_map) {
+            background-image: url("load.svg");
+        }
+
+        &:has(>#tool_save_map) {
+            background-image: url("save.svg");
+        }
+
+        &:has(>#tool_exit) {
+            background-image: url("exit.svg");
+        }
+
+        &:has(>#tool_play_reverse) {
+            background-image: url("reverse.svg");
+            &:has(>[value="true"]) {
+                background-image: url("pause.svg");
+            }
+        }
+
+        &:has(>#tool_play_forward) {
+            background-image: url("forward.svg");
+            &:has(>[value="true"]) {
+                background-image: url("pause.svg");
+            }
+        }
+
+        &>label {
+            display: block;
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        &:hover {
+            border-color: orangered !important;
+        }
+
+        &:active,
+        &:has(>:active) {
+            background-color: var(--color-blu7);
+            box-shadow: 0 0 2px 0 black;
+        }
+
+        &:focus,
+        &:has(>:focus) {
+            border-color: orange !important;
+        }
+
+        &:has(>input[type="button"]) {
+            &>input {
+                display: block;
+                position: absolute;
+                inline-size: 100%;
+                block-size: 100%;
+                appearance: none;
+                outline: none;
+                margin: 0;
+                padding: 0;
+                border: none;
+                color: transparent;
+                background: transparent;
+            }
+
+            &:has(>input[value="true"]) {
+                background-color: var(--color-blu7);
+                box-shadow: inset 0 0 5px 0 black;
+                border-color: darkblue;
+            }
+        }
+
+
+        &:has(>input[type="number"]) {
+            flex-flow: column nowrap;
+            /* overflow: hidden; */
+            background-color: var(--color-blu8);
+
+            &>.title {
+                display: flex;
+                flex: 0 0 50%;
+                box-sizing: border-box;
+                inline-size: 100%;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+            }
+
+            &>input {
+                display: flex;
+                flex: 1 0 50%;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+                background-color: rgba(255, 255, 255, 0.8);
+                border: none;
+                border-radius: 0 0 5px 5px;
+                outline: none;
+                font-family: var(--font-family-data);
+                text-align: center;
+
+                /* for default spin buttons */
+                /* -moz-appearance: textfield;
+
+                &::-webkit-outer-spin-button,
+                &::-webkit-inner-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                } */
+            }
+        }
+
+        &:has(>input[type="file"]) {
+            &>input {
+                display: block;
+                position: absolute;
+                inline-size: 100%;
+                block-size: 100%;
+                appearance: none;
+                outline: none;
+                margin: 0;
+                padding: 0;
+                border: none;
+                color: transparent;
+                background: transparent;
+
+                &::file-selector-button {
+                    display: none;
+                }
+            }
+        }
+
+
+        &:has(>select) {
+            flex-flow: column nowrap;
+            /* overflow: hidden; */
+            background-color: var(--color-blu8);
+
+            &>.title {
+                display: flex;
+                flex: 0 0 50%;
+                box-sizing: border-box;
+                inline-size: 100%;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+            }
+
+            &>.text {
+                display: flex;
+                flex: 1 0 50%;
+                box-sizing: border-box !important;
+                background-color: rgba(255, 255, 255, 0.8);
+                border: none;
+                border-radius: 0 0 5px 5px;
+                outline: none;
+                font-family: var(--font-family-data);
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
+
+            &>select {
+                position: absolute;
+                inline-size: 100%;
+                block-size: 100%;
+                appearance: none;
+                outline: none;
+                background: none;
+                color: transparent;
+                border: none;
+
+                &>option {
+                    /* appearance: initial; */
+                    color: initial;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+.body>.graph>.layers {
+    display: flex;
+    position: relative;
+    grid-area: layers;
+
+    &>* {
+        position: absolute;
+        pointer-events: none;
+        inline-size: 100%;
+        block-size: 100%;
+    }
+
+    &>.grid {
+        display: block;
+
+        &>svg {
+            inline-size: 100%;
+            block-size: 100%;
+
+            &>path {
+                stroke-width: 1px;
+                stroke: #ccc;
+            }
+        }
+    }
+}

@@ -1,0 +1,83 @@
+:root {
+    --color-blu0: hsla(230, 100%, 10%, 1);
+    --color-blu1: hsla(228, 100%, 20%, 1);
+    --color-blu2: hsla(226, 100%, 30%, 1);
+    --color-blu3: hsla(224, 100%, 40%, 1);
+    --color-blu4: hsla(222, 100%, 50%, 1);
+    --color-blu5: hsla(220, 90%, 60%, 1);
+    --color-blu6: hsla(218, 90%, 70%, 1);
+    --color-blu7: hsla(216, 90%, 80%, 1);
+    --color-blu8: hsla(214, 90%, 90%, 1);
+    --color-blu9: hsla(212, 90%, 98%, 1);
+
+    
+    --color-cya0: hsla(210, 100%, 10%, 1);
+    --color-cya1: hsla(208, 100%, 20%, 1);
+    --color-cya2: hsla(206, 100%, 30%, 1);
+    --color-cya3: hsla(204, 100%, 40%, 1);
+    --color-cya4: hsla(202, 100%, 50%, 1);
+    --color-cya5: hsla(200, 90%, 60%, 1);
+    --color-cya6: hsla(198, 90%, 70%, 1);
+    --color-cya7: hsla(196, 90%, 80%, 1);
+    --color-cya8: hsla(194, 90%, 90%, 1);
+    --color-cya9: hsla(192, 90%, 98%, 1);
+
+    --color-orn0: hsla(36, 100%, 10%, 1);
+    --color-orn1: hsla(34, 100%, 20%, 1);
+    --color-orn2: hsla(32, 100%, 30%, 1);
+    --color-orn3: hsla(30, 100%, 40%, 1);
+    --color-orn4: hsla(28, 100%, 50%, 1);
+    --color-orn5: hsla(26, 90%, 60%, 1);
+    --color-orn6: hsla(24, 90%, 70%, 1);
+    --color-orn7: hsla(22, 90%, 80%, 1);
+    --color-orn8: hsla(20, 90%, 90%, 1);
+    --color-orn9: hsla(18, 90%, 98%, 1);
+
+    --color-red0: hsla(10, 100%, 10%, 1);
+    --color-red1: hsla(8, 100%, 20%, 1);
+    --color-red2: hsla(6, 100%, 30%, 1);
+    --color-red3: hsla(4, 100%, 40%, 1);
+    --color-red4: hsla(2, 100%, 50%, 1);
+    --color-red5: hsla(0, 90%, 60%, 1);
+    --color-red6: hsla(358, 90%, 70%, 1);
+    --color-red7: hsla(356, 90%, 80%, 1);
+    --color-red8: hsla(354, 90%, 90%, 1);
+    --color-red9: hsla(352, 90%, 98%, 1);
+
+    --tooltip-tail: 8px;
+    --cell-size: 30px;
+    --cursor-dia: 20px;
+    --cell-border-radius: 0px;
+    --cell-border-width: 0px;
+    --cell-size-vis: calc(var(--cell-size) - var(--cell-border-width));
+    --arrow-width: 3px;
+    --arrow-cap: 10px;
+    --sprite-cell-scale: 1;
+    --sprite-vertex-scale: 0.5;
+
+    --font-family-body: Arial, Helvetica, sans-serif; 
+    --font-family-title: 'Times New Roman', Times, serif;
+    --font-family-data: 'Courier New', Courier, monospace;
+
+    --font-size-footnote: 10px;
+    --font-size-small: 12px;
+    --font-size-normal: 16px;
+    --font-size-large: 20px;
+    --font-size-huge: 30px;
+}
+
+* {
+    writing-mode: horizontal-tb;
+    transition: all .1s ease-in-out;
+    user-select: none;
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-normal);
+    margin: 0;
+    padding: 0;
+}
+
+
+i, b {
+    font-family: inherit;
+    font-size: inherit;
+}

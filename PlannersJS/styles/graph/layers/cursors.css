@@ -1,0 +1,25 @@
+.body>.graph>.layers>.cursors {
+    pointer-events: auto;
+
+    &>* {
+        position: absolute;
+        inline-size: var(--cursor-dia);
+        block-size: var(--cursor-dia);
+        box-sizing: border-box;
+        border: 2px solid black;
+        border-radius: 50%;
+        box-shadow: 0 0 2px 0 black;
+    }
+
+    &>.cursor-start {
+        background-color: hsla(10, 100%, 50%, 0.5);
+        border-color: red;
+    }
+
+    &>.cursor-goal {
+        background-color: hsla(100, 100%, 50%, 0.5);
+        border-color: green;
+        border-radius: 0;
+        transform:rotate(45deg);
+    }
+}

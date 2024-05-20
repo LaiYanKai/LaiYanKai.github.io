@@ -1,0 +1,55 @@
+body {
+    display: flex;
+    position: relative;
+    flex-flow: row nowrap;
+    inline-size: auto;
+    block-size: auto;
+    min-inline-size: 100vi;
+    min-block-size: 100vb;
+    overflow: auto;
+    background: repeating-linear-gradient(45deg,
+            rgba(155, 175, 235, 0.95),
+            rgba(155, 175, 235, 0.95) 10px,
+            rgba(135, 155, 235, 0.95) 10px,
+            rgba(135, 155, 235, 0.95) 20px);
+    transition: none;
+}
+
+
+.body {
+    display: flex;
+    flex: 0 1 0;
+    flex-flow: column nowrap;
+
+    &>.header {
+        display: flex;
+        flex: 1 0 20px;
+        padding: 5px;
+        inline-size: 100%;
+    }
+
+    &>.footer {
+        display: flex;
+        flex: 1 0 20px;
+        flex-flow: row nowrap;
+        padding: 5px;
+        inline-size: 100%;
+        justify-content: center;
+        font-size: var(--font-size-footnote);
+        color: black;
+    }
+}
+
+.panels {
+    display: flex;
+    flex: 1 0 50px;
+}
+
+.overlay {
+    display: grid;
+    position: fixed;
+    block-size: 100%;
+    inline-size: 100%;
+    background-color: rgb(0, 0, 0, 0.8);
+    z-index: 99;
+}

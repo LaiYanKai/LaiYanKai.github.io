@@ -1,0 +1,214 @@
+.body>.graph>.layers>.sprites {
+    &>svg {
+        position: absolute;
+        pointer-events: all;
+
+        &.vtx>:first-child,
+        &.cell>:first-child {
+            fill-opacity: 50%;
+            stroke-opacity: 90%;
+            stroke-width: 1;
+
+            &:hover {
+                stroke-opacity: 100%;
+                fill-opacity: 90%;
+            }
+
+            &.cya {
+                fill: var(--color-cya8);
+                stroke: var(--color-cya7);
+
+                &:hover {
+                    fill: var(--color-cya7);
+                    stroke: var(--color-cya6);
+                }
+            }
+
+            &.orn {
+                fill: var(--color-orn8);
+                stroke: var(--color-orn7);
+
+                &:hover {
+                    fill: var(--color-orn7);
+                    stroke: var(--color-orn6);
+                }
+            }
+
+            &.blu {
+                fill: var(--color-blu8);
+                stroke: var(--color-blu7);
+
+                &:hover {
+                    fill: var(--color-blu7);
+                    stroke: var(--color-blu6);
+                }
+            }
+
+            &.red {
+                fill: var(--color-red6);
+                stroke: var(--color-red4);
+
+                &:hover {
+                    fill: var(--color-red5);
+                    stroke: var(--color-red3);
+                }
+            }
+
+            &.trn {
+                fill: transparent;
+                stroke: transparent;
+
+                &:hover {
+                    stroke: gray;
+                }
+            }
+
+            /* ----------- Outlines ------------ */
+            &.o-red {
+                stroke: var(--color-red4);
+                stroke-dasharray: 6 6;
+                stroke-width: 3;
+                stroke-linecap: square;
+
+                &:hover {
+                    stroke: var(--color-red3);
+                }
+            }
+        }
+
+        &.arw {
+            transform-origin: calc(var(--arrow-width) / 2) center;
+
+            &>:first-child {
+                stroke-opacity: 80%;
+                stroke-width: var(--arrow-width);
+                stroke-linecap: round;
+
+                &:hover,
+                &:has(+polygon:hover) {
+                    stroke-opacity: 100%;
+                }
+
+                &.cya {
+                    stroke: var(--color-cya7);
+
+                    &:hover,
+                    &:has(+polygon:hover) {
+                        stroke: var(--color-cya6);
+
+                        &+polygon {
+                            fill: var(--color-cya6);
+                            fill-opacity: 100%;
+                        }
+                    }
+                }
+
+                &.orn {
+                    stroke: var(--color-orn7);
+
+                    &:hover,
+                    &:has(+polygon:hover) {
+                        stroke: var(--color-orn6);
+
+                        &+polygon {
+                            fill: var(--color-orn6);
+                            fill-opacity: 100%;
+                        }
+                    }
+                }
+
+                &.blu {
+                    stroke: var(--color-blu7);
+
+                    &:hover,
+                    &:has(+polygon:hover) {
+                        stroke: var(--color-blu6);
+
+                        &+polygon {
+                            fill: var(--color-blu6);
+                            fill-opacity: 100%;
+                        }
+                    }
+                }
+
+                &.red {
+                    stroke: var(--color-red5);
+
+                    &:hover,
+                    &:has(+polygon:hover) {
+                        stroke: var(--color-red4);
+
+                        &+polygon {
+                            fill: var(--color-red4);
+                            fill-opacity: 100%;
+                        }
+                    }
+                }
+
+                &.trn {
+                    stroke: transparent;
+
+                    &:hover,
+                    &:has(+polygon:hover) {
+                        stroke: gray;
+
+                        &+polygon {
+                            fill: gray;
+                            fill-opacity: 100%;
+                        }
+                    }
+                }
+            }
+
+            &>polygon {
+                /* arrow */
+                stroke: none;
+                fill-opacity: 80%;
+
+                &:hover {
+                    fill-opacity: 100%;
+                }
+
+                &.cya {
+                    fill: var(--color-cya7);
+
+                    &:hover {
+                        fill: var(--color-cya6);
+                    }
+                }
+
+                &.orn {
+                    fill: var(--color-orn7);
+
+                    &:hover {
+                        fill: var(--color-orn6);
+                    }
+                }
+
+                &.blu {
+                    fill: var(--color-blu7);
+
+                    &:hover {
+                        fill: var(--color-blu6);
+                    }
+                }
+
+                &.red {
+                    fill: var(--color-red5);
+
+                    &:hover {
+                        fill: var(--color-red4);
+                    }
+                }
+
+                &.trn {
+                    fill: transparent;
+
+                    &:hover {
+                        fill: gray;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,47 @@
+.body>.graph {
+    &>.ruler-left {
+        display: flex;
+        flex-flow: column-reverse nowrap;
+        grid-area: ruler-left;
+    }
+
+    &>.ruler-right {
+        display: flex;
+        flex-flow: column-reverse nowrap;
+        grid-area: ruler-right;
+    }
+
+    &>.ruler-top {
+        display: flex;
+        flex-flow: row nowrap;
+        grid-area: ruler-top;
+    }
+
+    &>.ruler-bottom {
+        display: flex;
+        flex-flow: row nowrap;
+        grid-area: ruler-bottom;
+    }
+
+    &>* {
+        .vrule {
+            display: flex;
+            flex: 0 0 var(--cell-size);
+            align-items:flex-end;
+            justify-content: center;
+            inline-size: 15px;
+            font-size: var(--font-size-footnote);
+            color: gray;
+        }
+
+        &>.hrule {
+            display: flex;
+            flex: 0 0 var(--cell-size);
+            align-items: center;
+            justify-content: flex-start;
+            block-size: 15px;
+            font-size: var(--font-size-footnote);
+            color: gray;
+        }
+    }
+}

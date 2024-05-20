@@ -1,0 +1,31 @@
+.body>.graph>.layers>.cells {
+    display: grid;
+    position: relative;
+    grid-auto-flow: row;
+    pointer-events: auto;
+    justify-items: center;
+    align-items: center;
+    justify-content: center;
+    align-content: center;
+
+    &>.cell {
+        display: flex;
+        flex-flow: row wrap;
+        position: relative;
+        inline-size: var(--cell-size-vis);
+        block-size: var(--cell-size-vis);
+        margin: calc(var(--cell-border-width) / 2);
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        background-color: white;
+        border-radius: var(--cell-border-radius);
+        z-index: 0;
+        font-family: var(--font-family-data);
+        font-size: var(--font-size-footnote);
+        text-align: center;
+        word-break: break-all;
+        overflow: hidden;
+        color: gray;
+    }
+}
