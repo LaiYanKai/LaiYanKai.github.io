@@ -94,5 +94,3 @@ var RayTracer = class {
     hasReached() { return this.#len_travelled > RayTracer.#REACHED_THRES; }
 
 };
-
-Object.seal(RayTracer);

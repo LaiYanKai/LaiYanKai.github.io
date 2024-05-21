@@ -41,7 +41,6 @@ UI.Cell = class {
     /** Sets the text of the dom element */
     text(text) { this.dom_text.nodeValue = text; }
 };
-Object.seal(UI.Cell);
 
 UI.Cells =  class{
     dom;
@@ -127,4 +126,3 @@ UI.Cells =  class{
         this.#construct(new_costs);
     }
 }
-Object.seal(UI.Cells);

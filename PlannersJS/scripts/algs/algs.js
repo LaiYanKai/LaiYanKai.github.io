@@ -19,7 +19,6 @@ Algs.AbstractNode = class {
         Object.seal(this.costs);
     }
 };
-Object.seal(Algs.AbstractNode);
 
 Algs.AbstractPriorityQueueNode = class extends Algs.AbstractNode {
     pq_sprite;
@@ -36,18 +35,20 @@ Algs.AbstractPriorityQueueNode = class extends Algs.AbstractNode {
         Object.freeze(this.pq_sprite);
     }
 }
-Object.seal(Algs.AbstractPriorityQueueNode);
 
 Algs.AbstractAlg = class {
     params;
     steps;
-    canvases;
-    lenses;
+    #canvases;
+    #lenses;
+    default_lens_idx;
     rank_names;
     num_ranks;
     default_rank;
     #cells;
 
+    get num_canvases() { this.#canvases.length; }
+    get num_lenses() { this.#lenses.length; }
 
     /**  Constructs an abstract path planner.
      * @param {Algs.Params} params key, value pair of parameters.
@@ -56,6 +57,28 @@ Algs.AbstractAlg = class {
         this.#setRanks(rank_names, default_rank);
         this.#setParams(params);
     }
+
+    /**
+     * @yields {UI.AbstractCanvas}
+     */
+    *canvases() {
+        for (const canvas of this.#canvases)
+            yield canvas;
+    }
+
+    /** @returns {UI.AbstractCanvas} */
+    canvas(idx) { return this.#canvases[idx]; }
+
+    /**
+     * @yields {UI.AbstractLens}
+     */
+    *lenses() {
+        for (const lens of this.#lenses)
+            yield lens;
+    }
+
+    /** @returns {UI.AbstractLens} */
+    lens(idx) { return this.#lenses[idx]; }
 
     /** Returns the cost at the *cell* coordinate.
      * @param {[number, number]} cell_coord A pair of non-negative integers describing the *cell* coordinates.
@@ -75,18 +98,35 @@ Algs.AbstractAlg = class {
         for (const canvas of canvases)
             if (!(canvas instanceof UI.AbstractCanvas))
                 throw new Error(`"canvas" is not UI.AbstractCanvas!`);
-        this.canvases = canvases;
-        Object.freeze(this.canvases);
+        this.#canvases = canvases;
+        Object.freeze(this.#canvases);
     }
 
-    setLenses(lenses) {
+    /**
+     * 
+     * @param {Array<UI.AbstractLens>} lenses Array of lenses
+     * @param {number} default_lens_idx The default lens is given by lenses[default_lens_idx].
+     */
+    setLenses(lenses, default_lens_idx) {
         if (Array.isArray(lenses) === false)
             throw new TypeError(`"lenses" must be an array of UI.AbstractLens`)
-        for (const lens of lenses)
-            if (!(lens instanceof UI.AbstractLens))
-                throw new Error(`layer is not UI.AbstractLens!`);
-        this.lenses = lenses;
-        Object.freeze(this.lenses);
+        if (!Utils.isFiniteNonNegativeInteger(default_lens_idx) || default_lens_idx > lenses.length)
+            throw new RangeError(`"default_lens_idx" must be >= 0 and shorter than the length of "lenses"`);
+        let num_lens_none = 0;
+        for (const lens of lenses) {
+            if (lens instanceof UI.AbstractLens === false)
+                throw new TypeError(`"lenses" must be an array of UI.AbstractLens`)
+            if (lens instanceof UI.LensNone)
+                ++num_lens_none;
+        }
+        if (num_lens_none !== 1) {
+            throw new Error(`There must be exactly one UI.LensNone in lenses`);
+        }
+
+        this.#lenses = lenses;
+        this.default_lens_idx = default_lens_idx;
+        Object.freeze(this.#lenses);
+        Object.freeze(this.default_lens_idx);
     }
 
     // used only once
@@ -109,13 +149,12 @@ Algs.AbstractAlg = class {
         this.rank_names = rank_names;
         this.default_rank = default_rank;
         this.num_ranks = this.rank_names.length;
-        
+
         Object.freeze(this.rank_names);
         Object.freeze(this.default_rank);
         Object.freeze(this.num_ranks);
     }
 };
-Object.seal(Algs.AbstractAlg);
 
 Algs.GridAlgNeighbor = class {
 
@@ -163,7 +202,6 @@ Algs.GridAlgNeighbor = class {
         Object.freeze(this.is_cardinal);
         Object.freeze(this.metric_length);
         Object.freeze(this.adj_cell_dir);
-        Object.seal(this);
     }
 };
 
@@ -269,8 +307,6 @@ Algs.AbstractGridAlg = class extends Algs.AbstractAlg {
             this.#nbNodeInfoV = has_lethal ? this.#nbNodeInfoVL.bind(this) : this.#nbNodeInfoVN.bind(this);
             this.#nbNodeInfos = this.#nbNodeInfosV.bind(this);
         }
-
-        Object.seal(this);
     };
 
     /** Used only once */

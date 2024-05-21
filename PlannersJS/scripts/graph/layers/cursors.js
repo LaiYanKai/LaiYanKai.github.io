@@ -28,7 +28,6 @@ UI.Cursor = class {
 
     enableTransition() { this.dom.style.removeProperty("transition"); }
 }
-Object.seal(UI.Cursor);
 
 ui.cursor_start = new UI.Cursor(
     document.querySelector(".body>.graph>.layers>.cursors>.cursor-start")

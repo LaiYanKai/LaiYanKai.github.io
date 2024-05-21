@@ -23,7 +23,6 @@ UI.Ruler = class {
         }
     }
 }
-Object.seal(UI.Ruler);
 
 ui.ruler_bottom = new UI.Ruler(
     document.querySelector(".body>.graph>.ruler-bottom"),

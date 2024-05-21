@@ -58,4 +58,3 @@ UI.Dialog = class {
      */
     cancel() { this.#current_form.cancel(); }
 }
-Object.seal(UI.Dialog);

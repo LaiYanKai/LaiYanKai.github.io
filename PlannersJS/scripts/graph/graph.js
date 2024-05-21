@@ -11,4 +11,3 @@ UI.Graph = class {
         Object.freeze(this);
     }
 };
-Object.seal(UI.Graph);

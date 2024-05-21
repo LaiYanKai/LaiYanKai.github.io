@@ -137,7 +137,6 @@ UI.AbstractFormElement = class {
 
     disable() { this.dom_input.disabled = true; }
 }
-Object.seal(UI.AbstractFormElement);
 
 UI.FormElementSelect = class extends UI.AbstractFormElement {
     #is_null;
@@ -208,7 +207,6 @@ UI.FormElementSelect = class extends UI.AbstractFormElement {
         this.selectValue(default_value);
     }
 }
-Object.seal(UI.FormElementSelect);
 
 UI.FormElementNumber = class extends UI.AbstractFormElement {
     #is_null;
@@ -297,4 +295,3 @@ UI.FormElementNumber = class extends UI.AbstractFormElement {
         this.dom_input.value = value;
     }
 }
-Object.seal(UI.FormElementNumber);

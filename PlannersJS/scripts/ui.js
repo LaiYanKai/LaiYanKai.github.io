@@ -23,14 +23,12 @@ const ui_states = {
     /** @type {number} */
     rank: 0,
     /** @type {number} */
-    step_idx: 0,
-    /** @type {PlayState} */
-    play_state: PlayState.Paused,
     changing_start: false,
     changing_goal: false,
     changing_draw_cost: false,
     changing_rank: false,
-    changing_step: false,
+    changing_lens: false,
+    /** @type {UI.AbstractAlg} */
     alg: null,
 };
 Object.seal(ui_states);
@@ -134,6 +132,8 @@ const UI = {
     AbstractCanvasVertex: undefined,
     AbstractCanvasArrow: undefined,
     AbstractLens: undefined,
+    LensRainbow: undefined,
+    LensNone: undefined,
     Step: undefined,
     Action: undefined,
     Player: undefined,
@@ -183,10 +183,14 @@ const ui = {
     tool_alg: undefined,
     /** @type {UI.AbstractToolButton} */
     tool_play_reverse: undefined,
+    /** @type {UI.AbstractToolButton} */
+    tool_step_reverse: undefined,
     /** @type {UI.AbstractToolNumber} */
     tool_step: undefined,
     /** @type {UI.AbstractToolSelect} */
     tool_rank: undefined,
+    /** @type {UI.AbstractToolButton} */
+    tool_step_forward: undefined,
     /** @type {UI.AbstractToolButton} */
     tool_play_forward: undefined,
     /** @type {UI.AbstractToolButton} */
@@ -458,6 +462,7 @@ const ui = {
         ui_states.changing_goal = false;
     },
 
+
     /**
      * 
      * @param {Algs.Parameters} alg_params 
@@ -470,29 +475,39 @@ const ui = {
         this.cursors.removeEvents();
         this.hideDialog();
         this.tooltip.hide();
-        
+
         ui_states.draw_mode = false;
 
         // load algorithm
         if (alg_params.algorithm === AlgAlgorithm.AStar) {
             ui_states.alg = new Algs.AStar(alg_params);
         }
-        else
-        {
+        else {
             window.alert("Algorithm is not implemented.")
             this.drawMode();
             return;
         }
 
         this.player.load(ui_states.alg.num_ranks);
-        this.layers.loadCanvases(ui_states.alg.canvases);
+        this.layers.loadCanvases([...ui_states.alg.canvases()]);
 
         // find path and build sprites and steps.
         ui_states.alg.run();
 
-        // Replace rank options
-        let rank_options = Array();
-        let i = 0;
+
+        // Build lens options
+        let lens_options = [];
+        let i = -1; // start from zero
+        for (const lens of ui_states.alg.lenses())
+            lens_options.push([lens.option_text, ++i]);
+        this.tool_lens.replaceOptions(
+            lens_options,
+            ui_states.alg.default_lens_idx
+        );
+
+        // Build rank options
+        let rank_options = [];
+        i = 0; // start from one
         for (const rank_name of ui_states.alg.rank_names)
             rank_options.push([rank_name, ++i]);
         this.tool_rank.replaceOptions(
@@ -500,10 +515,12 @@ const ui = {
             ui_states.alg.default_rank + 1);
         this.changeRank(ui_states.alg.default_rank); // requires player to load alg.
 
+        this.changeLens(ui_states.alg.default_lens_idx);
+
         this.gotoStep(0);
 
         this.playForward();
-        
+
     },
 
     _unloadAlg() {
@@ -511,52 +528,72 @@ const ui = {
             // do nothing
         } else if (ui_states.alg !== null) {
             this.player.unload();
-            this.layers.unloadCanvases(ui_states.alg.canvases);
+            this.layers.unloadCanvases([...ui_states.alg.canvases()]);
             ui_states.alg = null;
         } else if (ui_states.alg instanceof Algs.AbstractAlg === false)
             throw new TypeError(`ui_states.alg is invalid.`);
     },
 
     gotoStep(step_idx) {
-        if (ui_states.changing_step === true)
-            return;
-        ui_states.changing_step = true;
+        if (ui_states.draw_mode === false) {
+            this.player.gotoStep(ui_states.rank, step_idx);
+            this.tool_step.change(step_idx + 1);
+        }
+    },
 
-        console.log(step_idx);
-        this.player.gotoStep(ui_states.rank, step_idx);
-        ui_states.step_idx = step_idx; // error will be thrown above if rank or step_idx  are invalid.
+    /**
+     * 
+     * @param {number} lens_idx 
+     */
+    changeLens(lens_idx) {
+        if (ui_states.draw_mode === false) {
+            if (ui_states.changing_lens === true)
+                return;
+            ui_states.changing_lens = true;
 
-        this.tool_step.change(step_idx + 1);
-        ui_states.changing_step = false;
+            if (!Utils.isFiniteNonNegativeInteger(lens_idx) || lens_idx > ui_states.alg.num_lenses)
+                throw new Error(`lens_idx is not in range.`);
+
+            const lens = ui_states.alg.lens(lens_idx);
+
+            this.tool_lens.selectValue(lens_idx);
+            this.tool_lens.text = lens.option_label;
+
+            lens.lensCanvas();
+            this.player.setLens(lens);
+
+            ui_states.changing_lens = false;
+        }
     },
 
     /** 
      * @param {number} rank
      */
     changeRank(rank) {
-        if (ui_states.changing_rank === true)
-            return;
-        ui_states.changing_rank = true;
+        if (ui_states.draw_mode === false) {
+            if (ui_states.changing_rank === true)
+                return;
+            ui_states.changing_rank = true;
 
-        if (!Utils.isFiniteNonNegativeInteger(rank))
-            throw new Error(`rank "${rank}" must be a finite non-negative integer`);
-        // const step_type_text = String.fromCharCode(rank + 'A'.charCodeAt(0));
+            if (!Utils.isFiniteNonNegativeInteger(rank))
+                throw new Error(`rank "${rank}" must be a finite non-negative integer`);
+            // const step_type_text = String.fromCharCode(rank + 'A'.charCodeAt(0));
 
-        if (rank >= ui_states.alg.num_ranks)
-            throw new Error(`rank "${rank}" is larger than number of ranks (${ui_states.alg.numRanks}).`)
+            if (rank >= ui_states.alg.num_ranks)
+                throw new Error(`rank "${rank}" is larger than number of ranks (${ui_states.alg.numRanks}).`)
 
-        ui_states.rank = rank;
-        ui_states.step_idx = this.player.stepIdx(rank);
+            ui_states.rank = rank;
+            const step_idx = this.player.stepIdx(rank);
 
-        this.tool_rank.selectValue(rank + 1);
-        this.tool_rank.text = rank + 1;
-        this.tool_step.changeParams(
-            ui_states.step_idx + 1, 1, this.player.numSteps(rank), 1, true);
-        this.tool_step.label = `Go to step (Alt+4). There are ${this.player.numSteps(rank)} rank-${rank + 1} steps`
+            this.tool_rank.selectValue(rank + 1);
+            this.tool_rank.text = rank + 1;
+            this.tool_step.changeParams(
+                step_idx + 1, 1, this.player.numSteps(rank), 1, true);
+            this.tool_step.label = `Go to step (Alt+5). There are ${this.player.numSteps(rank)} rank-${rank + 1} steps`
 
-        ui_states.changing_rank = false;
+            ui_states.changing_rank = false;
+        }
     },
-
 
     toggleForward() {
         if (this.tool_play_forward.value)
@@ -572,60 +609,79 @@ const ui = {
             this.playReverse();
     },
 
+    _toolStepChanger(value) {
+        if (!ui.tool_step.isFocused()) {
+            ui.tool_step.change(value + 1);
+        }
+    },
+
+    skipForward() {
+        if (ui_states.draw_mode === false) {
+            this.player.gotoStep(0, this.player.numSteps(0) - 1);
+            const step_idx = this.player.stepIdx(ui_states.rank); // error will be thrown above if rank or step_idx  are invalid.
+            this._toolStepChanger(step_idx);
+        }
+    },
+
+    stepForward() {
+        if (ui_states.draw_mode === false) {
+            this.player.stepForward(this._toolStepChanger)
+        }
+    },
+
     playForward() {
         if (ui_states.draw_mode === false) {
-            ui_states.play_state = PlayState.Forward;
-            this.tool_play_reverse.label = "Click to rewind (Alt+3)";
+            this.tool_play_reverse.label = "Click to rewind (Alt+3). Double-click to go to start (Alt+Comma)";
             this.tool_play_reverse.release();
             if (this.tool_play_reverse.isHovered())
                 this.tool_play_reverse.setTip();
 
-            this.tool_play_forward.label = "Click to pause (Alt+6)";
+            this.tool_play_forward.label = "Click to pause (Alt+9). Double-click to go to end (Alt+Period)";
             this.tool_play_forward.press();
             if (this.tool_play_forward.isHovered())
                 this.tool_play_forward.setTip();
 
-            this.player.playForward((value) => {
-                if (!this.tool_step.isFocused()) {
-                    ui_states.changing_step = true;
-                    this.tool_step.change(value + 1);
-                    ui_states.changing_step = false;
-                }
-            });
+            this.player.playForward(this._toolStepChanger);
+        }
+    },
+
+    stepReverse() {
+        if (ui_states.draw_mode === false) {
+            this.player.stepReverse(this._toolStepChanger)
         }
     },
 
     playReverse() {
         if (ui_states.draw_mode === false) {
-            ui_states.play_state = PlayState.Reverse;
-            this.tool_play_reverse.label = "Click to pause (Alt+3)";
+            this.tool_play_reverse.label = "Click to pause (Alt+3). Double-click to go to start (Alt+Comma)";
             this.tool_play_reverse.press();
             if (this.tool_play_reverse.isHovered())
                 this.tool_play_reverse.setTip();
 
-            this.tool_play_forward.label = "Click to play (Alt+6)";
+            this.tool_play_forward.label = "Click to play (Alt+9). Double-click to go to end (Alt+Period)";
             this.tool_play_forward.release();
             if (this.tool_play_forward.isHovered())
                 this.tool_play_forward.setTip();
 
-            this.player.playReverse((value) => {
-                if (!this.tool_step.isFocused()) {
-                    ui_states.changing_step = true;
-                    this.tool_step.change(value + 1);
-                    ui_states.changing_step = false;
-                }
-            });
+            this.player.playReverse(this._toolStepChanger);
+        }
+    },
+
+    skipReverse() {
+        if (ui_states.draw_mode === false) {
+            this.player.gotoStep(0, 0);
+            const step_idx = this.player.stepIdx(ui_states.rank); // error will be thrown above if rank or step_idx  are invalid.
+            this._toolStepChanger(step_idx);
         }
     },
 
     pause() {
         if (ui_states.draw_mode === false) {
-            ui_states.play_state = PlayState.Paused;
-            this.tool_play_reverse.label = "Click to rewind (Alt+3)";
+            this.tool_play_reverse.label = "Click to rewind (Alt+3). Double-click to go to start (Alt+Comma)";
             this.tool_play_reverse.release();
             if (this.tool_play_reverse.isHovered())
                 this.tool_play_reverse.setTip();
-            this.tool_play_forward.label = "Click to play (Alt+6)";
+            this.tool_play_forward.label = "Click to play (Alt+9). Double-click to go to end (Alt+Period)";
             this.tool_play_forward.release();
             if (this.tool_play_forward.isHovered())
                 this.tool_play_forward.setTip();

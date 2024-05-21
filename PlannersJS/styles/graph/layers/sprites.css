@@ -1,80 +1,88 @@
 .body>.graph>.layers>.sprites {
-    &>svg {
+    &>div {
         position: absolute;
         pointer-events: all;
 
-        &.vtx>:first-child,
-        &.cell>:first-child {
-            fill-opacity: 50%;
-            stroke-opacity: 90%;
-            stroke-width: 1;
+        &.vtx {
+            border-radius: 50%;
+        }
+
+        &.vtx,
+        &.cell {
+            box-sizing: border-box;
+            opacity: 60%;
+            background-color: transparent;
+            border-color: transparent;
 
             &:hover {
-                stroke-opacity: 100%;
-                fill-opacity: 90%;
+                opacity: 80%;
+                border-width: 6px;
+                border-style: solid;
             }
 
             &.cya {
-                fill: var(--color-cya8);
-                stroke: var(--color-cya7);
+                background-color: var(--color-cya17);
 
                 &:hover {
-                    fill: var(--color-cya7);
-                    stroke: var(--color-cya6);
+                    border-color: var(--color-cya16);
                 }
             }
 
             &.orn {
-                fill: var(--color-orn8);
-                stroke: var(--color-orn7);
+                background-color: var(--color-orn17);
 
                 &:hover {
-                    fill: var(--color-orn7);
-                    stroke: var(--color-orn6);
+                    border-color: var(--color-orn16);
                 }
             }
 
             &.blu {
-                fill: var(--color-blu8);
-                stroke: var(--color-blu7);
+                background-color: var(--color-blu17);
 
                 &:hover {
-                    fill: var(--color-blu7);
-                    stroke: var(--color-blu6);
+                    border-color: var(--color-blu16);
                 }
             }
 
             &.red {
-                fill: var(--color-red6);
-                stroke: var(--color-red4);
+                background-color: var(--color-red6);
 
                 &:hover {
-                    fill: var(--color-red5);
-                    stroke: var(--color-red3);
+                    border-color: var(--color-red5);
+                }
+            }
+
+            &.gray {
+                background-color: var(--color-gray7);
+
+                &:hover {
+                    border-color: var(--color-gray6);
                 }
             }
 
             &.trn {
-                fill: transparent;
-                stroke: transparent;
+                background-color: transparent;
+                border-color: transparent;
 
                 &:hover {
-                    stroke: gray;
+                    border-color: gray;
                 }
             }
 
             /* ----------- Outlines ------------ */
             &.o-red {
-                stroke: var(--color-red4);
-                stroke-dasharray: 6 6;
-                stroke-width: 3;
-                stroke-linecap: square;
+                border: 6px dashed var(--color-red4);
 
                 &:hover {
-                    stroke: var(--color-red3);
+                    border-color: var(--color-red3);
                 }
             }
         }
+    }
+
+    &>svg {
+        position: absolute;
+        pointer-events: all;
 
         &.arw {
             transform-origin: calc(var(--arrow-width) / 2) center;
@@ -90,56 +98,70 @@
                 }
 
                 &.cya {
-                    stroke: var(--color-cya7);
+                    stroke: var(--color-cya6);
 
                     &:hover,
                     &:has(+polygon:hover) {
-                        stroke: var(--color-cya6);
+                        stroke: var(--color-cya5);
 
                         &+polygon {
-                            fill: var(--color-cya6);
+                            fill: var(--color-cya5);
                             fill-opacity: 100%;
                         }
                     }
                 }
 
                 &.orn {
-                    stroke: var(--color-orn7);
+                    stroke: var(--color-orn6);
 
                     &:hover,
                     &:has(+polygon:hover) {
-                        stroke: var(--color-orn6);
+                        stroke: var(--color-orn5);
 
                         &+polygon {
-                            fill: var(--color-orn6);
+                            fill: var(--color-orn5);
                             fill-opacity: 100%;
                         }
                     }
                 }
 
                 &.blu {
-                    stroke: var(--color-blu7);
+                    stroke: var(--color-blu6);
 
                     &:hover,
                     &:has(+polygon:hover) {
-                        stroke: var(--color-blu6);
+                        stroke: var(--color-blu5);
 
                         &+polygon {
-                            fill: var(--color-blu6);
+                            fill: var(--color-blu5);
                             fill-opacity: 100%;
                         }
                     }
                 }
 
                 &.red {
-                    stroke: var(--color-red5);
+                    stroke: var(--color-red6);
 
                     &:hover,
                     &:has(+polygon:hover) {
-                        stroke: var(--color-red4);
+                        stroke: var(--color-red5);
 
                         &+polygon {
-                            fill: var(--color-red4);
+                            fill: var(--color-red5);
+                            fill-opacity: 100%;
+                        }
+                    }
+                }
+
+                &.gray {
+                    stroke: var(--color-gray6);
+
+                    &:hover,
+                    &:has(+polygon:hover) {
+                        stroke: var(--color-gray5);
+
+                        &+polygon {
+                            fill: var(--color-gray5);
                             fill-opacity: 100%;
                         }
                     }
@@ -170,34 +192,42 @@
                 }
 
                 &.cya {
-                    fill: var(--color-cya7);
+                    fill: var(--color-cya6);
 
                     &:hover {
-                        fill: var(--color-cya6);
+                        fill: var(--color-cya5);
                     }
                 }
 
                 &.orn {
-                    fill: var(--color-orn7);
+                    fill: var(--color-orn6);
 
                     &:hover {
-                        fill: var(--color-orn6);
+                        fill: var(--color-orn5);
                     }
                 }
 
                 &.blu {
-                    fill: var(--color-blu7);
+                    fill: var(--color-blu6);
 
                     &:hover {
-                        fill: var(--color-blu6);
+                        fill: var(--color-blu5);
                     }
                 }
 
                 &.red {
-                    fill: var(--color-red5);
+                    fill: var(--color-red6);
 
                     &:hover {
-                        fill: var(--color-red4);
+                        fill: var(--color-red5);
+                    }
+                }
+
+                &.gray {
+                    fill: var(--color-gray6);
+
+                    &:hover {
+                        fill: var(--color-gray5);
                     }
                 }
 

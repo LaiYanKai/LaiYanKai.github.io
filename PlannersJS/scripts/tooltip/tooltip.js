@@ -72,4 +72,3 @@ UI.Tooltip = class {
 
     hide() { this.#dom_box.classList.add("hide"); }
 };
-Object.seal(UI.Tooltip);

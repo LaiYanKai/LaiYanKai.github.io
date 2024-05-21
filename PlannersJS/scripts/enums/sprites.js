@@ -17,6 +17,7 @@ const SpriteActionClass = {
     Cyan: "cya",
     Red: "red",
     Transparent: "trn",
+    Gray: "gray",
 };
 Object.freeze(SpriteActionClass);
 

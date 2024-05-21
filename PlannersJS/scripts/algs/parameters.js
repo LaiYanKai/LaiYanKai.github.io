@@ -52,4 +52,3 @@ Algs.Parameters = class {
             throw new Error(`"checkerboard" must be null or a value from AlgCheckerboard`);
     }
 };
-Object.seal(Algs.Parameters);

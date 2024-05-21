@@ -3,12 +3,11 @@
 // load the files
 const loader = {
     files: [
-        ["enums/alg.js", false],
+        ["enums/algs.js", false],
         ["enums/cursors.js", false],
         ["enums/dir_idx.js", false],
         ["enums/metric.js", false],
         ["enums/new_map.js", false],
-        ["enums/player.js", false],
         ["enums/sprites.js", false],
         ["enums/astar.js", false], // depends on sprites
         ["enums/tooltip.js", false],
@@ -31,6 +30,7 @@ const loader = {
         ["key_binder.js", false],
         ["player/sprites.js", false],
         ["player/canvas.js", false],
+        ["player/lens.js", false],
         ["player/player.js", false],
         ["algs/parameters.js", false],
         ["algs/containers.js", false],
@@ -58,6 +58,5 @@ const loader = {
             ui.init();
     }
 };
-Object.seal(loader);
 
 loader.load();

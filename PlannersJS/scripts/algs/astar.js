@@ -1,7 +1,8 @@
 "use strict";
+
 Algs.AStarCanvasCell = class extends UI.AbstractCanvasCell {
     constructor() {
-        super(AStarAction.length);
+        super(0, AStarAction.length);
     }
 
     add(f, g, h, status, ...abstract_canvas_cell_args) {
@@ -10,9 +11,9 @@ Algs.AStarCanvasCell = class extends UI.AbstractCanvasCell {
         sprite.register(AStarAction.G, g);
         sprite.register(AStarAction.H, h);
         sprite.register(AStarAction.Status, status);
-        sprite.dom_svg.addEventListener(
+        sprite.dom.addEventListener(
             "mousemove", this.#setTip.bind(this, sprite), false);
-        sprite.dom_svg.addEventListener(
+        sprite.dom.addEventListener(
             "mouseout", ui.tooltip.hide.bind(ui.tooltip), false);
         return sprite;
     }
@@ -39,7 +40,7 @@ Algs.AStarCanvasCell = class extends UI.AbstractCanvasCell {
         ui.tooltip.setTip(
             TooltipPosition.Right,
             message,
-            sprite.dom_svg,
+            sprite.dom,
         );
     }
 };
@@ -47,7 +48,7 @@ Algs.AStarCanvasCell = class extends UI.AbstractCanvasCell {
 Algs.AStarCanvasVertex = class extends UI.AbstractCanvasVertex {
     /** @type {UI.Tooltip} */
     constructor() {
-        super(AStarAction.length);
+        super(0, AStarAction.length);
     }
 
     add(f, g, h, status, ...abstract_canvas_cell_args) {
@@ -56,9 +57,9 @@ Algs.AStarCanvasVertex = class extends UI.AbstractCanvasVertex {
         sprite.register(AStarAction.G, g);
         sprite.register(AStarAction.H, h);
         sprite.register(AStarAction.Status, status);
-        sprite.dom_svg.addEventListener(
+        sprite.dom.addEventListener(
             "mousemove", this.#setTip.bind(this, sprite), false);
-        sprite.dom_svg.addEventListener(
+        sprite.dom.addEventListener(
             "mouseout", ui.tooltip.hide.bind(ui.tooltip), false);
         return sprite;
     }
@@ -84,7 +85,7 @@ Algs.AStarCanvasVertex = class extends UI.AbstractCanvasVertex {
         ui.tooltip.setTip(
             TooltipPosition.Right,
             message,
-            sprite.dom_svg,
+            sprite.dom,
         );
     }
 }
@@ -112,34 +113,45 @@ Algs.AStarNode = class extends Algs.AbstractPriorityQueueNode {
         this.f = this.g * g_weight + this.h * h_weight;
     }
 }
-Object.seal(Algs.AstarNode);
 
 
 Algs.AStar = class extends Algs.AbstractGridAlg {
+    /** @type {Algs.AbstractPriorityQueue} */
     #open_list;
+    /** @type {Map<Algs.AStarNode} */
     #nodes;
-    get #canvas_arrows() { return this.canvases[0]; }
-    get #canvas_nodes() { return this.canvases[1]; }
+    /** @returns {UI.AbstractCanvasArrow} */
+    get #canvas_arrows() { return this.canvas(1); }
+    /** @returns {Algs.AStarCanvasCell | Algs.AStarCanvasVertex} */
+    get #canvas_nodes() { return this.canvas(0); }
+    /** @returns {UI.AbstractLens} */
+    get #lens_f() { return this.lens(1); }
+    /** @returns {UI.AbstractLens} */
+    get #lens_g() { return this.lens(2); }
+    /** @returns {UI.AbstractLens} */
+    get #lens_h() { return this.lens(3); }
+    /** @type{UI.Step} */
     #step; // current step
+    /** @type{Array<[number, number]>} */
     #path;
 
     constructor(alg_params) {
-        super(["0: Smallest", "1: Every Expansion"], 1, alg_params);
+        super(["1: Smallest", "2: Every Expansion"], 1, alg_params);
 
         // Set up canvases
         let size;
         const canvases = Array(2);
-        canvases[0] = new UI.AbstractCanvasArrow(0); // put arrows below the nodes
         if (alg_params.node_type === AlgNodeType.Cell) {
-            canvases[1] = new Algs.AStarCanvasCell();
+            canvases[0] = new Algs.AStarCanvasCell();
             this.#addArrow = this.#addArrowCell;
             size = ui_states.size;
         }
         else if (alg_params.node_type === AlgNodeType.Vertex) {
-            canvases[1] = new Algs.AStarCanvasVertex();
+            canvases[0] = new Algs.AStarCanvasVertex();
             this.#addArrow = this.#addArrowVertex;
             size = Utils.addCoord(ui_states.size, [1, 1]);
         }
+        canvases[1] = new UI.AbstractCanvasArrow(1, 0); // put arrows above the nodes
         super.setCanvases(canvases);
 
         // Check h_weight and g_weight
@@ -149,7 +161,13 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
             throw new TypeError("g_weight must be a number!");
 
         // Set up lenses
-
+        const lenses = [
+            new UI.LensNone(this.#canvas_nodes, "None", "None"),
+            new UI.LensRainbow(this.#canvas_nodes, AStarAction.F, "F-cost", "$F"),
+            new UI.LensRainbow(this.#canvas_nodes, AStarAction.G, "G-cost", "$G"),
+            new UI.LensRainbow(this.#canvas_nodes, AStarAction.H, "H-cost", "$H"),
+        ]
+        super.setLenses(lenses, 0);
 
         // Set up Openlist
         let cost_indices = [];
@@ -177,6 +195,7 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
                     SpriteActionClass.Transparent,
                     0,
                     SpriteActionOutline.None);
+                this.#lens_h.updateBounds(h);
                 sprite.vis(); // sprites are not visualized at the first step.
                 const node = new Algs.AStarNode(coord, Infinity, h, sprite, null);
                 this.#nodes.set(id, node);
@@ -257,6 +276,8 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
         node.changeGandF(new_g, this.params.g_weight, this.params.h_weight);
         this.#step.registerWithData(node.sprite, AStarAction.G, node.g);
         this.#step.registerWithData(node.sprite, AStarAction.F, node.f);
+        this.#lens_g.updateBounds(node.g);
+        this.#lens_f.updateBounds(node.f);
     }
 
     #changeParent(node, new_parent_node) {
@@ -358,6 +379,14 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
     #visualizeExpanded(node) {
         this.#step.registerWithData(node.sprite, SpriteAction.Class, SpriteActionClass.Red);
         this.#step.registerWithData(node.sprite, AStarAction.Status, AStarNodeStatus.Expanding);
+
+        const id = this.serialize(node.coord);
+        const sprite = this.#canvas_arrows.sprite(id);
+        if (sprite) {
+            this.#step.registerWithData(sprite,
+                SpriteAction.Class,
+                SpriteActionClass.Blue);
+        }
     }
 
     #visualizeOpened(node) {
@@ -377,7 +406,7 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
             Utils.addCoord(node.coord, [0.5, 0.5]),
             Utils.subtractCoord(new_parent.coord, node.coord),
             false,
-            SpriteActionClass.Blue,
+            SpriteActionClass.Orange,
             0);
     }
     #addArrowVertex(id, node, new_parent) {
@@ -386,7 +415,7 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
             node.coord,
             Utils.subtractCoord(new_parent.coord, node.coord),
             false,
-            SpriteActionClass.Blue,
+            SpriteActionClass.Orange,
             0);
     }
 
@@ -397,9 +426,6 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
             this.#step.registerWithData(sprite,
                 SpriteAction.Display,
                 true);
-            this.#step.registerWithData(sprite,
-                SpriteAction.Class,
-                SpriteActionClass.Blue);
         }
         else {   // reroute current arrow
             const sprite = this.#canvas_arrows.sprite(id);
@@ -444,4 +470,3 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
         this.#step = null;
     }
 };
-Object.seal(Algs.AStar);

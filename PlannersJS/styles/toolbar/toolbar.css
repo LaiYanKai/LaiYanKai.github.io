@@ -43,17 +43,25 @@
         }
 
         &:has(>#tool_play_reverse) {
-            background-image: url("reverse.svg");
+            background-image: url("play_reverse.svg");
             &:has(>[value="true"]) {
                 background-image: url("pause.svg");
             }
         }
 
+        &:has(>#tool_step_reverse) {
+            background-image: url("step_reverse.svg");
+        }
+
         &:has(>#tool_play_forward) {
-            background-image: url("forward.svg");
+            background-image: url("play_forward.svg");
             &:has(>[value="true"]) {
                 background-image: url("pause.svg");
             }
+        }
+
+        &:has(>#tool_step_forward) {
+            background-image: url("step_forward.svg");
         }
 
         &>label {

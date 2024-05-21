@@ -165,7 +165,6 @@ Algs.AbstractPriorityQueue = class {
         this.#length = 0;
     }
 };
-Object.seal(Algs.AbstractPriorityQueue);
 
 
 Algs.AbstractQueue = class {
@@ -191,7 +190,6 @@ Algs.AbstractQueue = class {
         return this.#nodes.shift();
     }
 };
-Object.seal(Algs.AbstractQueue);
 
 Algs.AbstractStack = class {
     #nodes;
@@ -216,4 +214,3 @@ Algs.AbstractStack = class {
         return this.#nodes.shift(); // for consistency with how the ui tables are visualized.
     }
 };
-Object.seal(Algs.AbstractStack);

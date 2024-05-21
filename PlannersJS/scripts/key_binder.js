@@ -45,15 +45,26 @@ UI.KeyBinder = class {
                 if (e.key === "2")
                     ui.drawMode();
                 else if (e.key === "3")
-                    ui.tool_play_reverse.click();
+                    ui.tool_lens.focus();
                 else if (e.key === "4")
-                    ui.tool_step.focus();
+                    ui.tool_play_reverse.click();
                 else if (e.key === "5")
-                    ui.tool_rank.focus();
+                    ui.tool_step_reverse.focus();
                 else if (e.key === "6")
+                    ui.tool_step.focus();
+                else if (e.key === "7")
+                    ui.tool_rank.focus();
+                else if (e.key === "8")
+                    ui.tool_step_forward.click();
+                else if (e.key === "9")
                     ui.tool_play_forward.click();
+                else if (e.key === ",") {
+                    console.log("dbl"); 
+                    ui.tool_play_reverse.dblclick();
+                }
+                else if (e.key === ".")
+                    ui.tool_play_forward.dblclick();
             }
         }
     }
 };
-Object.seal(UI.KeyBinder);

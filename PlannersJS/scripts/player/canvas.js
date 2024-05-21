@@ -1,28 +1,33 @@
 "use strict";
 
 UI.AbstractCanvas = class {
+    canvas_id; // required to make sure a sprite belongs to a canvas
     dom;
     #sprites;
     #sprite_class;
     #sprite_args;
 
     /**
+     * @param {number} canvas_id a non-negative integer >= 0
      * @param {UI.AbstractSprite} sprite_class 
      * @param  {...any} sprite_args 
      */
-    constructor(sprite_class, ...sprite_args) {
+    constructor(canvas_id, sprite_class, ...sprite_args) {
         this.dom = document.createElement("div");
         this.dom.className = "sprites";
         this.#sprites = new Map();
         this.#sprite_class = sprite_class;
         this.#sprite_args = sprite_args;
-        Object.freeze(this.dom);
+        this.canvas_id = canvas_id;
+
+        for (const prop of ["canvas_id", "dom", "#sprite_class", "#sprite_args"])
+            Object.freeze(this[prop]);
     }
 
     /** Adds a sprite into the layer */
     add(id) {
-        const sprite = new this.#sprite_class(...this.#sprite_args);
-        this.dom.appendChild(sprite.dom_svg);
+        const sprite = new this.#sprite_class(this.canvas_id, ...this.#sprite_args);
+        this.dom.appendChild(sprite.dom);
         this.#sprites.set(id, sprite);
         return sprite;
     }
@@ -34,13 +39,14 @@ UI.AbstractCanvas = class {
         return this.#sprites.get(id);
     }
 
-    /** generator for sprite */
-    sprites = function* () {
+    /** generator for sprite 
+     * @yields {[id, sprite]} The id of the sprite and the sprite
+    */
+    *sprites() {
         for (const [id, sprite] of this.#sprites)
             yield [id, sprite];
     }
 };
-Object.seal(UI.AbstractCanvas);
 
 UI.AbstractCanvasCell = class extends UI.AbstractCanvas {
 
@@ -48,8 +54,8 @@ UI.AbstractCanvasCell = class extends UI.AbstractCanvas {
      * Initializes a canvas with sprites based on the size
      * @param {[number, number]} size number of x cells and y cells.
      * */
-    constructor(...sprite_args) {
-        super(UI.AbstractSpriteCell, ...sprite_args);
+    constructor(canvas_id, ...sprite_args) {
+        super(canvas_id, UI.AbstractSpriteCell, ...sprite_args);
         Object.freeze(this);
     }
 
@@ -79,7 +85,6 @@ UI.AbstractCanvasCell = class extends UI.AbstractCanvas {
         return sprite;
     }
 };
-Object.seal(UI.AbstractCanvasCell);
 
 
 UI.AbstractCanvasVertex = class extends UI.AbstractCanvas {
@@ -88,8 +93,8 @@ UI.AbstractCanvasVertex = class extends UI.AbstractCanvas {
      * Initializes a canvas with sprites based on the size
      * @param {[number, number]} size number of x vertices and y vertices.
      * */
-    constructor(...sprite_args) {
-        super(UI.AbstractSpriteVertex, ...sprite_args);
+    constructor(canvas_id, ...sprite_args) {
+        super(canvas_id, UI.AbstractSpriteVertex, ...sprite_args);
         Object.freeze(this);
     }
 
@@ -113,15 +118,14 @@ UI.AbstractCanvasVertex = class extends UI.AbstractCanvas {
         return sprite;
     }
 };
-Object.seal(UI.AbstractCanvasVertex);
 
 
 UI.AbstractCanvasArrow = class extends UI.AbstractCanvas {
     /** 
      * Initializes a canvas for adding arrows that can only occur from each cell (e.g. arrows that point from the cell to a parent).
      * */
-    constructor(...sprite_args) {
-        super(UI.AbstractSpriteArrow, ...sprite_args);
+    constructor(canvas_id, ...sprite_args) {
+        super(canvas_id, UI.AbstractSpriteArrow, ...sprite_args);
         Object.freeze(this);
     }
 
@@ -146,4 +150,3 @@ UI.AbstractCanvasArrow = class extends UI.AbstractCanvas {
         return sprite;
     }
 };
-Object.seal(UI.AbstractCanvasArrow);

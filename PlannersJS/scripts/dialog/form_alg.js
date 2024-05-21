@@ -694,4 +694,3 @@ UI.FormAlg = class extends UI.AbstractForm {
     _change_lethal(e) { ui.form_alg._setCustomPreset(e); }
     _change_checkerboard(e) { ui.form_alg._setCustomPreset(e); }
 };
-Object.seal(UI.FormAlg);

@@ -129,4 +129,3 @@ UI.FormNewMap = class extends UI.AbstractForm {
 
     cancel() { ui.hideDialog(); }
 }
-Object.seal(UI.FormNewMap);

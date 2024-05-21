@@ -27,7 +27,6 @@ UI.Layers = class {
             this.dom.removeChild(canvas.dom);
     }
 };
-Object.seal(UI.Layers);
 
 UI.Grid = class {
     dom;
@@ -71,4 +70,3 @@ UI.Grid = class {
         }
     }
 }
-Object.seal(UI.Grid);

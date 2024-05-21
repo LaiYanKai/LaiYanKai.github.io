@@ -54,7 +54,8 @@ UI.AbstractTool = class {
     #hideTip() { ui.tooltip.hide(); }
 
     focus() { this.dom_input.focus(); }
-    click() { this.dom_input.click(); }
+    click() { this.dom.click(); }
+    dblclick() { this.dom.dispatchEvent(new MouseEvent('dblclick')); }
 
     isHovered() { return this.dom.matches(":hover"); }
     isFocused() { return document.activeElement === this.dom_input; }
@@ -276,20 +277,35 @@ ui.tool_goal_y = new UI.AbstractToolNumber(
 ui.tool_exit = new UI.AbstractToolButton(
     false, "tool_exit", "Go back to drawing mode (Alt+2)");
 
+ui.tool_lens = new UI.AbstractToolSelect(
+    "tool_lens", 
+    "Select lenses (Alt+3)",
+    "Lens", "",
+    [
+        ["default", 0],
+    ], 0
+);
+
 ui.tool_play_reverse = new UI.AbstractToolButton(
-    false, "tool_play_reverse", "(Alt+3)");
+    false, "tool_play_reverse", "(Alt+4)");
+
+ui.tool_step_reverse = new UI.AbstractToolButton(
+    false, "tool_step_reverse", "Move one step back (Alt+5)");
 
 ui.tool_step = new UI.AbstractToolNumber(
-    1, "tool_step", "", "Step", 1, Infinity, 1, true);
+    1, "tool_step", "(Alt+6)", "Step", 1, Infinity, 1, true);
 
 ui.tool_rank = new UI.AbstractToolSelect(
     "tool_rank",
-    "Change step size (Alt+5), which affects how fast the visualization is played.",
+    "Change step size (Alt+7), which affects how fast the visualization is played.",
     "Size", "",
     [
         ["default", 0],
     ], 0
 );
 
+ui.tool_step_forward = new UI.AbstractToolButton(
+    false, "tool_step_forward", "Move one step forward (Alt+8)");
+
 ui.tool_play_forward = new UI.AbstractToolButton(
-    false, "tool_play_forward", "(Alt+6)");
+    false, "tool_play_forward", "(Alt+9)");

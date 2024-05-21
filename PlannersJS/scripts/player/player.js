@@ -13,6 +13,8 @@ UI.Player = class {
     #num_ranks;
     /** array of steps  @type {UI.Steps[]}*/
     #steps; // array of UI.Steps
+    /** undefined or a lens object @type { null | UI.AbstractLens} */
+    #lens;
 
     /** Initializer */
     constructor() {
@@ -20,13 +22,25 @@ UI.Player = class {
             throw new Error(`ui.player has already been initialized.`);
         ui.player = this;
 
+        this.setLens(null);
         this.unload();
         this.pause();
+    }
+
+    /**
+     * Set the lens for use by vis().
+     * @param {null | UI.AbstractLens} lens
+     */
+    setLens(lens) {
+        if (lens !== null && lens instanceof UI.AbstractLens === false)
+            throw new TypeError(`"lens" must be undefined or a UI.AbstractLens instance/`);
+        this.#lens = lens;
     }
 
     /** 
      * Prepares the player for parsing steps from a new algorithm .
      * @param {number} num_ranks The number of step ranks in an algorithm.
+     * @param {null | UI.AbstractLens} lens Set lens to null if no lens is used.
     */
     load(num_ranks) {
         if (!Utils.isFiniteNonNegativeInteger(num_ranks))
@@ -37,6 +51,7 @@ UI.Player = class {
         this.#num_steps_in_rank = Array(this.#num_ranks).fill(0);
         this.#vis_buffer = new Set();
         this.#steps = [];
+        this.setLens(null);
     }
 
     /** Clears the player and any step information. */
@@ -46,6 +61,7 @@ UI.Player = class {
         this.#num_steps_in_rank = [];
         this.#vis_buffer = new Set();
         this.#steps = [];
+        this.setLens(null);
     }
 
     /** 
@@ -65,8 +81,11 @@ UI.Player = class {
      * and clears the visualization buffer. 
     */
     vis() {
-        for (const sprite of this.#vis_buffer)
+        for (const sprite of this.#vis_buffer) {
             sprite.vis();
+            if (this.#lens)
+                this.#lens.lensSprite(sprite);
+        }
         this.#vis_buffer.clear();
     }
 
@@ -79,20 +98,38 @@ UI.Player = class {
     }
 
     /** 
+     * Steps the player forward by one step
+     * @param {function} tool_step_changer accepts an input value that changes the value in ui.tool_step.
+    */
+    stepForward(tool_step_changer) {
+        const is_last_step = this.#redoByRank(ui_states.rank) === false;
+        this.vis();
+        if (is_last_step)
+            ui.pause();
+        tool_step_changer(this.stepIdx(ui_states.rank));
+    }
+
+    /** 
      * Plays the player. 
      * @param {function} tool_step_changer accepts an input value that changes the value in ui.tool_step.
     */
     playForward(tool_step_changer) {
         this.pause();
         this.#handler = setInterval(
-            (e) => {
-                const is_last_step = this.#redoByRank(ui_states.rank) === false;
-                this.vis();
-                if (is_last_step)
-                    ui.pause();
-                tool_step_changer(this.stepIdx(ui_states.rank));
-            },
+            this.stepForward.bind(this, tool_step_changer),
             ui_params.play_interval);
+    }
+
+    /** 
+     * Steps the player back by one step
+     * @param {function} tool_step_changer accepts an input value that changes the value in ui.tool_step.
+    */
+    stepReverse(tool_step_changer) {
+        const is_first_step = this.#undoByRank(ui_states.rank) === false;
+        this.vis();
+        if (is_first_step)
+            ui.pause();
+        tool_step_changer(this.stepIdx(ui_states.rank));
     }
 
     /** 
@@ -102,13 +139,7 @@ UI.Player = class {
     playReverse(tool_step_changer) {
         this.pause();
         this.#handler = setInterval(
-            (e) => {
-                const is_first_step = this.#undoByRank(ui_states.rank) === false;
-                this.vis();
-                if (is_first_step)
-                    ui.pause();
-                tool_step_changer(this.stepIdx(ui_states.rank));
-            },
+            this.stepReverse.bind(this, tool_step_changer),
             ui_params.play_interval);
     }
 
@@ -123,12 +154,10 @@ UI.Player = class {
             throw new Error(`step_idx "${step_idx} is not an integer or is out of range."`)
 
         const curr_idx = this.stepIdx(rank);
-        console.log(rank, this.#step_idx_of_rank);
         if (curr_idx >= step_idx)
             this.#undoByRankTo(rank, step_idx);
         else
             this.#redoByRankTo(rank, step_idx);
-        console.log(this.#step_idx_of_rank);
         this.vis();
     }
 
@@ -256,7 +285,6 @@ UI.Player = class {
         this.#steps.push(step);
     }
 };
-Object.seal(UI.Player);
 
 UI.Step = class {
     #rank;
@@ -301,8 +329,9 @@ UI.Step = class {
 
     /** 
      * A generator that returns the actions. 
+     * @yields {UI.Action} An action stored in the step
     */
-    actions = function* () {
+    *actions() {
         for (const action of this.#actions)
             yield action;
     }
@@ -324,38 +353,3 @@ UI.Action = class {
     undo() { this.sprite.undo(this.action_id); }
 };
 Object.freeze(UI.Action);
-
-UI.AbstractLens = class {
-    #min;
-    #max;
-    #canvas;
-    #action_id;
-
-    get canvas() { return this.#canvas; }
-    get action_id() { return this.#action_id; }
-    /**
-     */
-    constructor(canvas, action_id) {
-        if (!(canvas instanceof UI.AbstractCanvas))
-            throw new Error(`"canvas" should be an AbstractCanvas instance.`);
-        if (!Number.isInteger(action_id))
-            throw new Error(`"action_id" should be an integer, got ${action_id}.`);
-
-        this.#canvas = canvas;
-        this.#action_id = action_id;
-
-        this.#min = Infinity;
-        this.#max = -Infinity;
-    }
-
-    updateBounds(value) {
-        if (value < this.#min)
-            this.#min = value;
-        else if (value > this.#max)
-            this.#max = value;
-    }
-
-    // override
-    vis() {
-    }
-};

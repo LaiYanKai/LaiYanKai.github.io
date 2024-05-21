@@ -30,9 +30,12 @@ UI.Toolbar = class {
 
         this.#run_tools = [
             ui.tool_exit,
+            ui.tool_lens,
             ui.tool_play_reverse,
+            ui.tool_step_reverse,
             ui.tool_step,
             ui.tool_rank,
+            ui.tool_step_forward,
             ui.tool_play_forward,
         ];
 
@@ -69,14 +72,24 @@ UI.Toolbar = class {
             "change", ui.toolbar._change_goal_y);
         ui.tool_exit.dom.addEventListener(
             "click", ui.toolbar._click_exit);
+        ui.tool_lens.dom_input.addEventListener(
+            "change", ui.toolbar._change_lens);
         ui.tool_play_reverse.dom.addEventListener(
             "click", ui.toolbar._click_play_reverse);
+        ui.tool_play_reverse.dom.addEventListener(
+            "dblclick", ui.toolbar._dblclick_play_reverse);
+        ui.tool_step_reverse.dom.addEventListener(
+            "click", ui.toolbar._click_step_reverse);
         ui.tool_step.dom_input.addEventListener(
             "change", ui.toolbar._change_step);
         ui.tool_rank.dom_input.addEventListener(
             "change", ui.toolbar._change_rank);
+        ui.tool_step_forward.dom.addEventListener(
+            "click", ui.toolbar._click_step_forward);
         ui.tool_play_forward.dom.addEventListener(
             "click", ui.toolbar._click_play_forward);
+        ui.tool_play_forward.dom.addEventListener(
+            "dblclick", ui.toolbar._dblclick_play_forward);
 
 
         this.drawMode();
@@ -186,9 +199,24 @@ UI.Toolbar = class {
         ui.drawMode();
     }
 
+    _change_lens(e) {
+        e.stopPropagation();
+        ui.changeLens(ui.tool_lens.value);
+    }
+
+    _dblclick_play_reverse(e) {
+        e.stopPropagation();
+        ui.skipReverse();
+    }
+
     _click_play_reverse(e) {
         e.stopPropagation();
         ui.toggleReverse();
+    }
+
+    _click_step_reverse(e) {
+        e.stopPropagation();
+        ui.stepReverse();
     }
 
     _change_step(e) {
@@ -199,6 +227,16 @@ UI.Toolbar = class {
     _change_rank(e) {
         e.stopPropagation();
         ui.changeRank(ui.tool_rank.value - 1);
+    }
+
+    _click_step_forward(e) {
+        e.stopPropagation();
+        ui.stepForward();
+    }
+
+    _dblclick_play_forward(e) {
+        e.stopPropagation();
+        ui.skipForward();
     }
 
     _click_play_forward(e) {
