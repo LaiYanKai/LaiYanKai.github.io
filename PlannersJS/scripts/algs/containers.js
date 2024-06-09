@@ -172,6 +172,7 @@ Algs.AbstractQueue = class {
 
     get length() { return this.#nodes.length; }
     get empty() { return this.#nodes.length === 0; }
+    filled() { return this.#nodes.length !== 0; }
 
     /**
      */
@@ -181,6 +182,11 @@ Algs.AbstractQueue = class {
 
     /** Enqueues the node to the back of the queue and returns the index where the node is inserted. */
     insert(node) {
+       
+        if (node.queued === true) {
+            return -1;
+        }
+
         this.#nodes.push(node);
         return this.length - 1;
     }
@@ -196,6 +202,7 @@ Algs.AbstractStack = class {
 
     get length() { return this.#nodes.length; }
     get empty() { return this.#nodes.length === 0; }
+    filled() { return this.#nodes.length !== 0; }
 
     /**
      */
@@ -205,6 +212,9 @@ Algs.AbstractStack = class {
 
     /** Pushes the node to the top of the stack and returns 0. */
     insert(node) {
+        if (node.queued === true) {
+            return -1;
+        }
         this.#nodes.unshift(node);
         return 0; // for consistency with how the ui tables are visualized.
     }

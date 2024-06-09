@@ -70,6 +70,7 @@ const Utils = {
 
     approxGt: function (value1, value2) { return value1 > value2 + ui_params.thresh; },
     approxGe: function (value1, value2) { return value1 > value2 - ui_params.thresh; },
+    approxEq: function (value1, value2) { return Math.abs(value2 - value1) <= ui_params.thresh; },
 
     /** 
      * Returns the *cell* coordinate in the directional vector of a *vertex* coordinate. 
@@ -142,7 +143,7 @@ const Utils = {
      * @param {[number, number]} coord2
      * @returns {[number, number]} sum of coordinates.
      */
-    addCoord: function (coord1, coord2) {
+    addCoords: function (coord1, coord2) {
         return [
             coord1[0] + coord2[0],
             coord1[1] + coord2[1]
@@ -154,7 +155,7 @@ const Utils = {
      * @param {[number, number]} coord1 
      * @param {[number, number]} coord2 
      */
-    subtractCoord: function (coord1, coord2) {
+    subtractCoords: function (coord1, coord2) {
         return [
             coord1[0] - coord2[0],
             coord1[1] - coord2[1]
@@ -165,6 +166,18 @@ const Utils = {
         return coord1[0] * coord2[0] + coord1[1] * coord2[1];
     },
 
+    multiplyCoord: function (coord1, scalar) {
+        return [coord1[0] * scalar, coord1[1] * scalar];
+    },
+
+    divideCoord: function (coord1, scalar) {
+        return [coord1[0] / scalar, coord1[1] / scalar];
+    },
+
+    unitCoord: function (coord1) {
+        const mag = Math.hypot(coord1[0], coord1[1]);
+        return [coord1[0] / mag, coord1[1] / mag];
+    },
 
     detCoords: function (coord1, coord2) {
         return coord1[0] * coord2[1] - coord1[1] * coord2[0];
@@ -181,7 +194,7 @@ const Utils = {
      * @throws an error if *dir* is [0, 0].
      * @returns {number} directional index, non-negative integer between 0 to 7 inclusive, where 0 is N, 1 is NE etc.
      */
-    dirToDirIndex (dir, thresh = 0) {
+    dirToDirIndex(dir, thresh = 0) {
         if (dir[0] > thresh) {
             if (dir[1] > thresh)
                 return DirIndex.NE; // [1, 1]
@@ -215,7 +228,7 @@ const Utils = {
      * @throws if *didx* is not a directional index.
      * @returns {[number, number]} a sign directional vector, where N is [0, 1], NE is [-1, 1] etc.
      */
-    dirIndexToDir (didx) {
+    dirIndexToDir(didx) {
         if (didx === DirIndex.N)
             return [0, 1];
         else if (didx === DirIndex.NW)
@@ -241,8 +254,15 @@ const Utils = {
      * @param {number} didx an integer to convert to a directional index.
      * @returns {number} A direcional index, non-negative integer between 0 to 7 inclusive, where 0 is N, 1 is NE etc.
      */
-    wrapDirIndex (didx) {
+    wrapDirIndex(didx) {
         return ((didx % DirIndex.length) + DirIndex.length) % DirIndex.length;
+    },
+
+    /** Returns the equivalent radians r in the range -pi <= r < pi. */
+    wrapAngle(rad) {
+        const PI2 = Math.PI * 2;
+        rad += Math.PI;
+        return ((rad % PI2) + PI2) % PI2 - Math.PI;
     },
 
     /** 
@@ -265,8 +285,9 @@ const Utils = {
     },
 
     euclidean: function (diff_coord) {
-        return Math.sqrt(diff_coord[0] * diff_coord[0] + diff_coord[1] * diff_coord[1]);
+        return Math.hypot(diff_coord[0], diff_coord[1]);
     },
+
     octile: function (diff_coord) {
         const ax = Math.abs(diff_coord[0]);
         const ay = Math.abs(diff_coord[1]);
@@ -290,6 +311,78 @@ const Utils = {
         const ax = Math.abs(diff_coord[0]);
         const ay = Math.abs(diff_coord[1]);
         return ax > ay ? ax : ay;
+    },
+
+    /** 
+     * Returns the value of a cubic bezier curve
+     * @param {number} t The parametric position, 0 <= t <= 1. 0 is at the start, 1 is at the end.
+     * @param {number} p0 The starting coordinate
+     * @param {number} p1 The position of the control knob for the starting coordinate.
+     * @param {number} p2 The position of the control knob for the end coordinate.
+     * @param {number} p3 The end coordinate.
+     */
+    cubicBezier(t, p0, p1, p2, p3) {
+        return (1 - t) ** 3 * p0
+            + 3 * t * (1 - t) ** 2 * p1
+            + 3 * (1 - t) * t ** 2 * p2
+            + t ** 3 * p3;
+    },
+
+    /** 
+     * Returns the gradient of a cubic bezier curve
+     * @param {number} t The parametric position, 0 <= t <= 1. 0 is at the start, 1 is at the end.
+     * @param {number} p0 The starting coordinate
+     * @param {number} p1 The position of the control knob for the starting coordinate.
+     * @param {number} p2 The position of the control knob for the end coordinate.
+     * @param {number} p3 The end coordinate.
+     */
+    cubicBezierGrad(t, p0, p1, p2, p3) {
+        return 3 * (1 - t) * (1 - t) * (p1 - p0)
+            + 6 * (1 - t) * t * (p2 - p1)
+            + 3 * t * t * (p3 - p2);
+    },
+
+    quadraticBezier(t, p0, p1, p2) {
+        return (1 - t) * (1 - t) * p0 + 2 * t * (1 - t) * p1 + t * t * p2;
+    },
+
+    quadraticBezierGrad(t, p0, p1, p2) {
+        return 2 * (1 - t) * (p1 - p0) + 2 * t * (p2 - p1);
+    },
+
+    /** 
+     * Update the minimum and maximum coordinates *in place* based on the value of coord.
+     * @param {[number, number]} min_bound The minimum coordinates.
+     * @param {[number, number]} max_bound The maximum coordinates.
+     * @param {[number, number]} coord The coordinates used to update the bounds.
+    */
+    updateBounds(min_bound, max_bound, coord) {
+        this.updateMinBound(min_bound, coord);
+        this.updateMaxBound(max_bound, coord);
+    },
+
+    /** 
+     * Update the minimum coordinates *in place* based on the value of coord.
+     * @param {[number, number]} min_bound The minimum coordinates.
+     * @param {[number, number]} coord The coordinates used to update the bounds.
+    */
+    updateMinBound(min_bound, coord) {
+        if (coord[0] < min_bound[0])
+            min_bound[0] = coord[0];
+        if (coord[1] < min_bound[1])
+            min_bound[1] = coord[1];
+    },
+
+    /** 
+     * Update the maximum coordinates *in place* based on the value of coord.
+     * @param {[number, number]} max_bound The maximum coordinates.
+     * @param {[number, number]} coord The coordinates used to update the bounds.
+    */
+    updateMaxBound(max_bound, coord) {
+        if (coord[0] > max_bound[0])
+            max_bound[0] = coord[0];
+        if (coord[1] > max_bound[1])
+            max_bound[1] = coord[1];
     },
 };
 Object.freeze(Utils);

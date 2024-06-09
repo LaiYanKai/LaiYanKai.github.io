@@ -1,10 +1,10 @@
 "use strict";
 
 const AStarAction = {
-    F: SpriteAction.length,
-    G: SpriteAction.length + 1,
-    H: SpriteAction.length + 2,
-    Status: SpriteAction.length + 3,
+    F: SpriteActionNode.length,
+    G: SpriteActionNode.length + 1,
+    H: SpriteActionNode.length + 2,
+    Status: SpriteActionNode.length + 3,
     length: 4,
 };
 Object.freeze(AStarAction);

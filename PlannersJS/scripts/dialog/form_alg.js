@@ -13,6 +13,7 @@ ui.form_alg_algorithm = new UI.FormElementSelect(
         ["Anya", AlgAlgorithm.Anya, AlgAlgorithm.Anya],
         ["RRT*", AlgAlgorithm.RRTStar, AlgAlgorithm.RRTStar],
         ["PRM*", AlgAlgorithm.PRMStar, AlgAlgorithm.PRMStar],
+        ["R2+", AlgAlgorithm.R2P, AlgAlgorithm.R2P],
     ], AlgAlgorithm.AStar);
 
 ui.form_alg_preset = new UI.FormElementSelect(
@@ -262,9 +263,9 @@ UI.FormAlg = class extends UI.AbstractForm {
                 ["Custom", AlgPresetCustom],
             ];
             default_preset = AlgPresetDijkstra.Cell;
-            hideElements("fh", "time_ordering", "g_weight", "h_weight");
+            hideElements("fh", "g_weight", "h_weight");
             hideElements("open_list");
-            showElements("node_type", "node_connectivity", "first_neighbor", "next_neighbor", "distance_metric", "g_nb", "costmap_type", "lethal", "checkerboard");
+            showElements("node_type", "node_connectivity", "first_neighbor", "next_neighbor", "time_ordering", "distance_metric", "g_nb", "costmap_type", "lethal", "checkerboard");
             showElements("cost_calculation", "graphing", "costmap");
         }
         else if (alg === AlgAlgorithm.AStar) {
@@ -294,7 +295,7 @@ UI.FormAlg = class extends UI.AbstractForm {
                 ["Default (Vertex)", AlgPresetAnya.Vertex],
                 ["Custom", AlgPresetCustom],
             ];
-            default_preset = AlgPresetAnya.Cell;
+            default_preset = AlgPresetAnya.Vertex;
             hideElements("node_connectivity", "first_neighbor", "next_neighbor", "g_nb");
             showElements("node_type", "fh", "time_ordering", "distance_metric", "g_weight", "h_weight", "costmap_type", "lethal", "checkerboard");
             showElements("open_list", "cost_calculation", "graphing", "costmap");
@@ -302,6 +303,16 @@ UI.FormAlg = class extends UI.AbstractForm {
         else if (alg === AlgAlgorithm.RRTStar) {
         }
         else if (alg === AlgAlgorithm.PRMStar) {
+        }
+        else if (alg === AlgAlgorithm.R2P) {
+            new_presets = [
+                ["Default", AlgPresetR2P.Default],
+                ["Custom", AlgPresetCustom]
+            ]
+            default_preset = AlgPresetR2P.Default;
+            hideElements("node_connectivity", "first_neighbor", "next_neighbor", "g_nb");
+            showElements("node_type", "fh", "time_ordering", "distance_metric", "g_weight", "h_weight", "costmap_type", "lethal", "checkerboard");
+            showElements("open_list", "cost_calculation", "graphing", "costmap");
         }
         else {
             throw new Error(`Unknown algorithm "${alg}"`);
@@ -424,19 +435,21 @@ UI.FormAlg = class extends UI.AbstractForm {
                 _this._change_node_connectivity();
                 ui.form_alg_first_neighbor.selectValue(DirIndex.N);
                 ui.form_alg_next_neighbor.selectValue(AlgNextNeighbor.AntiClockwise);
+                ui.form_alg_time_ordering.selectValue(AlgTimeOrdering.FIFO);
                 ui.form_alg_distance_metric.selectValue(Metric.Octile);
                 ui.form_alg_g_nb.selectValue(AlgGNb.Average);
                 ui.form_alg_costmap_type.selectValue(AlgCostmapType.MultiCost);
                 _this._change_costmap_type();
             } else if (preset === AlgPresetDijkstra.Vertex) {
-                ui.form_alg_node_type.selectValue(AlgNodeType.Cell);
+                ui.form_alg_node_type.selectValue(AlgNodeType.Vertex);
                 _this._change_node_type();
                 ui.form_alg_node_connectivity.selectValue(AlgNodeConnectivity.EightConnected);
                 _this._change_node_connectivity();
                 ui.form_alg_first_neighbor.selectValue(DirIndex.N);
                 ui.form_alg_next_neighbor.selectValue(AlgNextNeighbor.AntiClockwise);
+                ui.form_alg_time_ordering.selectValue(AlgTimeOrdering.FIFO);
                 ui.form_alg_distance_metric.selectValue(Metric.Octile);
-                ui.form_alg_g_nb.selectValue(AlgGNb.Average);
+                ui.form_alg_g_nb.selectValue(AlgGNb.Min);
                 ui.form_alg_costmap_type.selectValue(AlgCostmapType.MultiCost);
                 _this._change_costmap_type();
             }
@@ -491,7 +504,7 @@ UI.FormAlg = class extends UI.AbstractForm {
             }
         }
         else if (alg === AlgAlgorithm.ThetaStar) {
-            if (preset === AlgPresetAStar.Cell) {
+            if (preset === AlgPresetThetaStar.Cell) {
                 ui.form_alg_node_type.selectValue(AlgNodeType.Cell);
                 _this._change_node_type();
                 ui.form_alg_node_connectivity.selectValue(AlgNodeConnectivity.EightConnected);
@@ -505,7 +518,7 @@ UI.FormAlg = class extends UI.AbstractForm {
                 ui.form_alg_h_weight.change(1);
                 ui.form_alg_costmap_type.selectValue(AlgCostmapType.Binary);
                 _this._change_costmap_type();
-            } else if (preset === AlgPresetAStar.Vertex) {
+            } else if (preset === AlgPresetThetaStar.Vertex) {
                 ui.form_alg_node_type.selectValue(AlgNodeType.Vertex);
                 _this._change_node_type();
                 ui.form_alg_node_connectivity.selectValue(AlgNodeConnectivity.EightConnected);
@@ -569,6 +582,41 @@ UI.FormAlg = class extends UI.AbstractForm {
         }
         else if (alg === AlgAlgorithm.PRMStar) {
 
+        }
+        else if (alg === AlgAlgorithm.R2P) {
+            if (preset === AlgPresetR2P.Default) {
+                ui.form_alg_fh.selectValue(AlgFH.FOnly);
+                ui.form_alg_time_ordering.selectValue(AlgTimeOrdering.FIFO);
+                ui.form_alg_g_weight.change(1);
+                ui.form_alg_h_weight.change(1);
+            }
+            else if (preset === AlgPresetCustom) {
+            }
+            else {
+                throw new Error(`Unknown preset "${preset}" for algorithm "${alg}"`);
+            }
+
+            ui.form_alg_fh.disable();
+            ui.form_alg_time_ordering.disable();
+            ui.form_alg_g_weight.disable();
+            ui.form_alg_h_weight.disable();
+
+            // set node type
+            ui.form_alg_node_type.selectValue(AlgNodeType.Vertex);
+            ui.form_alg_node_type.disable();
+
+            // set binary
+            ui.form_alg_costmap_type.selectValue(AlgCostmapType.Binary);
+            ui.form_alg_costmap_type.disable();
+            _this._change_costmap_type();
+
+            // set distance metric
+            ui.form_alg_distance_metric.selectValue(AlgTimeOrdering.Euclidean);
+            ui.form_alg_distance_metric.disable();
+
+            // set checkerboard
+            ui.form_alg_checkerboard.selectValue(AlgCheckerboard.Allow);
+            ui.form_alg_checkerboard.disable();
         }
         else {
             throw new Error(`Unknown algorithm "${alg}"`);

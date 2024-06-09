@@ -8,8 +8,12 @@ const loader = {
         ["enums/dir_idx.js", false],
         ["enums/metric.js", false],
         ["enums/new_map.js", false],
-        ["enums/sprites.js", false],
+        ["enums/action.js", false],
         ["enums/astar.js", false], // depends on sprites
+        ["enums/dijkstra.js", false], // depends on sprites
+        ["enums/r2p.js", false], // depends on sprites
+        ["enums/bfs.js", false],
+        ["enums/dfs.js", false],
         ["enums/tooltip.js", false],
         ["utils/utils.js", false],
         ["utils/raytracer.js", false],
@@ -36,6 +40,14 @@ const loader = {
         ["algs/containers.js", false],
         ["algs/algs.js", false],
         ["algs/astar.js", false],
+        ["algs/dijkstra.js", false],
+        ["algs/bfs.js", false],
+        ["algs/dfs.js", false],
+        ["algs/r2p_types.js", false],
+        ["algs/r2p_sprites.js", false],
+        ["algs/r2p_canvas.js", false],
+        ["algs/r2p_mapper.js", false],
+        ["algs/r2p.js", false],
     ],
     num_loaded: 0,
 

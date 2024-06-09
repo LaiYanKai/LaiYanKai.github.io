@@ -1,16 +1,14 @@
 "use strict";
 
-Algs.AStarCanvasCell = class extends UI.AbstractCanvasCell {
+Algs.DijkstraCanvasCell = class extends UI.AbstractCanvasCell {
     constructor() {
-        super(0, AStarAction.length);
+        super(0, DijkstraAction.length);
     }
 
-    add(f, g, h, status, ...abstract_canvas_cell_args) {
+    add(g, status, ...abstract_canvas_cell_args) {
         const sprite = super.add(...abstract_canvas_cell_args);
-        sprite.register(AStarAction.F, f);
-        sprite.register(AStarAction.G, g);
-        sprite.register(AStarAction.H, h);
-        sprite.register(AStarAction.Status, status);
+        sprite.register(DijkstraAction.G, g);
+        sprite.register(DijkstraAction.Status, status);
         sprite.dom.addEventListener(
             "mousemove", this.#setTip.bind(this, sprite), false);
         sprite.dom.addEventListener(
@@ -21,22 +19,20 @@ Algs.AStarCanvasCell = class extends UI.AbstractCanvasCell {
     #setTip(sprite, e) {
         const pos = Utils.subtractCoords(
             sprite.value(SpriteActionNode.Position), [0.5, 0.5]);
-        const status = sprite.value(AStarAction.Status);
+        const status = sprite.value(DijkstraAction.Status);
         let status_str;
-        if (status === AStarNodeStatus.Queued)
+        if (status === DijkstraNodeStatus.Queued)
             status_str = "Queued";
-        else if (status === AStarNodeStatus.Expanding)
+        else if (status === DijkstraNodeStatus.Expanding)
             status_str = "Expanding";
-        else if (status === AStarNodeStatus.Visited)
+        else if (status === DijkstraNodeStatus.Visited)
             status_str = "Visited";
-        else if (status === AStarNodeStatus.Undiscovered)
+        else if (status === DijkstraNodeStatus.Undiscovered)
             status_str = "Undiscovered";
-        else if (status === AStarNodeStatus.Path)
+        else if (status === DijkstraNodeStatus.Path)
             status_str = "Path!";
-        const f = sprite.value(AStarAction.F).toFixed(3);
-        const g = sprite.value(AStarAction.G).toFixed(3);
-        const h = sprite.value(AStarAction.H).toFixed(3);
-        const message = `(${pos[0]}, ${[pos[1]]})\n${status_str}\nF = ${f}\nG = ${g}\nH = ${h}\n`;
+        const g = sprite.value(DijkstraAction.G).toFixed(3);
+        const message = `(${pos[0]}, ${[pos[1]]})\n${status_str}\nG = ${g}\n`;
         ui.tooltip.setTip(
             TooltipPosition.Right,
             message,
@@ -45,18 +41,16 @@ Algs.AStarCanvasCell = class extends UI.AbstractCanvasCell {
     }
 };
 
-Algs.AStarCanvasVertex = class extends UI.AbstractCanvasVertex {
+Algs.DijkstraCanvasVertex = class extends UI.AbstractCanvasVertex {
     /** @type {UI.Tooltip} */
     constructor() {
-        super(0, AStarAction.length);
+        super(0, DijkstraAction.length);
     }
 
-    add(f, g, h, status, ...abstract_canvas_cell_args) {
+    add(g, status, ...abstract_canvas_cell_args) {
         const sprite = super.add(...abstract_canvas_cell_args);
-        sprite.register(AStarAction.F, f);
-        sprite.register(AStarAction.G, g);
-        sprite.register(AStarAction.H, h);
-        sprite.register(AStarAction.Status, status);
+        sprite.register(DijkstraAction.G, g);
+        sprite.register(DijkstraAction.Status, status);
         sprite.dom.addEventListener(
             "mousemove", this.#setTip.bind(this, sprite), false);
         sprite.dom.addEventListener(
@@ -66,22 +60,20 @@ Algs.AStarCanvasVertex = class extends UI.AbstractCanvasVertex {
 
     #setTip(sprite, e) {
         const pos = sprite.value(SpriteActionNode.Position);
-        const status = sprite.value(AStarAction.Status);
+        const status = sprite.value(DijkstraAction.Status);
         let status_str;
-        if (status === AStarNodeStatus.Queued)
+        if (status === DijkstraNodeStatus.Queued)
             status_str = "Queued";
-        else if (status === AStarNodeStatus.Expanding)
+        else if (status === DijkstraNodeStatus.Expanding)
             status_str = "Expanding";
-        else if (status === AStarNodeStatus.Visited)
+        else if (status === DijkstraNodeStatus.Visited)
             status_str = "Visited";
-        else if (status === AStarNodeStatus.Undiscovered)
+        else if (status === DijkstraNodeStatus.Undiscovered)
             status_str = "Undiscovered";
-        else if (status === AStarNodeStatus.Path)
+        else if (status === DijkstraNodeStatus.Path)
             status_str = "Path!";
-        const f = sprite.value(AStarAction.F).toFixed(3);
-        const g = sprite.value(AStarAction.G).toFixed(3);
-        const h = sprite.value(AStarAction.H).toFixed(3);
-        const message = `(${pos[0]}, ${[pos[1]]})\n${status_str}\nF = ${f}\nG = ${g}\nH = ${h}\n`;
+        const g = sprite.value(DijkstraAction.G).toFixed(3);
+        const message = `(${pos[0]}, ${[pos[1]]})\n${status_str}\nG = ${g}\n`;
         ui.tooltip.setTip(
             TooltipPosition.Right,
             message,
@@ -91,45 +83,34 @@ Algs.AStarCanvasVertex = class extends UI.AbstractCanvasVertex {
 }
 
 
-Algs.AStarNode = class extends Algs.AbstractPriorityQueueNode {
+Algs.DijkstraNode = class extends Algs.AbstractPriorityQueueNode {
 
-    get f() { return this.costs[0]; }
-    get g() { return this.costs[1]; }
-    get h() { return this.costs[2]; }
+    get g() { return this.costs[0]; }
 
-    set f(new_f) { return this.costs[0] = new_f; }
-    set g(new_g) { return this.costs[1] = new_g; }
-    set h(new_h) { return this.costs[2] = new_h; }
+    set g(new_g) { return this.costs[0] = new_g; }
 
-    constructor(coord, g, h, sprite, pq_sprite) {
-        super(coord, 3, sprite, pq_sprite);
+    constructor(coord, g, sprite, pq_sprite) {
+        super(coord, 1, sprite, pq_sprite);
         this.g = g;
-        this.h = h;
-        this.f = g + h;
     }
 
-    changeGandF(new_g, g_weight, h_weight) {
+    changeG(new_g) {
         this.g = new_g;
-        this.f = this.g * g_weight + this.h * h_weight;
     }
 }
 
 
-Algs.AStar = class extends Algs.AbstractGridAlg {
+Algs.Dijkstra = class extends Algs.AbstractGridAlg {
     /** @type {Algs.AbstractPriorityQueue} */
     #open_list;
-    /** @type {Map<Algs.AStarNode} */
+    /** @type {Map<Algs.DijkstraNode} */
     #nodes;
     /** @returns {UI.AbstractCanvasArrow} */
     get #canvas_arrows() { return this.canvas(1); }
-    /** @returns {Algs.AStarCanvasCell | Algs.AStarCanvasVertex} */
+    /** @returns {Algs.DijkstraCanvasCell | Algs.DijkstraCanvasVertex} */
     get #canvas_nodes() { return this.canvas(0); }
     /** @returns {UI.AbstractLens} */
-    get #lens_f() { return this.lens(1); }
-    /** @returns {UI.AbstractLens} */
-    get #lens_g() { return this.lens(2); }
-    /** @returns {UI.AbstractLens} */
-    get #lens_h() { return this.lens(3); }
+    get #lens_g() { return this.lens(1); }
     /** @type{UI.Step} */
     #step; // current step
     /** @type{Array<[number, number]>} */
@@ -142,39 +123,28 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
         let size;
         const canvases = Array(2);
         if (alg_params.node_type === AlgNodeType.Cell) {
-            canvases[0] = new Algs.AStarCanvasCell();
+            canvases[0] = new Algs.DijkstraCanvasCell();
             this.#addArrow = this.#addArrowCell;
             size = ui_states.size;
         }
         else if (alg_params.node_type === AlgNodeType.Vertex) {
-            canvases[0] = new Algs.AStarCanvasVertex();
+            canvases[0] = new Algs.DijkstraCanvasVertex();
             this.#addArrow = this.#addArrowVertex;
             size = Utils.addCoords(ui_states.size, [1, 1]);
         }
         canvases[1] = new UI.AbstractCanvasArrow(1, 0); // put arrows above the nodes
         super.setCanvases(canvases);
 
-        // Check h_weight and g_weight
-        if (typeof this.params.h_weight !== "number")
-            throw new TypeError("h_weight must be a number!");
-        if (typeof this.params.g_weight !== "number")
-            throw new TypeError("g_weight must be a number!");
-
         // Set up lenses
         const lenses = [
             new UI.LensNone(this.#canvas_nodes, "None", "None"),
-            new UI.LensRainbow(this.#canvas_nodes, AStarAction.F, "F-cost", "$F"),
-            new UI.LensRainbow(this.#canvas_nodes, AStarAction.G, "G-cost", "$G"),
-            new UI.LensRainbow(this.#canvas_nodes, AStarAction.H, "H-cost", "$H"),
+            new UI.LensRainbow(this.#canvas_nodes, DijkstraAction.G, "G-cost", "$G"),
         ];
         super.setLenses(lenses, 0);
 
         // Set up Openlist
-        let cost_indices = [];
-        if (alg_params.fh === AlgFH.FOnly)
-            cost_indices = [0];
-        else if (alg_params.fh === AlgFH.FThenH)
-            cost_indices = [0, 2];
+        let cost_indices = [0];  // g-cost
+        // RECHECK FIFO
         let is_fifo = alg_params.time_ordering === AlgTimeOrdering.FIFO
         this.#open_list = new Algs.AbstractPriorityQueue(
             is_fifo, ui_params.thresh, ...cost_indices
@@ -187,17 +157,15 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
             for (let y = 0; y < size[1]; ++y) {
                 const coord = [x, y];
                 const id = this.serialize(coord);
-                const h = this.metric(Utils.subtractCoords(this.coord_goal, coord));
                 const sprite = this.#canvas_nodes.add(
-                    Infinity, Infinity, h, AStarNodeStatus.Undiscovered,
+                    Infinity, DijkstraNodeStatus.Undiscovered,
                     id, coord,
                     true,
                     SpriteActionClass.Transparent,
                     0,
                     SpriteActionOutline.None);
-                this.#lens_h.updateBounds(h);
                 sprite.vis(); // sprites are not visualized at the first step.
-                const node = new Algs.AStarNode(coord, Infinity, h, sprite, null);
+                const node = new Algs.DijkstraNode(coord, Infinity, sprite, null);
                 this.#nodes.set(id, node);
             }
         }
@@ -212,7 +180,7 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
 
         // Set up start node
         let xpd_node = this.#nodes.get(this.serialize(this.coord_start));
-        this.#changeGandF(xpd_node, 0);
+        this.#changeG(xpd_node, 0);
         xpd_node.parent = null;
         this.#queueNode(xpd_node);
 
@@ -272,12 +240,10 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
 
     }
 
-    #changeGandF(node, new_g) {
-        node.changeGandF(new_g, this.params.g_weight, this.params.h_weight);
-        this.#step.registerWithData(node.sprite, AStarAction.G, node.g);
-        this.#step.registerWithData(node.sprite, AStarAction.F, node.f);
+    #changeG(node, new_g) {
+        node.changeG(new_g);
+        this.#step.registerWithData(node.sprite, DijkstraAction.G, node.g);
         this.#lens_g.updateBounds(node.g);
-        this.#lens_f.updateBounds(node.f);
     }
 
     #changeParent(node, new_parent_node) {
@@ -329,7 +295,7 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
 
     /**
      * 
-     * @param {Algs.AStarNode} xpd_node 
+     * @param {Algs.DijkstraNode} xpd_node 
      * @param {Algs.GridAlgNeighbor} nb 
      */
     #nbNodeAccessible(nb) {
@@ -350,8 +316,8 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
     /**
      * Getting to neighbor node from expanded node does not improve the g-cost at the neighbor node.
      * @param {number} new_nb_g 
-     * @param {Algs.AStarNode} nb_node 
-     * @param {Algs.AStarNode} xpd_node 
+     * @param {Algs.DijkstraNode} nb_node 
+     * @param {Algs.DijkstraNode} xpd_node 
      */
     #nbNodeExpensive(new_nb_g, nb_node, xpd_node) {
     }
@@ -359,11 +325,11 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
     /**
      * Getting to neighbor node from expanded node improves the g-cost at the neighbor node.
      * @param {number} new_nb_g 
-     * @param {Algs.AStarNode} nb_node 
-     * @param {Algs.AStarNode} xpd_node 
+     * @param {Algs.DijkstraNode} nb_node 
+     * @param {Algs.DijkstraNode} xpd_node 
      */
     #nbNodeCheaper(new_nb_g, nb_node, xpd_node) {
-        this.#changeGandF(nb_node, new_nb_g);
+        this.#changeG(nb_node, new_nb_g);
         this.#changeParent(nb_node, xpd_node);
         this.#queueNode(nb_node);
     }
@@ -378,7 +344,7 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
 
     #visualizeExpanded(node) {
         this.#step.registerWithData(node.sprite, SpriteActionNode.Class, SpriteActionClass.Red);
-        this.#step.registerWithData(node.sprite, AStarAction.Status, AStarNodeStatus.Expanding);
+        this.#step.registerWithData(node.sprite, DijkstraAction.Status, DijkstraNodeStatus.Expanding);
 
         const id = this.serialize(node.coord);
         const sprite = this.#canvas_arrows.sprite(id);
@@ -391,12 +357,12 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
 
     #visualizeOpened(node) {
         this.#step.registerWithData(node.sprite, SpriteActionNode.Class, SpriteActionClass.Orange);
-        this.#step.registerWithData(node.sprite, AStarAction.Status, AStarNodeStatus.Queued);
+        this.#step.registerWithData(node.sprite, DijkstraAction.Status, DijkstraNodeStatus.Queued);
     }
 
     #visualizeClosed(node) {
         this.#step.registerWithData(node.sprite, SpriteActionNode.Class, SpriteActionClass.Blue);
-        this.#step.registerWithData(node.sprite, AStarAction.Status, AStarNodeStatus.Visited);
+        this.#step.registerWithData(node.sprite, DijkstraAction.Status, DijkstraNodeStatus.Visited);
     }
 
     #addArrow;
@@ -459,8 +425,8 @@ Algs.AStar = class extends Algs.AbstractGridAlg {
             node.sprite, SpriteActionNode.Class,
             SpriteActionClass.Red);
         this.#step.registerWithData(
-            node.sprite, AStarAction.Status,
-            AStarNodeStatus.Path);
+            node.sprite, DijkstraAction.Status,
+            DijkstraNodeStatus.Path);
     }
 
     #closeStep() {

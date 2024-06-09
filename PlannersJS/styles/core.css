@@ -83,6 +83,28 @@
     --color-red18: hsla(354, 70%, 90%, 1);
     --color-red19: hsla(352, 70%, 98%, 1);
 
+    
+    --color-green0: hsla(138, 100%, 10%, 1);
+    --color-green1: hsla(136, 100%, 20%, 1);
+    --color-green2: hsla(134, 100%, 30%, 1);
+    --color-green3: hsla(132, 100%, 40%, 1);
+    --color-green4: hsla(130, 100%, 50%, 1);
+    --color-green5: hsla(128, 90%, 60%, 1);
+    --color-green6: hsla(126, 90%, 70%, 1);
+    --color-green7: hsla(124, 90%, 80%, 1);
+    --color-green8: hsla(122, 90%, 90%, 1);
+    --color-green9: hsla(120, 90%, 98%, 1);
+    --color-green10: hsla(138, 70%, 10%, 1);
+    --color-green11: hsla(136, 70%, 20%, 1);
+    --color-green12: hsla(134, 70%, 30%, 1);
+    --color-green13: hsla(132, 70%, 40%, 1);
+    --color-green14: hsla(130, 70%, 50%, 1);
+    --color-green15: hsla(128, 70%, 60%, 1);
+    --color-green16: hsla(126, 70%, 70%, 1);
+    --color-green17: hsla(124, 70%, 80%, 1);
+    --color-green18: hsla(122, 70%, 90%, 1);
+    --color-green19: hsla(120, 70%, 98%, 1);
+
     --color-gray0: hsla(0, 0%, 10%, 1);
     --color-gray1: hsla(0, 0%, 20%, 1);
     --color-gray2: hsla(0, 0%, 30%, 1);
@@ -105,6 +127,31 @@
     --arrow-cap: 12px;
     --sprite-cell-scale: 1;
     --sprite-vertex-scale: 0.7;
+
+    --sprite-link-knob: 5; /* the quad bezier's knob location, positioned at this normal distance from the halfway point */
+    --sprite-link-anchor-radius: 0.25; /* the anchor's radius scaled to cell size */
+    --sprite-link-root-radius: 0.3; /* the root's radius scaled to cell size */
+    --sprite-link-arrow-length: 12; /* the arrow length in pixels */
+    --sprite-link-arrow-width: 12; /* the arrow width in pixels */
+    --sprite-link-arrow-position: 0.95; /* the arrow's position in the "t" parametric distance, with 0 being at the anchor, and 1 being at the root */
+    --sprite-link-stroke-width: 3; /* the stroke thickness of the link in pixels */
+    --sprite-link-anchor-width: 2; /* the stroke thickness of the anchor in pixels */
+
+    --sprite-sec-src-radius: 0.3; /* the radius of the circle at the source, scaled to cell size */
+    --sprite-sec-ray-arrow-length: 18; /* the ray's arrow length in pixels */ 
+    --sprite-sec-ray-arrow-width: 8; /* the ray's arrow width in pixels */
+    --sprite-sec-ray-radius: 0; /* the radius of the invisible circle at the other end of the ray. One end of the ray is at the src. */
+    --sprite-sec-radius: 4; /* the radius of the sector, scaled to cell size. */
+    --sprite-sec-ray-width: 3; /* the stroke width of the ray in pixels */
+    --sprite-sec-ext-width: 1; /* the stroke width of the extended linein pixels. Have to be smaller than ...ray-width */
+
+    --sprite-prog-src-radius: 0.3; 
+    --sprite-prog-tgt-radius: 0.2;
+    --sprite-prog-arrow-length: 20;
+    --sprite-prog-arrow-width: 12; 
+    --sprite-prog-stroke-width: 3; 
+
+    --sprite-trace-stroke-width: 5;
 
     --font-family-body: Arial, Helvetica, sans-serif;
     --font-family-title: 'Times New Roman', Times, serif;

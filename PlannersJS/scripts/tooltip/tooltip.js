@@ -20,7 +20,7 @@ UI.Tooltip = class {
      * Leave width or height as undefined for auto sizing.
      */
     setTip(dialog_pos, message, dom, width = undefined, height = undefined) {
-        this.#dom_box.textContent = message;
+        this.#dom_box.innerHTML = message;
         this.#dom_box.style.width = !width ? "auto" : width;
         this.#dom_box.style.height = !height ? "auto" : height;
         const base_rect = this.#dom.getBoundingClientRect();

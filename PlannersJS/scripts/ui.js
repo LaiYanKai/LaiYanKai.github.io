@@ -56,6 +56,46 @@ const ui_params = {
     /** @type {number} */
     sprite_vertex_scale: undefined,
     /** @type {number} */
+    sprite_link_knob: undefined,
+    /** @type {number} */
+    sprite_link_anchor_radius: undefined,
+    /** @type {number} */
+    sprite_link_root_radius: undefined,
+    /** @type {number} */
+    sprite_link_arrow_length: undefined,
+    /** @type {number} */
+    sprite_link_arrow_width: undefined,
+    /** @type {number} */
+    sprite_link_arrow_position: undefined,
+    /** @type {number} */
+    sprite_link_stroke_width: undefined,
+    /** @type {number} */
+    sprite_sec_src_radius: undefined,
+    /** @type {number} */
+    sprite_sec_ray_arrow_length: undefined,
+    /** @type {number} */
+    sprite_sec_ray_arrow_width: undefined,
+    /** @type {number} */
+    sprite_sec_ray_radius: undefined,
+    /** @type {number} */
+    sprite_sec_radius: undefined,
+    /** @type {number} */
+    sprite_sec_ray_width: undefined,
+    /** @type {number} */
+    sprite_sec_ext_width: undefined,
+    /** @type {number} */
+    sprite_prog_src_radius: undefined,
+    /** @type {number} */
+    sprite_prog_tgt_radius: undefined,
+    /** @type {number} */
+    sprite_prog_arrow_length: undefined,
+    /** @type {number} */
+    sprite_prog_arrow_width: undefined,
+    /** @type {number} */
+    sprite_prog_stroke_width: undefined,
+    /** @type {number} */
+    sprite_trace_stroke_width: undefined,
+    /** @type {number} */
     play_interval: 20,
     /** @type {number} */
     thresh: 1e-8,
@@ -75,70 +115,39 @@ const ui_params = {
         this.arrow_cap = parseFloat(getCssVar("--arrow-cap"));
         this.sprite_cell_scale = parseFloat(getCssVar("--sprite-cell-scale"));
         this.sprite_vertex_scale = parseFloat(getCssVar("--sprite-vertex-scale"));
+
+        this.sprite_link_knob = parseFloat(getCssVar("--sprite-link-knob"));
+        this.sprite_link_anchor_radius = parseFloat(getCssVar("--sprite-link-anchor-radius"));
+        this.sprite_link_root_radius = parseFloat(getCssVar("--sprite-link-root-radius"));
+        this.sprite_link_arrow_length = parseFloat(getCssVar("--sprite-link-arrow-length"));
+        this.sprite_link_arrow_width = parseFloat(getCssVar("--sprite-link-arrow-width"));
+        this.sprite_link_arrow_position = parseFloat(getCssVar("--sprite-link-arrow-position"));
+        this.sprite_link_stroke_width = parseFloat(getCssVar("--sprite-link-stroke-width"));
+
+        this.sprite_sec_src_radius = parseFloat(getCssVar("--sprite-sec-src-radius"));
+        this.sprite_sec_ray_arrow_length = parseFloat(getCssVar("--sprite-sec-ray-arrow-length"));
+        this.sprite_sec_ray_arrow_width = parseFloat(getCssVar("--sprite-sec-ray-arrow-width"));
+        this.sprite_sec_ray_radius = parseFloat(getCssVar("--sprite-sec-ray-radius"));
+        this.sprite_sec_radius = parseFloat(getCssVar("--sprite-sec-radius"));
+        this.sprite_sec_ray_width = parseFloat(getCssVar("--sprite-sec-ray-width"));
+        this.sprite_sec_ext_width = parseFloat(getCssVar("--sprite-sec-ext-width"));
+
+        this.sprite_prog_src_radius = parseFloat(getCssVar("--sprite-prog-src-radius"));
+        this.sprite_prog_tgt_radius = parseFloat(getCssVar("--sprite-prog-tgt-radius"));
+        this.sprite_prog_arrow_length = parseFloat(getCssVar("--sprite-prog-arrow-length"));
+        this.sprite_prog_arrow_width = parseFloat(getCssVar("--sprite-prog-arrow-width"));
+        this.sprite_prog_stroke_width = parseFloat(getCssVar("--sprite-prog-stroke-width"));
+
+        this.sprite_trace_stroke_width = parseFloat(getCssVar("--sprite-trace-stroke-width"));
     }
 };
 Object.seal(ui_params);
 
-const Algs = {
-    Parameters: undefined,
-    AbstractNode: undefined,
-    AbstractPriorityQueueNode: undefined,
-    AbstractPriorityQueue: undefined,
-    AbstractQueue: undefined,
-    AbstractStack: undefined,
-    AbstractAlg: undefined,
-    AbstractGridAlg: undefined,
-    GridAlgNeighbor: undefined,
-    AStarCanvasCell: undefined,
-    AStarCanvasVertex: undefined,
-    AStarNode: undefined,
-    AStar: undefined,
-};
-Object.seal(Algs);
+/** Classes for Algs */
+const Algs = {};
 
 /** Classes for ui */
-const UI = {
-    Overlay: undefined,
-    Cell: undefined,
-    Cells: undefined,
-    Cursor: undefined,
-    Cursors: undefined,
-    Grid: undefined,
-    Layers: undefined,
-    Ruler: undefined,
-    Graph: undefined,
-    AbstractTool: undefined,
-    AbstractToolButton: undefined,
-    AbstractToolNumber: undefined,
-    AbstractToolSelect: undefined,
-    AbstractToolFile: undefined,
-    AbstractForm: undefined,
-    AbstractFormElement: undefined,
-    Toolbar: undefined,
-    Tooltip: undefined,
-    KeyBinder: undefined,
-    FormHeading: undefined,
-    FormElementSelect: undefined,
-    FormElementNumber: undefined,
-    FormAlg: undefined,
-    FormNewMap: undefined,
-    Dialog: undefined,
-    AbstractSprite: undefined,
-    AbstractSpriteCell: undefined,
-    AbstractSpriteVertex: undefined,
-    AbstractSpriteArrow: undefined,
-    AbstractCanvas: undefined,
-    AbstractCanvasCell: undefined,
-    AbstractCanvasVertex: undefined,
-    AbstractCanvasArrow: undefined,
-    AbstractLens: undefined,
-    LensRainbow: undefined,
-    LensNone: undefined,
-    Step: undefined,
-    Action: undefined,
-    Player: undefined,
-};
-Object.seal(UI);
+const UI = {};
 
 const ui = {
     /** @type {UI.Cells} */
@@ -239,6 +248,8 @@ const ui = {
     form_alg: undefined,
     /** @type {UI.FormElementSelect} */
     form_new_map_source: undefined,
+    /** @type {UI.FormElementSelect} */
+    form_new_map_template: undefined,
     /** @type {UI.FormElementNumber} */
     form_new_map_size_x: undefined,
     /** @type {UI.FormElementNumber} */
@@ -280,8 +291,25 @@ const ui = {
             Utils.createArray2d(ui_states.size, 1),
             false);
 
+        this.test();
+
         delete this.init;
         Object.freeze(this);
+    },
+
+    test() {
+        let canvas = document.querySelector("div.sprites");
+
+        ui.newMap();
+        ui.form_new_map_source.selectValue(NewMapSource.Template);
+        ui.form_new_map._change_source();
+        ui.form_new_map_template.selectValue(NewMapTemplate.Maze01);
+        ui.dialog.ok();
+
+        ui.showDialog(ui.form_alg);
+        ui.form_alg_algorithm.selectValue(AlgAlgorithm.R2P);
+        ui.form_alg._change_algorithm();
+        ui.dialog.cancel();
     },
 
     /**
@@ -321,13 +349,13 @@ const ui = {
     newMap() {
         if (ui_states.draw_mode !== true)
             throw new Error(`newMap called while not in draw mode`);
-        this.showDialog("new_map");
+        ui.tool_new_map.click();
     },
 
     loadMap() {
         if (ui_states.draw_mode !== true)
             throw new Error(`loadMap called while not in draw mode`);
-        this.toolbar.tool("load_map").click();
+        ui.tool_load_map.click();
     },
 
     saveMap() {
@@ -375,6 +403,12 @@ const ui = {
         ui_states.size = [new_costs.length, new_costs[0].length];
         const new_start = Utils.isCoord(new_states.start) ? new_states.start : ui_states.start;
         const new_goal = Utils.isCoord(new_states.goal) ? new_states.goal : ui_states.goal;
+
+        // form_new_map sizes and vis
+        ui.form_new_map_size_x.change(ui_states.size[0]);
+        ui.form_new_map_size_y.change(ui_states.size[1]);
+        ui.form_new_map_visual_min_cost.change(new_states.visual_min_cost);
+        ui.form_new_map_visual_max_cost.change(new_states.visual_max_cost);
 
         // start cursors and tools    
         this.tool_start_x.changeParams(new_start[0], 0, ui_states.size[0], 0.5, false);
@@ -482,6 +516,19 @@ const ui = {
         if (alg_params.algorithm === AlgAlgorithm.AStar) {
             ui_states.alg = new Algs.AStar(alg_params);
         }
+        else if (alg_params.algorithm === AlgAlgorithm.Dijkstra) {
+            ui_states.alg = new Algs.Dijkstra(alg_params);
+        }
+        else if (alg_params.algorithm === AlgAlgorithm.BFS) {
+            ui_states.alg = new Algs.BFS(alg_params);
+        }
+        else if (alg_params.algorithm === AlgAlgorithm.DFS) {
+            ui_states.alg = new Algs.DFS(alg_params);
+        }
+        else if (alg_params.algorithm === AlgAlgorithm.R2P) {
+            ui_states.alg = new Algs.R2P(alg_params);
+        }
+
         else {
             window.alert("Algorithm is not implemented.")
             this.drawMode();
@@ -492,8 +539,7 @@ const ui = {
         this.layers.loadCanvases([...ui_states.alg.canvases()]);
 
         // find path and build sprites and steps.
-        ui_states.alg.run();
-
+        ui_states.alg.run(ui_states.start.slice(), ui_states.goal.slice());
 
         // Build lens options
         let lens_options = [];
@@ -706,6 +752,15 @@ const ui = {
      * */
     gridToPx(grid_coord) {
         return [grid_coord[0] * ui_params.cell_size, (ui_states.size[1] - grid_coord[1]) * ui_params.cell_size];
+    },
+
+    /** 
+     * Converts a vector in the grid to the corresponding pixel vector
+     * @param {[number, number]} vector An array of two numbers describing the vector in the grid.
+     * @returns {[number, number]} An array of two numbers describing the pixel values from the top left corner of the layers DOM object.
+     * */
+    gridToPxVector(vector) {
+        return [vector[0] * ui_params.cell_size, - vector[1] * ui_params.cell_size];
     },
 
     /** 

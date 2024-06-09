@@ -58,10 +58,8 @@ UI.KeyBinder = class {
                     ui.tool_step_forward.click();
                 else if (e.key === "9")
                     ui.tool_play_forward.click();
-                else if (e.key === ",") {
-                    console.log("dbl"); 
+                else if (e.key === ",")
                     ui.tool_play_reverse.dblclick();
-                }
                 else if (e.key === ".")
                     ui.tool_play_forward.dblclick();
             }

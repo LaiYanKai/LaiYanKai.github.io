@@ -10,7 +10,8 @@ const AlgAlgorithm = {
     Anya: 6,
     RRTStar: 7,
     PRMStar: 8,
-    length: 9,
+    R2P: 9,
+    length: 10,
 };
 Object.freeze(AlgAlgorithm);
 
@@ -129,5 +130,12 @@ const AlgPresetAnya = {
     Cell: 1,
     Vertex: 2,
     length: 3,
+};
+Object.freeze(AlgPresetAnya);
+
+const AlgPresetR2P = {
+    Custom: AlgPresetCustom,
+    Default: 1,
+    length: 2,
 };
 Object.freeze(AlgPresetAnya);

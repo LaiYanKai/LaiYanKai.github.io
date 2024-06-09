@@ -36,9 +36,27 @@ Algs.AbstractPriorityQueueNode = class extends Algs.AbstractNode {
     }
 }
 
+
+Algs.AbstractQueueNode = class extends Algs.AbstractNode {
+    queued;
+
+    constructor(coord, num_costs, sprite) {
+        super(coord, num_costs, sprite)
+        this.queued = false;
+    }
+};
+Algs.AbstractStackNode = class extends Algs.AbstractNode {
+    queued;
+
+    constructor(coord, num_costs, sprite) {
+        super(coord, num_costs, sprite)
+        this.queued = false;
+    }
+};
+
+
 Algs.AbstractAlg = class {
     params;
-    steps;
     #canvases;
     #lenses;
     default_lens_idx;
@@ -187,7 +205,7 @@ Algs.GridAlgNeighbor = class {
         this.didx = didx;
         this.dir = Utils.dirIndexToDir(didx);
         this.is_cardinal = Utils.isCardinal(didx);
-        this.metric_length = metric_function(this.dir);
+        this.metric_length = metric_function == null ?1:metric_function(this.dir);
         this.adj_cell_dir = Utils.adjCellFromVertex([0, 0], this.dir);
         this.in_map = null;
         this.cell_lethal = null;
@@ -398,7 +416,7 @@ Algs.AbstractGridAlg = class extends Algs.AbstractAlg {
 
     #nbCellInfosC(exp_node) {
         for (const neighbor of this.#neighbors) {
-            const neighbor_cell_coord = Utils.addCoord(exp_node.coord, neighbor.dir);
+            const neighbor_cell_coord = Utils.addCoords(exp_node.coord, neighbor.dir);
             neighbor.in_map = this.inMap(neighbor_cell_coord);
             this.#nbCellInfo(neighbor_cell_coord, neighbor);
         }
@@ -406,10 +424,10 @@ Algs.AbstractGridAlg = class extends Algs.AbstractAlg {
 
     #nbCellInfosV(exp_node) {
         for (const neighbor of this.#neighbors) {
-            const neighbor_vertex_coord = Utils.addCoord(exp_node.coord, neighbor.dir);
+            const neighbor_vertex_coord = Utils.addCoords(exp_node.coord, neighbor.dir);
             neighbor.in_map = this.inMap(neighbor_vertex_coord);
             if (!neighbor.is_cardinal) {
-                const neighbor_cell_coord = Utils.addCoord(exp_node.coord, neighbor.adj_cell_dir);
+                const neighbor_cell_coord = Utils.addCoords(exp_node.coord, neighbor.adj_cell_dir);
                 this.#nbCellInfo(neighbor_cell_coord, neighbor);
             }
         }
@@ -533,7 +551,7 @@ Algs.AbstractGridAlg = class extends Algs.AbstractAlg {
                             neighbor.node_chblocked = false;
                         }
                         else { // check for checkerboard acceess
-                            const parent_dir = Utils.subtractCoord(exp_node.parent.coord, exp_node.coord);
+                            const parent_dir = Utils.subtractCoords(exp_node.parent.coord, exp_node.coord);
 
                             const [nb_bl, nb_br] = this.#BLAndBRNeighbors(neighbor);
 
@@ -565,7 +583,7 @@ Algs.AbstractGridAlg = class extends Algs.AbstractAlg {
                             neighbor.node_chblocked = false;
                         }
                         else { // not a start node, check for checkerboard access
-                            const parent_dir = Utils.subtractCoord(exp_node.parent.coord, exp_node.coord);
+                            const parent_dir = Utils.subtractCoords(exp_node.parent.coord, exp_node.coord);
                             const [nb_l, nb_r] = this.#LAndRNeighbors(neighbor);
                             neighbor.node_chblocked = (!nb_l.cell_access && !nb_r.cell_access && Utils.dotCoords(parent_dir, neighbor.dir) < 0);
 

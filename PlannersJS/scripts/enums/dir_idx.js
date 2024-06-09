@@ -1,7 +1,10 @@
 "use strict";
 
 /** 
- * Integers between 0 and 7 describing compass directions where N=0, NW=1, etc. */
+ * Integers between 0 and 7 describing compass directions where N=0, NW=1, etc. 
+ * @enum {number}
+ * @readonly
+ */
 const DirIndex = {
     N: 0,
     NW: 1,

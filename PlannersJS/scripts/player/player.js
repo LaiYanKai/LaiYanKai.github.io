@@ -169,8 +169,6 @@ UI.Player = class {
     */
     #undo() {
         const from_idx = this.#step_idx_of_rank[0];
-        if (from_idx <= 0)
-            return null;
 
         const step = this.#steps[from_idx];
 
@@ -182,7 +180,7 @@ UI.Player = class {
             this.#vis_buffer.add(action.sprite);
         }
 
-        return this.#steps[from_idx - 1];
+        return from_idx <= 0 ? null : this.#steps[from_idx - 1];
     }
 
     /** 
@@ -304,7 +302,7 @@ UI.Step = class {
      * Registers an action associated with a sprite.
      * Does not modify the sprite. Useful for the initial step where sprite should is initialized somewhere else.
      * @param {UI.AbstractSprite | *} sprite Any sprite that is derived from UI.AbstractSprite.
-     * @param {SpriteAction | number} action_id The action index for a sprite.
+     * @param {SpriteActionNode | number} action_id The action index for a sprite.
     */
     register(sprite, action_id) {
         this.#actions.push(new UI.Action(sprite, action_id));
@@ -313,7 +311,7 @@ UI.Step = class {
     /** 
      * Registers an action associated with a sprite and assigns the new action data into the sprite.
      * @param {UI.AbstractSprite | *} sprite Any sprite that is derived from UI.AbstractSprite.
-     * @param {SpriteAction | number} action_id The action index for a sprite.
+     * @param {SpriteActionNode | number} action_id The action index for a sprite.
      * @param {*} new_action_data the new action data to register with the sprite.
     */
     registerWithData(sprite, action_id, new_action_data) {

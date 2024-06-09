@@ -82,7 +82,10 @@
 
     &>svg {
         position: absolute;
-        pointer-events: all;
+
+        & * {
+            pointer-events: painted;
+        }
 
         &.arw {
             transform-origin: calc(var(--arrow-width) / 2) center;
@@ -238,6 +241,191 @@
                         fill: gray;
                     }
                 }
+            }
+        }
+
+        &.r2l {
+            opacity: 0.8;
+
+            &.src {
+                --r2l-color: var(--color-red14);
+
+                &.hol {
+                    --r2l-color: var(--color-red12);
+                }
+
+                &.exp {
+                    --r2l-color: var(--color-red11);
+                }
+            }
+
+            &.tgt {
+                --r2l-color: var(--color-green14);
+
+                &.hol {
+                    --r2l-color: var(--color-green12);
+                }
+
+                &.exp {
+                    --r2l-color: var(--color-green11);
+                }
+            }
+
+            &.prn {
+                --r2l-color: var(--color-gray5);
+            }
+
+            &>.curve {
+                fill: none;
+                stroke: var(--r2l-color);
+                stroke-width: var(--sprite-link-stroke-width);
+                stroke-dasharray: 4 2;
+            }
+
+            &>.arrow {
+                fill: var(--r2l-color);
+                stroke: none;
+            }
+
+            &>.anchor {
+                fill: white;
+                stroke: var(--r2l-color);
+                stroke-width: var(--sprite-link-anchor-width);
+                stroke-linejoin: miter;
+
+                &.fill {
+                    fill: var(--r2l-color);
+                }
+            }
+
+            &>.line {
+                stroke: var(--r2l-color);
+                stroke-width: var(--sprite-link-anchor-width);
+            }
+
+            &.que {
+                &>.curve {
+                    stroke-width: calc(2 * var(--sprite-link-anchor-width));;
+                    stroke-dasharray: 1 6;
+                    stroke-linecap: round;
+                }
+            }
+
+            &.path {
+                z-index: 1 !important;
+                opacity: 1;
+                --r2l-path-color: var(--color-blu15);
+
+                &>.curve {
+                    stroke-dasharray: none;
+                    stroke-width: calc(3 * var(--sprite-link-anchor-width));
+                    stroke: var(--r2l-path-color);
+                }
+
+                &>.arrow {
+                    fill: var(--r2l-path-color);
+                }
+
+                &>.anchor {
+                    &.fill {
+                        fill: var(--r2l-path-color);
+                        stroke: var(--r2l-path-color);
+                    }
+                }
+            }
+
+            &.ey {
+                &>.curve {
+                    stroke-dasharray: none;
+                }
+            }
+            
+            &.vy {
+                &>.curve {
+                    stroke-dasharray: none;
+                }
+            }
+
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+
+        &.r2s {
+            --r2s-stop-start: var(--color-blu16);
+            --r2s-stop-end: var(--color-blu17);
+
+            &.inactive {
+                --r2s-stop-start: var(--color-blu18);
+                --r2s-stop-end: var(--color-blu8);
+            }
+
+            &.active {
+                --r2s-stop-start: var(--color-orn17);
+                --r2s-stop-end: var(--color-orn17);
+            }
+
+            & .stop-start {
+                stop-color: var(--r2s-stop-start);
+                stop-opacity: 0.9;
+            }
+
+            & .stop-end {
+                stop-color: var(--r2s-stop-end);
+                stop-opacity: 0.9;
+            }
+
+            &>.src {
+                fill: none;
+                stroke: var(--color-gray4);
+                stroke-width: var(--sprite-sec-ext-width);
+                stroke-dasharray: var(--sprite-sec-ray-width) calc(var(--sprite-sec-ray-width) / 2);
+            }
+
+            &>.ray {
+                fill: var(--color-gray4);
+                stroke: var(--color-gray4);
+                stroke-width: var(--sprite-sec-ray-width);
+                stroke-linejoin: round;
+            }
+
+            &>.ext {
+                fill: none;
+                stroke: var(--color-gray4);
+                stroke-width: var(--sprite-sec-ext-width);
+                stroke-dasharray: 3;
+            }
+
+        }
+
+        &.r2p {
+
+            &>.line,
+            &>.arrow {
+                fill: none;
+                stroke: var(--color-blu14);
+                stroke-width: var(--sprite-prog-stroke-width);
+                stroke-linecap: round;
+            }
+        }
+
+        &.r2t {
+            --r2t-color: var(--color-gray4);
+
+            &.active {
+                --r2t-color: var(--color-orn6);
+            }
+
+            &.inactive {
+                --r2t-color: var(--color-cya6);
+            }
+
+            &>path {
+                fill: none;
+                stroke: var(--r2t-color);
+                stroke-width: var(--sprite-trace-stroke-width);
+                stroke-linecap: round;
             }
         }
     }

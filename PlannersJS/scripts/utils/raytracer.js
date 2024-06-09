@@ -1,6 +1,13 @@
 "use strict";
 
-var RayTracer = class {
+const RayTracerState = {
+    X: 0, // moved in X dim (crossed vertical line)
+    Y: 1, // moved in Y dim (crossed horizontal line)
+    XY: 2, // moved in X & Y dim (crossed vertex)
+};
+Object.freeze(RayTracerState);
+
+const RayTracer = class {
     static #THRES = 1e-8;
     static #REACHED_THRES = 1 - this.#THRES;
 
@@ -12,7 +19,7 @@ var RayTracer = class {
     #len_travelled = 0; // always positive
 
     // Extra implementations
-    #crossed_vertex = false;
+    #state = RayTracerState.XY;
 
     constructor() { }
 
@@ -46,7 +53,7 @@ var RayTracer = class {
         }
 
         this.#len_travelled = 0;
-        this.#crossed_vertex = true;
+        this.#state = RayTracerState.XY;
     }
 
     #getNext(d) {
@@ -56,24 +63,24 @@ var RayTracer = class {
 
     /**
      * Brings the raytracer to the next root vertex
-     * Use adjCellOfVertex to get cell corresponding to vertex.
+     * Use adjCellFromVertex to get cell corresponding to vertex.
      */
     update() {
         if (this.#next_len[1] - this.#next_len[0] > RayTracer.#THRES) {
             this.#len_travelled = this.#next_len[0];
-            this.#crossed_vertex = false;
+            this.#state = this.#sgn[1] === 0 ? RayTracerState.XY : RayTracerState.X;
 
             this.#getNext(0); // x crossed a grid line before y crossed a grid line 
         }
         else if (this.#next_len[0] - this.#next_len[1] > RayTracer.#THRES) {
             this.#len_travelled = this.#next_len[1];
-            this.#crossed_vertex = false;
+            this.#state = this.#sgn[0] === 0 ? RayTracerState.XY : RayTracerState.Y;
 
             this.#getNext(1); // y crossed a grid line before x crossed a grid line
         }
         else { // x and y crossed grid line at same location
             this.#len_travelled = this.#next_len[0];
-            this.#crossed_vertex = true;
+            this.#state = RayTracerState.XY;
 
             this.#getNext(0);
             this.#getNext(1);
@@ -85,6 +92,12 @@ var RayTracer = class {
 
     /** Returns the root vertex (array) */
     getRoot() { return this.#root; }
+
+    /** @returns {[number, number]} */
+    getDiff() {return this.#dif; }
+
+    /** @returns {RayTracerState} */
+    getState() { return this.#state; }
 
     /** Returns the length travelled (number). 
      * Distance between "from" and "to" is normalised to one */

@@ -55,7 +55,7 @@ UI.AbstractCanvasCell = class extends UI.AbstractCanvas {
      * @param {[number, number]} size number of x cells and y cells.
      * */
     constructor(canvas_id, ...sprite_args) {
-        super(canvas_id, UI.AbstractSpriteCell, ...sprite_args);
+        super(canvas_id, UI.SpriteCell, ...sprite_args);
         Object.freeze(this);
     }
 
@@ -65,22 +65,22 @@ UI.AbstractCanvasCell = class extends UI.AbstractCanvas {
         outline = SpriteActionOutline.None) {
         const sprite = super.add(id);
         sprite.register(
-            SpriteAction.Position,
+            SpriteActionNode.Position,
             [coord[0] + 0.5, coord[1] + 0.5]);
         sprite.register(
-            SpriteAction.Size,
+            SpriteActionNode.Size,
             [ui_params.sprite_cell_scale, ui_params.sprite_cell_scale]);
         sprite.register(
-            SpriteAction.Display,
+            SpriteActionNode.Display,
             display);
         sprite.register(
-            SpriteAction.Class,
+            SpriteActionNode.Class,
             sprite_class);
         sprite.register(
-            SpriteAction.ZIndex,
+            SpriteActionNode.ZIndex,
             z_index);
         sprite.register(
-            SpriteAction.Outline,
+            SpriteActionNode.Outline,
             outline);
         return sprite;
     }
@@ -94,7 +94,7 @@ UI.AbstractCanvasVertex = class extends UI.AbstractCanvas {
      * @param {[number, number]} size number of x vertices and y vertices.
      * */
     constructor(canvas_id, ...sprite_args) {
-        super(canvas_id, UI.AbstractSpriteVertex, ...sprite_args);
+        super(canvas_id, UI.SpriteVertex, ...sprite_args);
         Object.freeze(this);
     }
 
@@ -103,17 +103,17 @@ UI.AbstractCanvasVertex = class extends UI.AbstractCanvas {
         z_index = 0,
         outline = SpriteActionOutline.None) {
         const sprite = super.add(id);
-        sprite.register(SpriteAction.Position,
+        sprite.register(SpriteActionNode.Position,
             coord);
-        sprite.register(SpriteAction.Size,
+        sprite.register(SpriteActionNode.Size,
             [ui_params.sprite_vertex_scale, ui_params.sprite_vertex_scale]);
-        sprite.register(SpriteAction.Display,
+        sprite.register(SpriteActionNode.Display,
             display);
-        sprite.register(SpriteAction.Class,
+        sprite.register(SpriteActionNode.Class,
             sprite_class);
-        sprite.register(SpriteAction.ZIndex,
+        sprite.register(SpriteActionNode.ZIndex,
             z_index);
-        sprite.register(SpriteAction.Outline,
+        sprite.register(SpriteActionNode.Outline,
             outline);
         return sprite;
     }
@@ -125,7 +125,7 @@ UI.AbstractCanvasArrow = class extends UI.AbstractCanvas {
      * Initializes a canvas for adding arrows that can only occur from each cell (e.g. arrows that point from the cell to a parent).
      * */
     constructor(canvas_id, ...sprite_args) {
-        super(canvas_id, UI.AbstractSpriteArrow, ...sprite_args);
+        super(canvas_id, UI.SpriteArrow, ...sprite_args);
         Object.freeze(this);
     }
 
@@ -133,19 +133,19 @@ UI.AbstractCanvasArrow = class extends UI.AbstractCanvas {
         sprite_class = SpriteActionClass.Transparent,
         z_index = 0) {
         const sprite = super.add(id);
-        sprite.register(SpriteAction.Position,
+        sprite.register(SpriteActionNode.Position,
             coord);
-        sprite.register(SpriteAction.Size,
+        sprite.register(SpriteActionNode.Size,
             size);
-        sprite.register(SpriteAction.Display,
+        sprite.register(SpriteActionNode.Display,
             display);
-        sprite.register(SpriteAction.Class,
+        sprite.register(SpriteActionNode.Class,
             sprite_class);
-        sprite.register(SpriteAction.ZIndex,
+        sprite.register(SpriteActionNode.ZIndex,
             z_index);
         // arrow does not have outline
         // sprite.register(
-        //     SpriteAction.Outline,
+        //     SpriteActionNode.Outline,
         //     false);
         return sprite;
     }
