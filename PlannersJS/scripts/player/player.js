@@ -169,6 +169,8 @@ UI.Player = class {
     */
     #undo() {
         const from_idx = this.#step_idx_of_rank[0];
+        if (from_idx <= 0)
+            return null;
 
         const step = this.#steps[from_idx];
 
@@ -180,7 +182,7 @@ UI.Player = class {
             this.#vis_buffer.add(action.sprite);
         }
 
-        return from_idx <= 0 ? null : this.#steps[from_idx - 1];
+        return this.#steps[from_idx - 1];
     }
 
     /** 

@@ -11,6 +11,7 @@ const loader = {
         ["enums/action.js", false],
         ["enums/astar.js", false], // depends on sprites
         ["enums/dijkstra.js", false], // depends on sprites
+        ["enums/gbfs.js", false], // depends on sprites
         ["enums/r2p.js", false], // depends on sprites
         ["enums/bfs.js", false],
         ["enums/dfs.js", false],
@@ -43,6 +44,7 @@ const loader = {
         ["algs/dijkstra.js", false],
         ["algs/bfs.js", false],
         ["algs/dfs.js", false],
+        ["algs/gbfs.js", false],
         ["algs/r2p_types.js", false],
         ["algs/r2p_sprites.js", false],
         ["algs/r2p_canvas.js", false],

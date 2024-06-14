@@ -298,6 +298,12 @@ const ui = {
     },
 
     test() {
+
+        ui.showDialog(ui.form_alg) ;
+        ui.form_alg_algorithm.selectValue(AlgAlgorithm.GBFS) ;
+        ui.form_alg._change_algorithm();
+        ui.dialog.ok();
+
         let canvas = document.querySelector("div.sprites");
 
         ui.newMap();
@@ -525,10 +531,12 @@ const ui = {
         else if (alg_params.algorithm === AlgAlgorithm.DFS) {
             ui_states.alg = new Algs.DFS(alg_params);
         }
+        else if (alg_params.algorithm === AlgAlgorithm.GBFS) {
+            ui_states.alg = new Algs.GBFS(alg_params);
+        }
         else if (alg_params.algorithm === AlgAlgorithm.R2P) {
             ui_states.alg = new Algs.R2P(alg_params);
         }
-
         else {
             window.alert("Algorithm is not implemented.")
             this.drawMode();
