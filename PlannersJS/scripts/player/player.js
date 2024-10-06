@@ -177,7 +177,7 @@ UI.Player = class {
         for (let r = 0; r <= step.rank; ++r)
             --this.#step_idx_of_rank[r];
 
-        for (const action of step.actions()) {
+        for (const action of step.actionsReverse()) {
             action.undo();
             this.#vis_buffer.add(action.sprite);
         }
@@ -312,13 +312,18 @@ UI.Step = class {
 
     /** 
      * Registers an action associated with a sprite and assigns the new action data into the sprite.
+     * Allows checking of duplicates. 
      * @param {UI.AbstractSprite | *} sprite Any sprite that is derived from UI.AbstractSprite.
-     * @param {SpriteActionNode | number} action_id The action index for a sprite.
-     * @param {*} new_action_data the new action data to register with the sprite.
-    */
-    registerWithData(sprite, action_id, new_action_data) {
-        sprite.register(action_id, new_action_data);
-        this.register(sprite, action_id);
+     * @param {number} action_id
+     * @param {*} new_data **Cannot be _undefined_**
+     * @param {boolean} [allow_duplicates=false] Defaults to false. 
+     * Set to _false_ to check if the previous entry is a duplicate of the current. If it is a duplicate, the data is not registered and false is returned. 
+     * If set to _true_, new_data is registered and the function returns true.
+     * @returns {boolean}
+     */
+    registerWithData(sprite, action_id, new_action_data, allow_duplicates = false) {
+        if (sprite.register(action_id, new_action_data, allow_duplicates))
+            this.register(sprite, action_id);
     }
 
     /** 
@@ -328,12 +333,21 @@ UI.Step = class {
     changeRank(rank) { this.#rank = rank; }
 
     /** 
-     * A generator that returns the actions. 
+     * A generator that yields the actions in the forward order (redo)
      * @yields {UI.Action} An action stored in the step
     */
     *actions() {
         for (const action of this.#actions)
             yield action;
+    }
+
+    /** 
+     * A generator that yields the actions in the reverse order (redo)
+     * @yields {UI.Action} An action stored in the step
+    */
+    *actionsReverse() {
+        for (let i = this.#actions.length - 1; i >= 0; --i)
+            yield this.#actions[i];
     }
 };
 Object.freeze(UI.Step);

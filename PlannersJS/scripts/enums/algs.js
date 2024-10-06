@@ -8,8 +8,8 @@ const AlgAlgorithm = {
     AStar: 4,
     ThetaStar: 5,
     Anya: 6,
-    RRTStar: 7,
-    PRMStar: 8,
+    RRT: 7,
+    PRM: 8,
     R2P: 9,
     length: 10,
 };
@@ -50,6 +50,34 @@ const AlgTimeOrdering = {
 };
 Object.freeze(AlgTimeOrdering);
 
+const AlgNeighborSelectionMethod = {
+    KNN: 0,
+    Radius: 1,
+    length: 2,
+};
+Object.freeze(AlgNeighborSelectionMethod);
+
+const AlgNearbyNodesSelectionMethod = {
+    Nearest: 0,
+    Radius: 1,
+    length: 2,
+};
+Object.freeze(AlgNearbyNodesSelectionMethod);
+
+
+const AlgRewiringOfTree = {
+    Enable: 0,
+    Disable: 1,
+    length: 2,
+};
+Object.freeze(AlgRewiringOfTree);
+
+const AlgGrowTreeTillPathFound = {
+  Enable: 0,
+  Disable: 1,
+  length: 2,
+};
+Object.freeze(AlgGrowTreeTillPathFound);
 const AlgGNb = {
     Average: 0,
     Expanded: 1, // only for cells
@@ -139,3 +167,23 @@ const AlgPresetR2P = {
     length: 2,
 };
 Object.freeze(AlgPresetAnya);
+
+const AlgPresetPRM = {
+  Custom: AlgPresetCustom,
+  Default: 1,
+    Star: 2,
+    DefaultGrowUntilPath: 3,
+    StarGrowUntilPath: 4,
+  length: 5,
+};
+Object.freeze(AlgPresetPRM);
+
+const AlgPresetRRT = {
+  Custom: AlgPresetCustom,
+  Default: 1,
+    Star: 2,
+    DefaultGrowUntilPath: 3,
+    StarGrowUntilPath: 4,
+  length: 5,
+};
+Object.freeze(AlgPresetRRT);

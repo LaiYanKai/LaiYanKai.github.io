@@ -157,10 +157,14 @@ const RayTracerGeneral = class {
         this.#dif = [NaN, NaN];
         this.#next_plen = [NaN, NaN];
         this.#cache = [NaN, NaN];
+        this.#root = [NaN, NaN];
         this.#sgn = [NaN, NaN];
         this.#plen_travelled = Infinity;
         this.#front_sgns = [];
+        this.#checkerboard_sgns = [];
+        this.#length = NaN;
         this.#state = RayTracerState.XY;
+        this.#root = [NaN, NaN];
     }
 
     /**
@@ -168,6 +172,8 @@ const RayTracerGeneral = class {
      * @param {[number, number]} to_coord 
      */
     init(from_coord, to_coord) {
+        this.#plen_travelled = Infinity;
+
         for (let d = 0; d < 2; ++d) {
             this.#dif[d] = to_coord[d] - from_coord[d];
 
@@ -176,12 +182,14 @@ const RayTracerGeneral = class {
                 this.#root[d] = Math.floor(from_coord[d]);
                 this.#cache[d] = this.#sgn[d] - from_coord[d];
                 this.#next_plen[d] = (this.#root[d] + this.#cache[d]) / this.#dif[d];
+                this.#plen_travelled = 0;
             }
             else if (this.#dif[d] + this.#thres < 0) { // this.#dif[d] is negative
                 this.#sgn[d] = -1;
                 this.#root[d] = Math.ceil(from_coord[d]);
                 this.#cache[d] = this.#sgn[d] - from_coord[d];
                 this.#next_plen[d] = (this.#root[d] + this.#cache[d]) / this.#dif[d];
+                this.#plen_travelled = 0;
             }
             else { // this.#dif[d] is close to zero.
                 this.#root[d] = Math.floor(from_coord[d]);
@@ -193,7 +201,6 @@ const RayTracerGeneral = class {
         }
 
         this.#length = Utils.euclidean(this.#dif);
-        this.#plen_travelled = 0;
         this.#state = RayTracerState.XY;
 
         const err = Utils.subtractCoords(from_coord, this.#root);
@@ -219,7 +226,7 @@ const RayTracerGeneral = class {
             return;
         }
         let I;
-        if (Utils.approxEq(err, 0) && front_sgn[d] === 0)
+        if (Utils.approxEq(err[d], 0) && front_sgn[d] === 0)
             I = [-1, 1];
         else
             I = [front_sgn[d]];
@@ -257,28 +264,71 @@ const RayTracerGeneral = class {
 
 
     /**
+     * Returns true if the cell at _cell_coord_ is occupied, false otherwise
+     * @name RayTracerComparator
+     * @function 
+     * @param {[number, number]} cell_coord the cell coordinate to test
+     * @returns {boolean} true if occupied, false if free.
+     */
+
+    /**
+     * Returns _true_ if the line drawn from _from_coord_ to _to_coord_ collides with an obstacle, _false_ if the line can be drawn unobstructed.
+     * @param {[number, number]} from_coord the coordinate to test line-of-sight from.
+     * @param {[number, number]} to_coord the coordinate to reach.
+     * @param {boolean} checkerboard Set to true if checkerboard corners have to be checked
+     * @param {RayTracerComparator} is_occupied Function that takes in one input (cell_coord), and outputs true if the cell at cell_coord is occupied, false otherwise.
+     * @returns {boolean} True if collision has occurred, false if reached.
+     * @example
+     * const raytracer = new RayTracerGeneral();
+     * const from_coord = ui_states.start;
+     * const to_coord = ui_states.goal;
+     * const checkerboard = false;
+     * const isOccupied = cell_coord => {
+     *     const cell = ui.cells.at(cell_coord);
+     *     return cell === null || cell.cost >= params.lethal;
+     * };
+     * const collided = raytracer.run(from_coord, to_coord, checkerboard, isOccupied);
+     */
+    run(from_coord, to_coord, checkerboard, isOccupied) {
+        this.init(from_coord, to_coord)
+        while (!this.hasReached()) {
+
+            // Check front
+            let front_blocked = true;
+            for (const front_sgn of this.getFrontSgn()) {
+                const front_cell_coord = Utils.adjCellFromVertex(this.getRoot(), front_sgn);
+                // const cell_cost = ui.cells.at(front_cell_coord); // if at least one of the cell_cost is free, then no collision, just break.
+                if (!isOccupied(front_cell_coord)) {
+                    front_blocked = false;
+                    break;
+                }
+            }
+            if (front_blocked)
+                return true;
+
+            // Check checkerboard
+            if (checkerboard && this.getState() === RayTracerState.XY) { // only if u need to check checkerboard.
+                for (const ch_sgn_pair of this.getCheckerboardSgnPairs()) {
+                    const cell_coord1 = Utils.adjCellFromVertex(this.getRoot(), ch_sgn_pair[0]);
+                    // const cell_cost1 = ui.cells.at(cell_coord1);
+                    const cell_coord2 = Utils.adjCellFromVertex(this.getRoot(), ch_sgn_pair[1]);
+                    // const cell_cost2 = ui.cells.at(cell_coord2);
+                    if (isOccupied(cell_coord1) && is_occupied(cell_coord2))
+                        return true; // blocked by checkerboard.
+                }
+            }
+
+            // update root vertex
+            this.update();
+        }
+        return false;
+    }
+
+
+    /**
      * Brings the raytracer to the next root vertex
-     * Make sure to call it in the following order:
      * @example 
-     * this.init(from_coord, to_coord);
-     * while (1) {
-     *     for (const front_sgn of this.getFrontSgn()) {
-     *         const front_cell_coord = Utils.adjCellFromVertex(this.getRoot(), sgn);
-     *         const cell_cost = ui.cells.at(front_cell_coord); // if at least one of the cell_cost is free, then no collision, just break.
-     *     }
-     *     if (this.getState() === RayTracerState.XY) { // only if u need to check checkerboard.
-     *         for (const ch_sgn_pair of this.getCheckerboardSgnPairs()) {
-     *             const cell_coord1 = Utils.adjCellFromVertex(this.getRoot(), sgn_pair[0]);
-     *             const cell_cost1 = ui.cells.at(cell_coord1);
-     *             const cell_coord2 = Utils.adjCellFromVertex(this.getRoot(), sgn_pair[1]);
-     *             const cell_cost2 = ui.cells.at(cell_coord2);
-     *             // blocked iff both are occupied.
-     *         }
-     *     }
-     *     if (this.hasReached())
-     *         break;
-     *     this.update();
-     * }
+     * <caption>See this.run() for more example code</caption>
      */
     update() {
         if (this.#next_plen[1] - this.#next_plen[0] > this.#thres) {
@@ -306,13 +356,10 @@ const RayTracerGeneral = class {
     /** 
      * Yields the sign direction of the front cell(s) from the root vertex.
      * @example 
-     * <caption>See this.update() for more example code</caption>
-     * for (const sgn of this.getFrontSgn()) {
-     *     const front_cell_coord = Utils.adjCellFromVertex(this.getRoot(), sgn);
-     * }
+     * <caption>See this.run() for more example code</caption>
      * @yields {[number, number]} 
     */
-    *getFrontSgn() {
+    * getFrontSgn() {
         for (const sgn of this.#front_sgns)
             yield sgn.slice();
     }
@@ -322,14 +369,10 @@ const RayTracerGeneral = class {
      * Yields a pair of sign directions from the root vertex, which indicates the pair of diagonally opposite cells to check for checkerboard corners.
      * Let sgn_pair be the yielded pair of sign directions.
      * @example 
-     * <caption>See this.update() for more example code</caption>
-     * for (const sgn_pair of this.getCheckerboardSgnPairs()) {
-     *     const cell_coord1 = Utils.adjCellFromVertex(this.getRoot(), sgn_pair[0]);
-     *     const cell_coord2 = Utils.adjCellFromVertex(this.getRoot(), sgn_pair[1]);
-     * }
+     * <caption>See this.run() for more example code</caption>
      * @yields {[[number, number], [number, number]]}
      */
-    *getCheckerboardSgnPairs() {
+    * getCheckerboardSgnPairs() {
         for (const sgn_pair of this.#checkerboard_sgns) {
             const sliced_sgn_pair = [sgn_pair[0].slice(), sgn_pair[1].slice()];
             yield sliced_sgn_pair;
@@ -376,3 +419,276 @@ const RayTracerGeneral = class {
 
 
 };
+
+const HorizontalTracer = class {
+    /**
+     * @description A specific implementation of RayTracerGeneral 
+     * that only traces horizontal lines with Integer Y-coordinates.
+     */
+
+    /**
+     * Returns _true_ if the line drawn from _from_coord_ to _to_coord_ collides with an obstacle, _false_ if the line can be drawn unobstructed.
+     * @param {[number, number]} from_coord the coordinate to test line-of-sight from.
+     * @param {boolean} is_right _true_ if the direction is +x, _false_ if the direction is -x.
+     * @param {boolean} checkerboard Set to true if checkerboard corners have to be checked
+     * @param {RayTracerComparator} is_occupied Function that takes in one input (cell_coord), and outputs true if the cell at cell_coord is occupied, false otherwise.
+     * @returns {[number, number]} the final coordinate of collision
+     * @example
+     * const from_coord = ui_states.start;
+     * const is_right = true;
+     * const checkerboard = false;
+     * const isOccupied = cell_coord => {
+     *     const cell = ui.cells.at(cell_coord);
+     *     return cell === null || cell.cost >= params.lethal;
+     * };
+     * const collided = HorizontalTracer.run(from_coord, is_right, checkerboard, isOccupied);
+     */
+    static run(from_coord, is_right, checkerboard, isOccupied) {
+        if (from_coord[1] >= ui_states.size[1]) {
+            console.warn("HorizontalTracer: from_coord is at the top boundary.\nRunning LowerHorizontalTracer instead.");
+            return LowerHorizontalTracer.run(from_coord, is_right, isOccupied);
+        } else if (from_coord[1] <= 0) {
+            console.warn("HorizontalTracer: from_coord is at the bottom boundary.\nRunning UpperHorizontalTracer instead.");
+            return UpperHorizontalTracer.run(from_coord, is_right, isOccupied);
+        }
+        from_coord = is_right
+            ? [Math.floor(from_coord[0]), from_coord[1]]
+            : [Math.ceil(from_coord[0]), from_coord[1]];
+        let check1 = is_right
+            ? Utils.topRightCellFromVertex(from_coord)
+            : Utils.topLeftCellFromVertex(from_coord);
+        let check2 = is_right
+            ? Utils.bottomRightCellFromVertex(from_coord)
+            : Utils.bottomLeftCellFromVertex(from_coord);
+        const d = is_right ? [1, 0] : [-1, 0];
+        let last_check1 = check1.slice();
+        let last_check2 = check2.slice();
+        const fixOffset = is_right ? p => p : p => Utils.addCoords(p, [1, 0]); 
+        while (check1[0] >= 0 && check1[0] < ui_states.size[0]) {
+            if (isOccupied(check1) && isOccupied(check2))
+                return fixOffset(check1);
+            
+            if (checkerboard) {
+                if (isOccupied(check1) && isOccupied(last_check2))
+                    return fixOffset(check1);
+                if (isOccupied(check2) && isOccupied(last_check1))
+                    return fixOffset(check1);
+            }
+            last_check1 = check1;
+            last_check2 = check2;
+            check1 = Utils.addCoords(check1, d);
+            check2 = Utils.addCoords(check2, d);
+        }
+        return fixOffset(check1);
+    }
+
+    static runRight(from_coord, checkerboard, isOccupied) {
+        return this.run(from_coord, true, checkerboard, isOccupied);
+    }
+
+    static runLeft(from_coord, checkerboard, isOccupied) {
+        return this.run(from_coord, false, checkerboard, isOccupied);
+    }
+}
+
+const UpperHorizontalTracer = class {
+    /**
+     * @description Raytracer that only checks for collisions with the cell above it.
+     * Only traces horizontal lines with Integer Y-coordinates.
+     */
+
+    /**
+     * Returns the final coordinate of collision, or the map boundary if no collision occurs.
+     * @param {[number, number]} from_coord the coordinate to test line-of-sight from.
+     * @param {boolean} is_right _true_ if the direction is +x, _false_ if the direction is -x.
+     * @param {RayTracerComparator} isOccupied Function that takes in one input (cell_coord), and outputs true if the cell at cell_coord is occupied, false otherwise.
+     * @param {boolean} inverse Set to true if the raytracer should check for free cells instead of occupied cells.
+     * @returns {[number, number]} the final coordinate of collision
+     * @example
+     * const from_coord = ui_states.start;
+     * const is_right = true;
+     * const isOccupied = cell_coord => {
+     *    const cell = ui.cells.at(cell_coord);
+     *    return cell === null || cell.cost >= params.lethal;
+     * };
+     * const collided = LowerHorizontalTracer.run(from_coord, is_right, isOccupied);
+     */
+    static run(from_coord, is_right, isOccupied, inverse = false) {
+        if (from_coord[1] >= ui_states.size[1]) {
+            console.warn(`UpperHorizontalTracer: from_coord "${from_coord}"is at the top boundary.`);
+            return from_coord;
+        }
+        from_coord = is_right
+            ? [Math.floor(from_coord[0]), from_coord[1]]
+            : [Math.ceil(from_coord[0]), from_coord[1]];
+        const d = is_right ? [1, 0] : [-1, 0];
+        let check = is_right
+            ? Utils.topRightCellFromVertex(from_coord)
+            : Utils.topLeftCellFromVertex(from_coord);
+        const isFree = inverse ? c => isOccupied(c) : c => !isOccupied(c);
+        const fixOffset = is_right ? p => p : p => Utils.addCoords(p, [1, 0]); 
+
+        while (check[0] >= 0 && check[0] < ui_states.size[0] && isFree(check)) {
+            check = Utils.addCoords(check, d);
+        }
+        return fixOffset(check);
+    }
+
+    static runRight(from_coord, isOccupied, inverse = false) {
+        // console.log(`running UpperHorizontalTracer.runRight(${from_coord}, isOccupied, ${inverse})`);
+        return this.run(from_coord, true, isOccupied, inverse);
+    }
+
+    static runLeft(from_coord, isOccupied, inverse = false) {
+        // console.log(`running UpperHorizontalTracer.runLeft(${from_coord}, isOccupied, ${inverse})`);
+        return this.run(from_coord, false, isOccupied, inverse);
+    }
+}
+
+const LowerHorizontalTracer = class {
+    /**
+     * @description Raytracer that only checks for collisions with the cell below it.
+     * Only traces horizontal lines with Integer Y-coordinates.
+     */
+
+    /**
+     * Returns the final coordinate of collision, or the map boundary if no collision occurs.
+     * @param {[number, number]} from_coord the coordinate to test line-of-sight from.
+     * @param {boolean} is_right _true_ if the direction is +x, _false_ if the direction is -x.
+     * @param {RayTracerComparator} isOccupied Function that takes in one input (cell_coord), and outputs true if the cell at cell_coord is occupied, false otherwise.
+     * @param {boolean} inverse Set to true if the raytracer should check for free cells instead of occupied cells.
+     * @returns {[number, number]} the final coordinate of collision
+     * @example
+     * const from_coord = ui_states.start;
+     * const is_right = true;
+     * const isOccupied = cell_coord => {
+     *   const cell = ui.cells.at(cell_coord);
+     *   return cell === null || cell.cost >= params.lethal;
+     * };
+     * const collided = LowerHorizontalTracer.run(from_coord, is_right, isOccupied);
+     * 
+     */
+    static run(from_coord, is_right, isOccupied, inverse = false) {
+        if (from_coord[1] <= 0) {
+            console.warn(`LowerHorizontalTracer: from_coord "${from_coord}" is at the bottom boundary.`);
+            return from_coord;
+        }
+        const start = Utils.addCoords(from_coord, [0, -1]);
+        const res = UpperHorizontalTracer.run(start, is_right, isOccupied, inverse);
+        return Utils.addCoords(res, [0, 1]);
+    }
+
+    static runRight(from_coord, isOccupied, inverse = false) {
+        // console.log(`running LowerHorizontalTracer.runRight(${from_coord}, isOccupied, ${inverse})`);
+        return this.run(from_coord, true, isOccupied, inverse);
+    }
+
+    static runLeft(from_coord, isOccupied, inverse = false) {
+        // console.log(`running LowerHorizontalTracer.runLeft(${from_coord}, isOccupied, ${inverse})`);
+        return this.run(from_coord, false, isOccupied, inverse);
+    }
+}
+
+const HorizontalCornerTracer = class {
+    /**
+     * @description Raytracer that only checks for collisions with
+     * the first corner it encounters past the starting
+     * that only works with Integer X and Y-coordinates.
+     * 
+     * Corner definition: a point p with only one cell occupied around it
+     * 
+     * Direcitonal Corner definition: a point p is a corner for a ray direction d
+     * iff exactly one cell before p is occupied and zero cells after p are occupied.
+     */
+
+    /**
+     * Returns the final coordinate of collision, or the map boundary if no collision occurs.
+     * @param {[number, number]} from_coord the coordinate to test line-of-sight from.
+     * @param {boolean} is_right the coordinate to reach.
+     * @param {RayTracerComparator} isOccupied Function that takes in one input (cell_coord), and outputs true if the cell at cell_coord is occupied, false otherwise.
+     * @param {boolean} top_only Set to true if only corners in the top row should be checked
+     * @param {boolean} bottom_only Set to true if only corners in the bottom row should be checked
+     * @param {boolean} inverse Set to true if the raytracer should check for free cells instead of occupied cells.
+     * @returns {[number, number]} the final coordinate of collision
+     * @example
+     * const from_coord = ui_states.start;
+     * const is_right = true;
+     * const isOccupied = cell_coord => {
+     *    const cell = ui.cells.at(cell_coord);
+     *   return cell === null || cell.cost >= params.lethal;
+     * };
+     * const top_only = false;
+     * const bottom_only = false;
+     * const inverse = false;   
+     * const collided = HorizontalCornerTracer.run(from_coord, is_right, isOccupied, top_only, bottom_only, inverse);
+     */
+    static run(from_coord, is_right, isOccupied, top_only = false, bottom_only = false, inverse = false, no_direction = false) {
+        if (from_coord[1] <= 0) {
+            console.warn("HorizontalCornerTracer: from_coord is at the bottom boundary.");
+            return UpperHorizontalTracer.run(from_coord, is_right, isOccupied, inverse);
+        } else if (from_coord[1] >= ui_states.size[1]) {
+            console.warn("HorizontalCornerTracer: from_coord is at the top boundary.");
+            return LowerHorizontalTracer.run(from_coord, is_right, isOccupied, inverse);
+        }
+        const d = is_right ? [1, 0] : [-1, 0];
+        from_coord = is_right
+            ? [Math.floor(from_coord[0]), from_coord[1]]
+            : [Math.ceil(from_coord[0]), from_coord[1]];
+        let check = is_right
+            ? Utils.topRightCellFromVertex(from_coord)
+            : Utils.topLeftCellFromVertex(from_coord);
+        const isNotFree = inverse ? c => !isOccupied(c) : c => isOccupied(c);
+
+        const makeCount = top_only ? (top, bottom) => top && bottom ? 2 : top && !bottom ? 1 : 0
+            : bottom_only ? (top, bottom) => top && bottom ? 2 : !top && bottom ? 1 : 0
+            : (top, bottom) => top + bottom;
+        const fixOffset = is_right ? p => p : p => Utils.addCoords(p, [1, 0]); 
+
+        const sum = arr => arr.reduce((a, b) => a + b, 0);
+        const isWall = counter => sum(counter[1]) == 2
+            || (counter[0][0] && counter[1][1])
+            || (counter[0][1] && counter[1][0]);
+
+        const counter = [];
+
+        const prev = Utils.topLeftCellFromVertex(check);
+        const prev_bottom = Utils.bottomRightCellFromVertex(prev);
+        counter.push([isNotFree(prev), isNotFree(prev_bottom)]);
+
+        const bottom = Utils.bottomRightCellFromVertex(check);
+        counter.push([isNotFree(check), isNotFree(bottom)]);
+        // does not check for checkerboard on the first cell
+        if (sum(counter[1]) == 2) return fixOffset(check);
+
+        counter.shift();
+        
+        check = Utils.addCoords(check, d);
+        
+        while (check[0] >= 0 && check[0] < ui_states.size[0]) {
+            const bottom = Utils.bottomRightCellFromVertex(check);
+            // break if there is a wall
+            counter.push([isNotFree(check), isNotFree(bottom)]);
+            if (isWall(counter)) break;
+            // break if the corner is found
+            if (sum(counter[0]) == 1 && sum(counter[1]) == 0) {
+                break;
+            }
+            if (no_direction && sum(counter[0]) == 0 && sum(counter[1]) == 1) {
+                break;
+            }
+            counter.shift();
+            check = Utils.addCoords(check, d);
+        }
+        return fixOffset(check);
+    }
+
+    static runRight(from_coord, isOccupied, top_only = false, bottom_only = false, inverse = false, no_direction = false) {
+        return this.run(from_coord, true, isOccupied, top_only, bottom_only, inverse, no_direction);
+    }
+
+    static runLeft(from_coord, isOccupied, top_only = false, bottom_only = false, inverse = false, no_direction = false) {
+        return this.run(from_coord, false, isOccupied, top_only, bottom_only, inverse, no_direction);
+    }
+
+
+}

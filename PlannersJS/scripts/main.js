@@ -12,6 +12,10 @@ const loader = {
         ["enums/astar.js", false], // depends on sprites
         ["enums/dijkstra.js", false], // depends on sprites
         ["enums/gbfs.js", false], // depends on sprites
+        ["enums/prm.js", false], // depends on sprites
+        ["enums/rrt.js", false], // depends on sprites    
+        ["enums/thetastar.js", false], // depends on sprites
+        ["enums/anya.js", false], 
         ["enums/r2p.js", false], // depends on sprites
         ["enums/bfs.js", false],
         ["enums/dfs.js", false],
@@ -42,14 +46,22 @@ const loader = {
         ["algs/algs.js", false],
         ["algs/astar.js", false],
         ["algs/dijkstra.js", false],
+        ["algs/prm.js", false],
+        ["algs/rrt.js", false],
         ["algs/bfs.js", false],
         ["algs/dfs.js", false],
         ["algs/gbfs.js", false],
+        ["algs/thetastar.js", false],
+        ["algs/anya_sprites.js", false],
+        ["algs/anya_canvas.js", false],
+        ["algs/anya.js", false],
         ["algs/r2p_types.js", false],
         ["algs/r2p_sprites.js", false],
         ["algs/r2p_canvas.js", false],
         ["algs/r2p_mapper.js", false],
         ["algs/r2p.js", false],
+        ["algs/rrt_canvas.js", false],
+        ["algs/rrt_sprites.js", false],
     ],
     num_loaded: 0,
 
@@ -71,6 +83,9 @@ const loader = {
         if (this.num_loaded === this.files.length)
             ui.init();
     }
+
+    
 };
+
 
 loader.load();

@@ -54,14 +54,34 @@ Object.freeze(R2PActionLink);
 const R2PLinkStatus = {
     None: 0,
     Expanding: 1,
-    Holding: 2,
+    Waiting: 2,
     Pruning: 3,
     Placing: 4,
-    OutOfAngularSector: 5,
-    OutOfOccupiedSector: 6,
-    Queued: 7,
-    Path: 8,
-    length: 9,
+    Queued: 5,
+    Path: 6,
+    length: 7,
+    /**
+     * @param {R2PLinkType | any} type 
+     * @returns {string}
+     */
+    toString(type) {
+        if (type === this.None)
+            return "None";
+        else if (type === this.Expanding)
+            return "Expanding";
+        else if (type === this.Waiting)
+            return "Waiting";
+        else if (type === this.Pruning)
+            return "Pruning";
+        else if (type === this.Placing)
+            return "Placing";
+        else if (type === this.Queued)
+            return "Queued";
+        else if (type === this.Path)
+            return "Path!";
+        else
+            return "";
+    }
 };
 Object.freeze(R2PLinkStatus);
 
@@ -78,7 +98,10 @@ const R2PLinkType = {
     Un: 5,
     Oc: 6,
     length: 7,
-    /** @param {R2PLinkType} type */
+    /** 
+     * @param {R2PLinkType | any} type 
+     * @returns {string}
+     * */
     toString(type) {
         if (type === R2PLinkType.Vu)
             return "Vu";
@@ -166,9 +189,11 @@ const R2PActionTrace = {
     ZIndex: 1,
     /** {[number, number]} Adds a coordinate reflecting the current position of the trace */
     Add: 2,
+    /** {undefined} clears the stack.  */
+    Clear: 3,
     /** {R2PTraceClass} Adds a coordinate reflecting the current position of the trace */
-    Class: 3,
-    length: 4,
+    Class: 4,
+    length: 5,
 };
 Object.freeze(R2PActionTrace);
 
@@ -178,8 +203,9 @@ Object.freeze(R2PActionTrace);
  */
 const R2PTraceClass = {
     Inactive: 0,
-    Active: 1,
-    length: 2,
+    Waiting: 1,
+    Active: 2,
+    length: 3,
 };
 Object.freeze(R2PTraceClass);
 

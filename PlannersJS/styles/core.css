@@ -128,14 +128,24 @@
     --sprite-cell-scale: 1;
     --sprite-vertex-scale: 0.7;
 
+    /* ================ Anya ============== */
+    --sprite-anya-stroke-width: 3; /* {px} stroke width for anya sprites. */
+    --sprite-anya-ray-arrow-length: 20; /* {px} arrow length. */
+    --sprite-anya-ray-arrow-width: 10; /* {px} arrow width. */
+    --sprite-anya-root-radius: 0.3; /* {grid length} radius for the root. */
+
+    /* ================ RRT ============== */
+    --sprite-rrt-circ-stroke-width: 3; /* {px} stroke width for the rrt circle */
+
+    /* ================ R2+ ============== */
     --sprite-link-knob: 5; /* the quad bezier's knob location, positioned at this normal distance from the halfway point */
-    --sprite-link-anchor-radius: 0.25; /* the anchor's radius scaled to cell size */
-    --sprite-link-root-radius: 0.3; /* the root's radius scaled to cell size */
+    --sprite-link-anchor-radius: 0.4; /* the anchor's radius scaled to cell size */
+    --sprite-link-root-radius: 0; /* the root's radius scaled to cell size */
     --sprite-link-arrow-length: 12; /* the arrow length in pixels */
     --sprite-link-arrow-width: 12; /* the arrow width in pixels */
     --sprite-link-arrow-position: 0.95; /* the arrow's position in the "t" parametric distance, with 0 being at the anchor, and 1 being at the root */
-    --sprite-link-stroke-width: 3; /* the stroke thickness of the link in pixels */
-    --sprite-link-anchor-width: 2; /* the stroke thickness of the anchor in pixels */
+    --sprite-link-stroke-width: 4; /* the stroke thickness of the link in pixels */
+    --sprite-link-anchor-width: 4; /* the stroke thickness of the anchor in pixels */
 
     --sprite-sec-src-radius: 0.3; /* the radius of the circle at the source, scaled to cell size */
     --sprite-sec-ray-arrow-length: 18; /* the ray's arrow length in pixels */ 
@@ -146,13 +156,14 @@
     --sprite-sec-ext-width: 1; /* the stroke width of the extended linein pixels. Have to be smaller than ...ray-width */
 
     --sprite-prog-src-radius: 0.3; 
-    --sprite-prog-tgt-radius: 0.2;
+    --sprite-prog-tgt-radius: 0.3;
     --sprite-prog-arrow-length: 20;
     --sprite-prog-arrow-width: 12; 
     --sprite-prog-stroke-width: 3; 
 
     --sprite-trace-stroke-width: 5;
 
+    /* ================ Font Sizes ============== */
     --font-family-body: Arial, Helvetica, sans-serif;
     --font-family-title: 'Times New Roman', Times, serif;
     --font-family-data: 'Courier New', Courier, monospace;

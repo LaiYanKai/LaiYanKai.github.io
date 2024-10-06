@@ -32,16 +32,29 @@ UI.AbstractSprite = class {
         return this.#history[action_id][this.#current[action_id]];
     }
 
-    /** Registers an operation into the history, 
-     * and increments the counter associated with the operation. */
-    register(action_id, new_data) {
+    /** 
+     * Registers new data to the sprite with the option of checking duplicate entries.
+     * @param {number} action_id
+     * @param {*} new_data **Cannot be _undefined_**
+     * @param {boolean} [allow_duplicates=false] Defaults to false. 
+     * Set to _false_ to check if the previous entry is a duplicate of the current. If it is a duplicate, the data is not registered and false is returned. 
+     * If set to _true_, new_data is registered and the function returns true.
+     * @returns {boolean}
+     */
+    register(action_id, new_data, allow_duplicates = false) {
+        if (new_data === undefined)
+            throw new Error(`Registering new data as "undefined"`);
+
+        if (!allow_duplicates) {
+            const prev_data = this.value(action_id);
+            if (prev_data === new_data)
+                return false;
+        }
+
         this.#current[action_id] = this.#history[action_id].length;
         this.#history[action_id].push(new_data);
+        return true;
     }
-
-    atFirstStep(action_id) { return this.#current[action_id] <= 0; }
-
-    atLastStep(action_id) { return this.#current[action_id] >= this.#history[action_id].length - 1; }
 
     /** Increments the counter to the next historical state of an operation, 
      * Does nothing if the counter is at the last operation. */
@@ -54,7 +67,7 @@ UI.AbstractSprite = class {
     }
 
     /** Decrements the counter to the previous historical state of an operation.
-     * Does nothing if the counter is at the current position.
+     * Does nothing if the counter is at the -1 position.
     */
     undo(action_id) {
         if (this.#current[action_id] >= 0) {
@@ -63,18 +76,6 @@ UI.AbstractSprite = class {
         }
         return false;
     }
-
-    // /** Sets all operation counters to 0. */
-    // undoAll() {
-    //     for (let o = 0; o < this.#current.length; ++o)
-    //         this.#current[o] = 0;
-    // }
-
-    // /** Sets all operation counters to the end. */
-    // redoAll() {
-    //     for (let o = 0; o < this.#current.length; ++o)
-    //         this.#current[o] = this.#history[o].length - 1;
-    // }
 
     /** Returns true if displayed. Reuse this in derived classes */
     vis() {
@@ -198,6 +199,9 @@ UI.SpriteArrow = class extends UI.AbstractSprite {
 
         const dom_cap = this.#dom_shape.nextSibling;
 
+        // z-index
+        this.dom.style.zIndex = this.value(SpriteActionArrow.ZIndex);
+
         // class
         for (const dom of [this.#dom_shape, dom_cap])
             dom.setAttribute("class", this.value(SpriteActionArrow.Class))
@@ -235,5 +239,152 @@ UI.SpriteArrow = class extends UI.AbstractSprite {
         // const halfw = 0.5 * (ui_params.arrow_width + mag + ui_params.arrow_cap);
         const halfw = 0.9 * mag - ui_params.arrow_cap
         dom_cap.setAttribute("points", `${halfw},0 ${halfw},${ui_params.arrow_cap} ${halfw + ui_params.arrow_cap},${ui_params.arrow_cap / 2}`);
+    }
+};
+
+UI.SpriteLine = class extends UI.AbstractSprite {   //line
+    #dom_shape;
+
+    constructor(canvas_id, num_extra_actions) {
+        super(canvas_id, SpriteActionLine.length + num_extra_actions, "line", true);  
+
+        // construct
+        this.#dom_shape = Utils.createSVGElement("line");
+        this.dom.appendChild(this.#dom_shape);
+    }
+    setLineStyle(style) {
+        // Here you can define different styles, for now, let's handle 'dotted'
+        switch (style) {
+            case 'dotted':
+                // This sets the line to be dotted. Adjust the numbers to change the pattern.
+                this.#dom_shape.setAttribute("stroke-dasharray", "5, 5");
+                break;
+            default:
+                // A default case to handle solid lines or any other styles
+                this.#dom_shape.removeAttribute("stroke-dasharray");
+        }
+    }
+
+    vis() {
+        const display = this.value(SpriteActionLine.Display);
+        if (display === false) {
+            this.dom.style.display = "none";
+            return;
+        }
+        this.dom.style.removeProperty("display");
+        this.dom.setAttribute("class", this.cls_base);
+
+       
+
+        // class
+        for (const dom of [this.#dom_shape])
+            dom.setAttribute("class", this.value(SpriteActionLine.Class))
+
+
+          // outline
+        const outline = this.value(SpriteActionLine .Outline);
+        if (outline === SpriteActionOutline.Dotted)
+                this.#dom_shape.setAttribute("stroke-dasharray", "5, 5");
+           
+        // pos, size, mag and rad.
+        let pos = this.value(SpriteActionLine.Position);
+        pos = ui.gridToPx(pos);
+        let size = this.value(SpriteActionLine.Size);
+        size = [
+            size[0] * ui_params.cell_size,
+            size[1] * ui_params.cell_size];
+
+        // css based values
+        this.#dom_shape.setAttribute("x1", ui_params.arrow_width / 2);
+        this.#dom_shape.setAttribute("y1", ui_params.arrow_cap / 2);
+        this.#dom_shape.setAttribute("y2", ui_params.arrow_cap / 2);
+
+        // position
+        pos[0] -= ui_params.arrow_width / 2;
+        pos[1] -= ui_params.arrow_cap / 2;
+        this.dom.style.inset = `${pos[1]}px auto auto ${pos[0]}px`;
+
+        // size 
+        const mag = Math.hypot(size[0], size[1]);
+        this.#dom_shape.setAttribute("x2", ui_params.arrow_width / 2 + mag);
+        const w = ui_params.arrow_width + mag;
+        const h = ui_params.arrow_cap;
+        this.dom.setAttribute("viewBox", `0 0 ${w} ${h}`);
+        this.dom.setAttribute("width", w);
+        this.dom.setAttribute("height", h);
+        const rad = Math.atan2(-size[1], size[0]);
+        this.dom.style.transform = `rotate(${rad}rad)`;
+
+   
+    }
+};
+UI.SpriteCircle = class extends UI.AbstractSprite {   //circle
+    #dom_shape;
+
+    constructor(canvas_id, num_extra_actions) {
+        super(canvas_id, SpriteActionCircle.length + num_extra_actions, "circle", true);  
+
+        // construct
+        this.#dom_shape = Utils.createSVGElement("circle");
+        this.dom.appendChild(this.#dom_shape);
+    }
+    setLineStyle(style) {
+        // Here you can define different styles, for now, let's handle 'dotted'
+        switch (style) {
+            case 'dotted':
+                // This sets the circle to be dotted. Adjust the numbers to change the pattern.
+                this.#dom_shape.setAttribute("stroke-dasharray", "5, 5");
+                break;
+            default:
+                // A default case to handle solid circles or any other styles
+                this.#dom_shape.removeAttribute("stroke-dasharray");
+        }
+    }
+
+    vis() {
+        const display = this.value(SpriteActionCircle.Display);
+        if (display === false) {
+            this.dom.style.display = "none";
+            return;
+        }
+        this.dom.style.removeProperty("display");
+        this.dom.setAttribute("class", this.cls_base);
+
+       
+
+        // class
+        for (const dom of [this.#dom_shape])
+            dom.setAttribute("class", this.value(SpriteActionCircle.Class))
+
+        // pos, size, mag and rad.
+        let pos = this.value(SpriteActionCircle.Position);
+        pos = ui.gridToPx(pos);
+        let size = this.value(SpriteActionCircle.Size);
+        size = [
+            size[0] * ui_params.cell_size,
+            size[1] * ui_params.cell_size];
+
+        // css based values
+        this.#dom_shape.setAttribute("cx", 100/ 2);
+        this.#dom_shape.setAttribute("cy", 10 / 2);
+        this.#dom_shape.setAttribute("r", ui_params.arrow_cap / 2);
+
+        // position
+        pos[0] -= ui_params.arrow_width / 2;
+        pos[1] -= ui_params.arrow_cap / 2;
+        this.dom.style.inset = `${pos[1]}px auto auto ${pos[0]}px`;
+
+        // size 
+        const mag = Math.hypot(size[0], size[1]);
+        this.#dom_shape.setAttribute("x2", ui_params.arrow_width / 2 + mag);
+        const w = 1000 ;
+        const h = 1000;
+        this.dom.setAttribute("viewBox", `0 0 ${w} ${h}`);
+        this.dom.setAttribute("width", w);
+        this.dom.setAttribute("height", h);
+        const rad = Math.atan2(-size[1], size[0]);
+        this.dom.style.transform = `rotate(${rad}rad)`;
+
+   
     }
 };

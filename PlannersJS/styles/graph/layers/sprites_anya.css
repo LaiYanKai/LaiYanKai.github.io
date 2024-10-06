@@ -1,0 +1,88 @@
+.body>.graph>.layers>.sprites {
+    &>svg {
+
+        &.anya-node {
+            /* Link */
+            opacity: 0.7;
+
+
+            &[stat="0"] {
+                /* Queue */
+                --anya-fill-color: var(--color-orn5);
+                --anya-stroke-color: var(--color-orn4);
+            }
+
+            &[stat="1"] {
+                /* Expanding */
+                opacity: 0.8;
+                --anya-fill-color: var(--color-red6);
+                --anya-stroke-color: var(--color-red5);
+            }
+
+            &[stat="2"] {
+                /* Visited */
+                --anya-fill-color: var(--color-blu17);
+                --anya-stroke-color: var(--color-blu16);
+            }
+
+            &[stat="3"] {
+                /* Path */
+                z-index: 1 !important;
+                opacity: 1;
+                --anya-fill-color: var(--color-red6);
+                --anya-stroke-color: var(--color-red5);
+            }
+
+            &>.ray {
+                fill: none;
+                opacity: 0.3;
+                stroke-width: var(--sprite-anya-stroke-width);
+                stroke: var(--anya-stroke-color);
+            }
+
+            &>.arrow {
+                fill: var(--anya-stroke-color);
+                opacity: 0.3;
+                stroke: none;
+            }
+
+            &>.root {
+                fill: var(--anya-fill-color);
+                stroke-width: var(--sprite-anya-stroke-width);
+                stroke: var(--anya-stroke-color);
+            }
+
+            &>.sec {
+                opacity: 0;
+                fill: var(--anya-fill-color);
+                stroke: none;
+            }
+
+            &>.interval {
+                fill: none;
+                stroke-width: var(--sprite-anya-stroke-width);
+                stroke: var(--anya-stroke-color);
+                stroke-dasharray: 
+                    calc(var(--sprite-anya-stroke-width) * 2) 
+                    calc(var(--sprite-anya-stroke-width) * 1);
+                opacity: 0.3;
+            }
+
+            &:hover {
+                opacity: 0.8;
+                z-index: 1;
+
+                &>.ray,
+                &>.arrow,
+                &>.interval {
+                    opacity: 0.8;
+                }
+
+                &>.sec {
+                    opacity: 0.6;
+                }
+            }
+        }
+
+    }
+}

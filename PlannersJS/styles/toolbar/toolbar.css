@@ -99,6 +99,7 @@
                 border: none;
                 color: transparent;
                 background: transparent;
+                z-index: 99;
             }
 
             &:has(>input[value="true"]) {

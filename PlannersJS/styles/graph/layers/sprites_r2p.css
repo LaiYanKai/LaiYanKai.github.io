@@ -1,0 +1,349 @@
+.body>.graph>.layers>.sprites {
+    &>svg {
+
+        &.r2l {
+            /* Link */
+            opacity: 0.6;
+
+            &[tdir="-1"] {
+                /* Src */
+                --r2l-color: var(--color-red14);
+                --r2l-excolor: var(--color-red13);
+                --r2l-tmcolor: var(--color-red15);
+            }
+
+            &[tdir="1"] {
+                /* Tgt */
+                --r2l-color: var(--color-green14);
+                --r2l-excolor: var(--color-green13);
+                --r2l-tmcolor: var(--color-green15);
+            }
+
+
+            &>.curve {
+                fill: none;
+                stroke-width: var(--sprite-link-stroke-width);
+            }
+
+            &>.arrow {
+                fill: var(--r2l-color);
+                stroke: none;
+            }
+
+            &>.anchor {
+                opacity: 0.1;
+                fill: white;
+                stroke-width: var(--sprite-link-anchor-width);
+                stroke-linejoin: round;
+
+                &.fill {
+                    fill: var(--r2l-color);
+                }
+            }
+
+            &>.line {
+                opacity: 0.1;
+                stroke-width: var(--sprite-link-anchor-width);
+            }
+
+
+            &[lstat="0"] {
+                /* None */
+
+            }
+
+            &[lstat="1"] {
+                /* Expanding */
+                opacity: 0.8;
+                stroke-width: calc(2 * var(--sprite-link-stroke-width));
+            }
+
+            &[lstat="2"] {
+                /* Waiting */
+
+            }
+
+            &[lstat="3"] {
+                /* Pruning */
+
+            }
+
+            &[lstat="4"] {
+                /* Placing */
+
+            }
+
+            &[lstat="5"] {
+                /* Queued */
+                opacity: 0.7;
+
+                &>.curve {
+                    filter: drop-shadow(0 0 2px rgba(0, 0, 0, .3));
+                }
+            }
+
+            &[lstat="6"] {
+                /* Path */
+                z-index: 1 !important;
+                opacity: 1;
+                --r2l-path-color: var(--color-blu15);
+
+                &>.curve {
+                    stroke-dasharray: none;
+                    stroke-width: calc(2 * var(--sprite-link-stroke-width));
+                    stroke: var(--r2l-path-color) !important;
+                    stroke-linecap: round;
+                }
+
+                &>.arrow {
+                    fill: var(--r2l-path-color) !important;
+                }
+
+                &>.anchor {
+                    fill: var(--r2l-path-color) !important;
+                    stroke: var(--r2l-path-color) !important;
+                    opacity: 0.5 !important;
+                }
+
+                &:hover {
+                    &>.anchor {
+                        opacity: 1 !important;
+                    }
+                }
+            }
+
+            &[ltype="0"] {
+
+                /* Vu */
+                &>.curve {
+                    stroke-dasharray: 10 4;
+                }
+
+                &>.curve,
+                &>.anchor,
+                &>.line {
+                    stroke: var(--r2l-color);
+                }
+
+                &>.arrow {
+                    fill: var(--r2l-color);
+                }
+            }
+
+            &[ltype="1"] {
+
+                /* Eu */
+                &>.curve {
+                    stroke-dasharray: 10 4;
+                }
+
+                &>.curve,
+                &>.anchor,
+                &>.line {
+                    stroke: var(--r2l-excolor);
+                }
+
+                &>.arrow {
+                    fill: var(--r2l-excolor);
+                }
+            }
+
+            &[ltype="2"] {
+
+                /* Vy */
+                &>.curve {
+                    stroke-dasharray: none;
+                }
+
+                &>.curve,
+                &>.anchor,
+                &>.line {
+                    stroke: var(--r2l-color);
+                }
+
+
+                &>.arrow {
+                    fill: var(--r2l-color);
+                }
+            }
+
+            &[ltype="3"] {
+
+                /* Ey */
+                &>.curve {
+                    stroke-dasharray: none;
+                }
+
+                &>.curve,
+                &>.anchor,
+                &>.line {
+                    stroke: var(--r2l-excolor);
+                }
+
+                &>.arrow {
+                    fill: var(--r2l-excolor);
+                }
+            }
+
+            &[ltype="4"] {
+
+                /* Tm */
+                &>.curve {
+                    stroke-dasharray: 4 2;
+                }
+
+                &>.curve,
+                &>.anchor,
+                &>.line {
+                    stroke: var(--r2l-tmcolor);
+                }
+
+                &>.arrow {
+                    fill: var(--r2l-tmcolor);
+                }
+            }
+
+            &[ltype="5"] {
+
+                /* Un */
+                &>.curve {
+                    stroke-dasharray: 10 2 2 2;
+                }
+
+                &>.curve,
+                &>.anchor,
+                &>.line {
+                    stroke: var(--r2l-color);
+                }
+
+                &>.arrow {
+                    fill: var(--r2l-color);
+                }
+            }
+
+            &[ltype="6"] {
+
+                /* Oc */
+                &>.curve {
+                    stroke-dasharray: 8 2;
+                }
+
+                &>.curve,
+                &>.anchor,
+                &>.line {
+                    stroke: var(--r2l-tmcolor);
+                }
+
+                &>.arrow {
+                    fill: var(--r2l-tmcolor);
+                }
+            }
+
+            &:hover {
+                opacity: 1;
+                z-index: 1;
+
+                &>.line,
+                &>.anchor {
+                    opacity: 1;
+                }
+            }
+        }
+
+        &.r2s {
+            --r2s-stop-start: var(--color-blu16);
+            --r2s-stop-end: var(--color-blu17);
+
+            &.inactive {
+                --r2s-stop-start: var(--color-blu18);
+                --r2s-stop-end: var(--color-blu8);
+            }
+
+            &.active {
+                --r2s-stop-start: var(--color-orn17);
+                --r2s-stop-end: var(--color-orn17);
+            }
+
+            & .stop-start {
+                stop-color: var(--r2s-stop-start);
+                stop-opacity: 0.9;
+            }
+
+            & .stop-end {
+                stop-color: var(--r2s-stop-end);
+                stop-opacity: 0.9;
+            }
+
+            &>.src {
+                fill: none;
+                stroke: var(--color-gray4);
+                stroke-width: var(--sprite-sec-ext-width);
+                stroke-dasharray: var(--sprite-sec-ray-width) calc(var(--sprite-sec-ray-width) / 2);
+            }
+
+            &>.ray {
+                fill: var(--color-gray4);
+                stroke: var(--color-gray4);
+                stroke-width: var(--sprite-sec-ray-width);
+                stroke-linejoin: round;
+            }
+
+            &>.ext {
+                fill: none;
+                stroke: var(--color-gray4);
+                stroke-width: var(--sprite-sec-ext-width);
+                stroke-dasharray: 3;
+            }
+
+        }
+
+        &.r2p {
+
+            &>.line,
+            &>.arrow {
+                fill: none;
+                stroke: var(--color-gray6);
+                stroke-width: var(--sprite-prog-stroke-width);
+            }
+
+            &>.line {
+                stroke-dasharray: 4;
+            }
+        }
+
+        &.r2t {
+            transition: none;
+            --r2t-stroke-width: var(--sprite-trace-stroke-width);
+
+            &>path {
+                fill: none;
+                stroke-linecap: round;
+            }
+
+            &[tstat="0"] {
+                /* Inactive */
+                --r2t-color: var(--color-blu6);
+                opacity: 0.8;
+            }
+
+            &[tstat="1"] {
+                /* Waiting */
+                --r2t-color: var(--color-blu6);
+                opacity: 0.7;
+            }
+
+            &[tstat="2"] {
+                /* Active */
+                --r2t-color: var(--color-orn6);
+                --r2t-stroke-width: calc(1.5 * var(--sprite-trace-stroke-width));
+                opacity: 0.8;
+                z-index: 1 !important;
+            }
+
+            &>path {
+                stroke: var(--r2t-color);
+                stroke-width: var(--r2t-stroke-width);
+            }
+        }
+    }
+}

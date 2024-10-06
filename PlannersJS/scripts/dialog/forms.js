@@ -25,7 +25,7 @@ UI.AbstractForm = class {
         this.#dom_elements.appendChild(element.dom);
     }
 
-    constructor(title, description) {
+    constructor (title, description) {
         this.dom = document.createElement("div");
         this.dom.className = "form";
 
@@ -78,7 +78,7 @@ UI.AbstractForm = class {
 UI.FormHeading = class {
     dom;
 
-    constructor(heading) {
+    constructor (heading) {
         this.dom = document.createElement("div");
         this.dom.className = "heading";
         const dom_span = document.createElement("span");
@@ -98,7 +98,7 @@ UI.AbstractFormElement = class {
     dom_label;
     dom_input;
 
-    constructor(name, id, label, input_tag) {
+    constructor (name, id, label, input_tag) {
         this.dom_parameter = document.createElement("div");
         this.dom_parameter.className = "parameter";
 
@@ -159,7 +159,7 @@ UI.FormElementSelect = class extends UI.AbstractFormElement {
      * Each string in the array represents the text of the option in the drop down menu. The option value is given by the number.
      * @param {number} default_value The option whose value equals to this value will be selected.
      */
-    constructor(name, id, label, options, default_value) {
+    constructor (name, id, label, options, default_value) {
         super(name, id, label, "select");
         this.replaceOptions(options, default_value);
     }
@@ -181,6 +181,7 @@ UI.FormElementSelect = class extends UI.AbstractFormElement {
     selectValue(value) {
         let idx = -1;
         for (const option of this.dom_input.options) {
+            console.log("option.value", option.value);
             ++idx;
             if (parseInt(option.value) === value)
                 break;
@@ -188,6 +189,8 @@ UI.FormElementSelect = class extends UI.AbstractFormElement {
         if (idx >= this.dom_input.options.length)
             throw new Error(`Invalid value "${value}" selected.`);
         this.dom_input.selectedIndex = idx;
+        console.log("this.dom_input.selectedIndex", this.dom_input.selectedIndex);
+        console.log("this.value", this.value);
     }
 
     /**
@@ -218,7 +221,7 @@ UI.FormElementNumber = class extends UI.AbstractFormElement {
     get value() { return this.#is_null ? NaN : this.#value; }
     get raw_value() { return parseFloat(this.dom_input.value); }
 
-    constructor(name, id, label, value, min, max, step,
+    constructor (name, id, label, value, min, max, step,
         is_integer, attach_changer = true) {
         super(name, id, label, "input");
         this.dom_input.type = "number";

@@ -91,7 +91,9 @@ UI.Cells =  class{
 
 
     /** Returns cell at coord if coord is in map, null otherwise
-     * @param coord array of two ints */
+     * @param coord array of two ints
+     * @returns {UI.Cell | null} 
+     */
     at(coord) {
         return ui.inMapCell(coord) ? this.#cells[coord[0]][coord[1]] : null;
     }

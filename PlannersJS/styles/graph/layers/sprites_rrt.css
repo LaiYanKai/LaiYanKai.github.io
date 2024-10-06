@@ -1,0 +1,19 @@
+.body>.graph>.layers>.sprites {
+    &>svg {
+        &.rrt-circ {
+            &>.circ {
+                opacity: 0.6;
+                fill: rgba(255, 255, 255, 0.05);
+                stroke: var(--color-red6);
+                stroke-width: var(--sprite-rrt-circ-stroke-width);
+                stroke-dasharray: var(--sprite-rrt-circ-stroke-width);
+
+                &:hover {
+                    fill: rgba(255, 255, 255, 0.4);
+                    opacity: 0.9;
+                }
+            }
+
+        }
+    }
+}
