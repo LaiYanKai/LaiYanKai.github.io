@@ -73,9 +73,9 @@ const AlgRewiringOfTree = {
 Object.freeze(AlgRewiringOfTree);
 
 const AlgGrowTreeTillPathFound = {
-  Enable: 0,
-  Disable: 1,
-  length: 2,
+    Enable: 0,
+    Disable: 1,
+    length: 2,
 };
 Object.freeze(AlgGrowTreeTillPathFound);
 const AlgGNb = {
@@ -133,7 +133,8 @@ const AlgPresetDijkstra = {
     Custom: AlgPresetCustom,
     Cell: 1,
     Vertex: 2,
-    length: 3,
+    EE3305: 3,
+    length: 4,
 };
 Object.freeze(AlgPresetDijkstra);
 
@@ -141,7 +142,8 @@ const AlgPresetAStar = {
     Custom: AlgPresetCustom,
     Cell: 1,
     Vertex: 2,
-    length: 3,
+    EE3305: 3,
+    length: 4,
 };
 Object.freeze(AlgPresetAStar);
 
@@ -169,21 +171,21 @@ const AlgPresetR2P = {
 Object.freeze(AlgPresetAnya);
 
 const AlgPresetPRM = {
-  Custom: AlgPresetCustom,
-  Default: 1,
+    Custom: AlgPresetCustom,
+    Default: 1,
     Star: 2,
     DefaultGrowUntilPath: 3,
     StarGrowUntilPath: 4,
-  length: 5,
+    length: 5,
 };
 Object.freeze(AlgPresetPRM);
 
 const AlgPresetRRT = {
-  Custom: AlgPresetCustom,
-  Default: 1,
+    Custom: AlgPresetCustom,
+    Default: 1,
     Star: 2,
     DefaultGrowUntilPath: 3,
     StarGrowUntilPath: 4,
-  length: 5,
+    length: 5,
 };
 Object.freeze(AlgPresetRRT);

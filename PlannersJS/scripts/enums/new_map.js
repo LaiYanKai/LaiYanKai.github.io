@@ -27,14 +27,16 @@ Object.freeze(NewMapKeep);
  * @readonly
  */
 const NewMapTemplate = {
-    Maze00: 0,
-    Maze01: 1,
-    Maze02: 2,
-    Maze03: 3,
-    Maze04: 4,
-    Test01: 5,
-    Test02: 6,
-    Test03: 7,
-    length: 8,
+    EE3305A: 0,
+    EE3305B: 1,
+    Maze00: 2,
+    Maze01: 3,
+    Maze02: 4,
+    Maze03: 5,
+    Maze04: 6,
+    Test01: 7,
+    Test02: 8,
+    Test03: 9,
+    length: 10,
 };
 Object.freeze(NewMapTemplate);

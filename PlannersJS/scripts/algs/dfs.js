@@ -1,7 +1,7 @@
 "use strict";
 
 Algs.DFSCanvasCell = class extends UI.AbstractCanvasCell {
-  constructor() {
+  constructor () {
     super(0, DFSAction.length);
   }
 
@@ -41,7 +41,7 @@ Algs.DFSCanvasCell = class extends UI.AbstractCanvasCell {
 
 Algs.DFSCanvasVertex = class extends UI.AbstractCanvasVertex {
   /** @type {UI.Tooltip} */
-  constructor() {
+  constructor () {
     super(0, DFSAction.length);
   }
 
@@ -76,8 +76,12 @@ Algs.DFSCanvasVertex = class extends UI.AbstractCanvasVertex {
 };
 
 Algs.DFSNode = class extends Algs.AbstractStackNode {
-  constructor(coord, sprite) {
+  /* @type {boolean} */
+  examined;
+
+  constructor (coord, sprite) {
     super(coord, 0, sprite);
+    this.examined = false;
   }
 };
 
@@ -99,7 +103,7 @@ Algs.DFS = class extends Algs.AbstractGridAlg {
   /** @type{Array<[number, number]>} */
   #path;
 
-  constructor(alg_params) {
+  constructor (alg_params) {
     super(["1: Smallest", "2: Every Expansion"], 1, alg_params);
 
     // Set up canvases
@@ -158,15 +162,17 @@ Algs.DFS = class extends Algs.AbstractGridAlg {
 
     // Set up start node
     let xpd_node = this.#nodes.get(this.serialize(this.coord_start));
+    xpd_node.examined = true;
 
     xpd_node.parent = null;
-    this.#StackNode(xpd_node);
+    this.#stackNode(xpd_node);
 
     this.#closeStep();
 
     // prev_nb_node for visualization purposes
     let prev_nb_node = null;
-    while (this.#stackFilled()) {
+    let goal_found = false;
+    while (this.#stackFilled() && !goal_found) {
       this.#newMjrStep();
       this.#visualizeNeighbors(prev_nb_node, null);
       prev_nb_node = null;
@@ -174,10 +180,6 @@ Algs.DFS = class extends Algs.AbstractGridAlg {
 
       xpd_node = this.#pollNode();
       this.#visualizeExpanded(xpd_node);
-
-      if (this.#goalReached(xpd_node))
-        // will close current step if goal reached
-        break;
 
       this.#closeStep();
 
@@ -197,11 +199,19 @@ Algs.DFS = class extends Algs.AbstractGridAlg {
 
         this.#visualizeNeighbors(prev_nb_node, nb_node);
         prev_nb_node = nb_node;
+
         // continue if node is inaccessible.
-        if (this.#nbNodeAccessible(nb) === true && nb_node.parent === null) {
+        if (this.#nbNodeAccessible(nb) === true && nb_node.examined === false) {
           nb_node.parent = xpd_node;
+          nb_node.examined = true;
           this.#visualizeParent(nb_node, null, xpd_node);
-          this.#StackNode(nb_node);
+          if (this.#goalReached(nb_node)) {
+            // will close current step if goal reached
+            goal_found = true;
+            break;
+          }
+          else
+            this.#stackNode(nb_node);
         }
 
         this.#closeStep();
@@ -219,7 +229,7 @@ Algs.DFS = class extends Algs.AbstractGridAlg {
     node.parent = new_parent_node;
   }
 
-  #StackNode(node) {
+  #stackNode(node) {
     if (this.#stack.insert(node) === -1) {
       // visited
     } else {

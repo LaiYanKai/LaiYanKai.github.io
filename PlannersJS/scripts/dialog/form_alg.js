@@ -549,6 +549,7 @@ UI.FormAlg = class extends UI.AbstractForm {
       new_presets = [
         ["Default (Cell)", AlgPresetDijkstra.Cell],
         ["Default (Vertex)", AlgPresetDijkstra.Vertex],
+        ["EE3305", AlgPresetDijkstra.EE3305],
         ["Custom", AlgPresetCustom],
       ];
       default_preset = AlgPresetDijkstra.Cell;
@@ -587,6 +588,7 @@ UI.FormAlg = class extends UI.AbstractForm {
       new_presets = [
         ["Default (Cell)", AlgPresetAStar.Cell],
         ["Default (Vertex)", AlgPresetAStar.Vertex],
+        ["EE3305", AlgPresetAStar.EE3305],
         ["Custom", AlgPresetCustom],
       ];
       default_preset = AlgPresetAStar.Cell;
@@ -722,7 +724,7 @@ UI.FormAlg = class extends UI.AbstractForm {
         "goal_radius",
         "distance_from_coord",
         "sample_size",
-       
+
         "nearby_nodes_selection_method",
         "nearby_nodes_selection_method_nearest_number",
         "nearby_nodes_selection_method_radius_number",
@@ -768,7 +770,7 @@ UI.FormAlg = class extends UI.AbstractForm {
         "neighbor_selection_method",
         "neighbor_selection_method_knn_number",
         "neighbor_selection_method_radius_number",
-      
+
         "distance_metric",
         "g_nb",
         "costmap_type",
@@ -961,6 +963,20 @@ UI.FormAlg = class extends UI.AbstractForm {
         ui.form_alg_g_nb.selectValue(AlgGNb.Min);
         ui.form_alg_costmap_type.selectValue(AlgCostmapType.MultiCost);
         _this._change_costmap_type();
+      } else if (preset === AlgPresetDijkstra.EE3305) {
+        ui.form_alg_node_type.selectValue(AlgNodeType.Cell);
+        _this._change_node_type();
+        ui.form_alg_node_connectivity.selectValue(
+          AlgNodeConnectivity.EightConnected
+        );
+        _this._change_node_connectivity();
+        ui.form_alg_first_neighbor.selectValue(DirIndex.N);
+        ui.form_alg_next_neighbor.selectValue(AlgNextNeighbor.AntiClockwise);
+        ui.form_alg_time_ordering.selectValue(AlgTimeOrdering.FIFO);
+        ui.form_alg_distance_metric.selectValue(Metric.Euclidean);
+        ui.form_alg_g_nb.selectValue(AlgGNb.Neighbor);
+        ui.form_alg_costmap_type.selectValue(AlgCostmapType.MultiCost);
+        _this._change_costmap_type();
       } else if (preset === AlgPresetCustom) {
         _this._change_node_type();
         _this._change_node_connectivity();
@@ -1003,6 +1019,23 @@ UI.FormAlg = class extends UI.AbstractForm {
         ui.form_alg_costmap_type.selectValue(AlgCostmapType.MultiCost);
         ui.form_alg_g_nb.selectValue(AlgGNb.Min);
         _this._change_costmap_type();
+      } else if (preset === AlgPresetAStar.EE3305) {
+        ui.form_alg_node_type.selectValue(AlgNodeType.Cell);
+        _this._change_node_type();
+        ui.form_alg_node_connectivity.selectValue(
+          AlgNodeConnectivity.EightConnected
+        );
+        _this._change_node_connectivity();
+        ui.form_alg_first_neighbor.selectValue(DirIndex.N);
+        ui.form_alg_next_neighbor.selectValue(AlgNextNeighbor.AntiClockwise);
+        ui.form_alg_fh.selectValue(AlgFH.FOnly);
+        ui.form_alg_time_ordering.selectValue(AlgTimeOrdering.FIFO);
+        ui.form_alg_distance_metric.selectValue(Metric.Euclidean);
+        ui.form_alg_g_weight.change(1);
+        ui.form_alg_h_weight.change(1);
+        ui.form_alg_costmap_type.selectValue(AlgCostmapType.MultiCost);
+        _this._change_costmap_type();
+        ui.form_alg_g_nb.selectValue(AlgGNb.Neighbor);
       } else if (preset === AlgPresetCustom) {
         _this._change_node_type();
         _this._change_node_connectivity();
